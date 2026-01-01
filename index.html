@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>統合法令閲覧システム</title>
+  <link rel="shortcut icon" type="image/x-icon"
+    href="favicon.ico" />
+  <style>
+    body {
+      font-size: smaller;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      line-height: inherit;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* TailwindCSS基本スタイル */
+    *,
+    ::before,
+    ::after {
+      box-sizing: border-box;
+      border-width: 0;
+      border-style: solid;
+      border-color: #e5e7eb;
+    }
+
+    /* ローディングスピナーのスタイル */
+    #spinner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 9999;
+    }
+
+    #spinner.visible {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #spinner_inside {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .lds-ellipsis {
+      display: inline-block;
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .lds-ellipsis div {
+      position: absolute;
+      top: 33px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #0066cc;
+      animation-timing-function: cubic-bezier(0, 1, 1, 0);
+    }
+
+    .lds-ellipsis div:nth-child(1) {
+      left: 8px;
+      animation: lds-ellipsis1 0.6s infinite;
+    }
+
+    .lds-ellipsis div:nth-child(2) {
+      left: 8px;
+      animation: lds-ellipsis2 0.6s infinite;
+    }
+
+    .lds-ellipsis div:nth-child(3) {
+      left: 32px;
+      animation: lds-ellipsis2 0.6s infinite;
+    }
+
+    .lds-ellipsis div:nth-child(4) {
+      left: 56px;
+      animation: lds-ellipsis3 0.6s infinite;
+    }
+
+    @keyframes lds-ellipsis1 {
+      0% {
+        transform: scale(0);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes lds-ellipsis3 {
+      0% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(0);
+      }
+    }
+
+    @keyframes lds-ellipsis2 {
+      0% {
+        transform: translate(0, 0);
+      }
+      100% {
+        transform: translate(24px, 0);
+      }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* SAT tool related styles */
+    ._div_ArticleTitle,
+    ._div_ParagraphSentence {
+      text-indent: -1em;
+      margin-left: 1em;
+      padding-left: 1rem;
+    }
+
+    ._div_ItemSentence {
+      text-indent: -1em;
+      margin-left: 1em;
+    }
+
+    ._div_ArticleTitle ._div_ItemSentence {
+      margin-left: 0;
+    }
+
+    pre {
+      white-space: pre-wrap !important;
+    }
+
+    span#arabic,
+    span.chikujo {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    span.abbr {
+      background-color: #888;
+      cursor: pointer;
+    }
+
+    span.bracket {
+      cursor: pointer;
+    }
+
+    /* Tailwind CSS utility classes for proper indentation */
+    .indent-1 { text-indent: -1em; margin-left: 1em; }
+    .pl-4 { padding-left: 1rem; }
+    .pl-8 { padding-left: 2rem; }
+    .pl-12 { padding-left: 3rem; }
+    .pl-16 { padding-left: 4rem; }
+    .pb-4 { padding-bottom: 1rem; }
+    .font-bold { font-weight: bold; }
+    .text-xl { font-size: 1.25rem; }
+
+    /* Additional utility classes used in law content */
+    .column { display: block; }
+    .active { display: block; }
+
+    /* Main layout structure */
+    #viewer-toolbar {
+      flex-shrink: 0; /* ツールバーは固定サイズ */
+    }
+
+    #viewer-content {
+      flex: 1; /* 残りのスペースを使用 */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* 子要素でスクロール制御 */
+    }
+
+    #color_picker {
+      flex-shrink: 0;
+    }
+
+    #text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #spectrum {
+      flex-shrink: 0;
+    }
+
+    /* Custom resizer styles */
+    .resizer {
+      width: 8px;
+      background-color: #e0e0e0;
+      cursor: col-resize;
+      position: relative;
+      flex-shrink: 0;
+      transition: background-color 0.2s ease;
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .resizer::before {
+      content: '⋮⋮';
+      color: #999;
+      font-size: 12px;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .resizer:hover {
+      background-color: #0066cc;
+    }
+
+    .resizer:hover::before {
+      color: white;
+    }
+
+    .resizer:active {
+      background-color: #004499;
+    }
+
+    /* Layout adjustments for contenteditable_container */
+    #contenteditable_container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #main {
+      flex: 1;
+      overflow-y: auto; /* メインスクロールをここで制御 */
+      min-height: 0; /* flexアイテムのスクロールのために必要 */
+    }
+
+    #content {
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    #comment_container {
+      flex-shrink: 0;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    /* Comment layout styles */
+    #comment_svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 15px;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #comment_svg svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    #comment_div {
+      position: relative;
+      margin-left: 15px; /* comment_svgの幅分だけ左マージン */
+      padding-left: 5px;
+      box-sizing: border-box;
+      /* height: 100%; を削除 - 内容に応じた高さ */
+      /* overflow: visible; はデフォルトなので削除 */
+    }
+
+    /* パンくずナビゲーションのスタイル */
+    #breadcrumb-navigation {
+      flex-shrink: 0;
+      height: 2rem; /* 固定高さ */
+      overflow: hidden; /* オーバーフローを隠す */
+    }
+
+    #breadcrumb-list {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE and Edge */
+      list-style: none; /* リストマーカーを削除 */
+      margin: 0;
+      padding: 0;
+    }
+
+    #breadcrumb-list::-webkit-scrollbar {
+      display: none; /* Chrome, Safari and Opera */
+    }
+
+    #breadcrumb-navigation li {
+      list-style: none; /* リストマーカーを削除 */
+    }
+
+    /* Utility classes for breadcrumb */
+    .text-Sea-900 { color: #000082; }
+    .text-Sea-700 { color: #0000B3; }
+    .text-Sumi-600 { color: #757578; }
+    .text-light-Text-Body { color: #1A1A1C; }
+    .text-light-Text-PlaceHolder { color: #757578; }
+    .bg-White-1000 { background-color: #FFFFFF; }
+    .border-Sumi-200 { border-color: #E8E8EB; }
+    .hover\:underline:hover { text-decoration: underline; }
+    .hover\:text-Sea-700:hover { color: #0000B3; }
+    .transition-colors { transition: color 0.2s ease; }
+    .duration-200 { transition-duration: 200ms; }
+    .focus\:outline-none:focus { outline: none; }
+    .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(0, 0, 130, 0.5); }
+    .focus\:ring-Sea-500:focus { box-shadow: 0 0 0 2px rgba(0, 0, 130, 0.5); }
+    .focus\:ring-opacity-50:focus { box-shadow: 0 0 0 2px rgba(0, 0, 130, 0.5); }
+    .rounded { border-radius: 0.25rem; }
+    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .ml-2 { margin-left: 0.5rem; }
+    .p-1 { padding: 0.25rem; }
+    .w-4 { width: 1rem; }
+    .h-4 { height: 1rem; }
+    .fixed { position: fixed; }
+    .top-0 { top: 0; }
+    .left-0 { left: 0; }
+    .right-0 { right: 0; }
+    .border-b { border-bottom-width: 1px; }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .space-x-1 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.25rem; }
+    .space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
+    .text-xs { font-size: 0.75rem; }
+    .overflow-x-auto { overflow-x: auto; }
+    .whitespace-nowrap { white-space: nowrap; }
+    .flex-1 { flex: 1 1 0%; }
+    .min-w-0 { min-width: 0; }
+    .flex-shrink-0 { flex-shrink: 0; }
+    .container { max-width: 100%; margin: 0 auto; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+
+    @media (min-width: 768px) {
+      .md\:px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .md\:space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
+    }
+  </style>
+  <link rel="stylesheet" href="./css/style_egov.css" />
+  <script defer src="dist/api.js"></script>
+  <script defer src="dist/viewer.js"></script>
+  <script defer src="js/breadcrumb-navigation.js"></script>
+</head>
+
+<body>
+
+  <div id="spinner">
+    <div id="spinner_inside">
+      <p id="loading_message"></p>
+      <div class="lds-ellipsis">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API section for law data fetching -->
+  <div id="app" style="padding: 20px;">
+    <!-- This will be populated by the API component -->
+  </div>
+
+  <!-- Viewer UI components -->
+  <div class="top" style="display: none;" id="viewer-toolbar">
+    <ul>
+      <li>
+        <img src="./img/comment.png" class="icon" id="btn_comment" style="background-color: #ffcccc"
+          commentColor="#ffcccc" title="コメント (Ctrl+1)" />
+        <img src="./img/color_select.png" class="icon_bottom" id="btn_select_comment_color" title="コメント色の選択" />
+      </li>
+      <li>
+        <img src="./img/bold.png" class="icon" id="btn_bold" title="太字 (Ctrl+B)" />
+      </li>
+      <li>
+        <img src="./img/underline.png" class="icon" id="btn_underline" title="下線 (Ctrl+U)" />
+      </li>
+      <li>
+        <img src="./img/highlight.png" class="icon" id="btn_highlight" title="マーカー (Ctrl+H)" highlightColor="#ffff60"
+          style="background-color: #ffff60" />
+        <img src="./img/color_select.png" class="icon_bottom" id="btn_select_highlight_color" title="マーカー色の選択" />
+      </li>
+      <li>
+        <img src="./img/eraser.png" class="icon" id="btn_erase" title="マーカー削除(Ctrl+D)" />
+      </li>
+      <li class="blank"></li>
+      <li id="li_figureOn" class="hidden">
+        <img src="./img/figure_on.png" class="icon" id="btn_figureOn" title="図面表示" />
+      </li>
+      <li id="li_figureOff" class="hidden">
+        <img src="./img/figure_off.png" class="icon" id="btn_figureOff" title="図面非表示" />
+      </li>
+      <li id="li_editUnlock" class="hidden">
+        <img src="./img/edit_unlock.png" class="icon" id="btn_editUnlock" title="本文ロック解除（本文の編集を可能にします）" />
+      </li>
+      <li id="li_editLock" class="hidden">
+        <img src="./img/edit_lock.png" class="icon" id="btn_editLock" title="本文ロック（本文の変更を禁止します）" />
+      </li>
+      <li class="blank"></li>
+      <li id="word_menu">
+        <div>
+          <label><img src="./img/lightness.png" class="icon2" title="ワード反転色の輝度" /></label>
+          <input type="range" id="word_inversion_lightness" name="word_inversion_lightness" min="0.2" max="0.8"
+            step="0.1" />
+        </div>
+        <div>
+          <label><input type="checkbox" id="block_mode" checked /><img src="./img/block_inversion.png" class="icon2"
+              title="ブロック反転（反転範囲を漢字・カタカナ・英語が連続する範囲まで広げます）" /></label>
+        </div>
+        <div>
+          <label><input type="checkbox" id="auto_sieve_mode" checked /><img src="./img/scissors.png" class="icon2"
+              title="ワードトリミング（ヒットしなかったワードを自動で削除します）" /></label>
+        </div>
+      </li>
+      <li>
+        <div id="word_query" contenteditable="true" placeholder="反転ワードを入力...(Ctrl+Shift+F)"></div>
+      </li>
+      <li>
+        <span id="fusoku_display" class="chikujo">附則表示切替</span>
+      </li>
+      <li>
+        <span id="comment_toggle" class="chikujo">コメント表示切替</span>
+      </li>
+      <li>
+        <a href="https://www.legislative-affairs-office.general-affairs-division.general-affairs-department.jpo.go.jp/higuchi/sat_law/manual/manual.html"
+          target="_blank"><img src="./img/help.png" class="icon" title="ヘルプを表示します" /></a>
+      </li>
+      <li class="blank"><input id="article_jump" type="text" placeholder="条文番号ジャンプ（Ctrl+/）" /></li>
+      <li id="zumen_analysis"></li>
+    </ul>
+
+    <!-- Breadcrumb Navigation -->
+    <nav id="breadcrumb-navigation" class="bg-White-1000" aria-label="法令構造ナビゲーション">
+      <div class="container mx-auto px-2 md:px-4 py-1">
+        <div class="flex items-center">
+          <ul id="breadcrumb-list" class="flex items-center space-x-1 md:space-x-2 text-xs overflow-x-auto whitespace-nowrap flex-1 min-w-0" role="navigation" aria-label="パンくずリスト">
+            <!-- パンくずアイテムが動的に挿入される -->
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="bottom" style="display: none;" id="viewer-content">
+    <div id="color_picker">
+      <img style="margin-right: 2px" src="./img/colormap.gif" usemap="#colormap" alt="colormap" />
+    </div>
+
+    <div id="text" class="column">
+      <div id="main">
+        <div id="contenteditable_container">
+          <div id="content">データ読み込み中...</div>
+          <div id="comment_container">
+            <div id="color_picker_comment">
+              <img style="margin-right: 2px" src="./img/colormap.gif" usemap="#colormap" alt="colormap" />
+            </div>
+            <div id="comment_svg"><svg></svg></div>
+            <div id="comment_div"></div>
+          </div>
+        </div>
+      </div>
+      <div id="spectrum">
+        <canvas id="spectrum_bar" width="1" height="1"> </canvas>
+      </div>
+    </div>
+  </div>
+
+  <map id="colormap" name="colormap"><area style="cursor: pointer" shape="poly"
+      coords="63,0,72,4,72,15,63,19,54,15,54,4" alt="#003366" /><area style="cursor: pointer" shape="poly"
+      coords="81,0,90,4,90,15,81,19,72,15,72,4" alt="#336699" /><area style="cursor: pointer" shape="poly"
+      coords="99,0,108,4,108,15,99,19,90,15,90,4" alt="#3366CC" /><area style="cursor: pointer" shape="poly"
+      coords="117,0,126,4,126,15,117,19,108,15,108,4" alt="#003399" /><area style="cursor: pointer" shape="poly"
+      coords="135,0,144,4,144,15,135,19,126,15,126,4" alt="#000099" /><area style="cursor: pointer" shape="poly"
+      coords="153,0,162,4,162,15,153,19,144,15,144,4" alt="#0000CC" /><area style="cursor: pointer" shape="poly"
+      coords="171,0,180,4,180,15,171,19,162,15,162,4" alt="#000066" /><area style="cursor: pointer" shape="poly"
+      coords="54,15,63,19,63,30,54,34,45,30,45,19" alt="#006666" /><area style="cursor: pointer" shape="poly"
+      coords="72,15,81,19,81,30,72,34,63,30,63,19" alt="#006699" /><area style="cursor: pointer" shape="poly"
+      coords="90,15,99,19,99,30,90,34,81,30,81,19" alt="#0099CC" /><area style="cursor: pointer" shape="poly"
+      coords="108,15,117,19,117,30,108,34,99,30,99,19" alt="#0066CC" /><area style="cursor: pointer" shape="poly"
+      coords="126,15,135,19,135,30,126,34,117,30,117,19" alt="#0033CC" /><area style="cursor: pointer" shape="poly"
+      coords="144,15,153,19,153,30,144,34,135,30,135,19" alt="#0000FF" /><area style="cursor: pointer" shape="poly"
+      coords="162,15,171,19,171,30,162,34,153,30,153,19" alt="#3333FF" /><area style="cursor: pointer" shape="poly"
+      coords="180,15,189,19,189,30,180,34,171,30,171,19" alt="#333399" /><area style="cursor: pointer" shape="poly"
+      coords="45,30,54,34,54,45,45,49,36,45,36,34" alt="#669999" /><area style="cursor: pointer" shape="poly"
+      coords="63,30,72,34,72,45,63,49,54,45,54,34" alt="#009999" /><area style="cursor: pointer" shape="poly"
+      coords="81,30,90,34,90,45,81,49,72,45,72,34" alt="#33CCCC" /><area style="cursor: pointer" shape="poly"
+      coords="99,30,108,34,108,45,99,49,90,45,90,34" alt="#00CCFF" /><area style="cursor: pointer" shape="poly"
+      coords="117,30,126,34,126,45,117,49,108,45,108,34" alt="#0099FF" /><area style="cursor: pointer" shape="poly"
+      coords="135,30,144,34,144,45,135,49,126,45,126,34" alt="#0066FF" /><area style="cursor: pointer" shape="poly"
+      coords="153,30,162,34,162,45,153,49,144,45,144,34" alt="#3366FF" /><area style="cursor: pointer" shape="poly"
+      coords="171,30,180,34,180,45,171,49,162,45,162,34" alt="#3333CC" /><area style="cursor: pointer" shape="poly"
+      coords="189,30,198,34,198,45,189,49,180,45,180,34" alt="#666699" /><area style="cursor: pointer" shape="poly"
+      coords="36,45,45,49,45,60,36,64,27,60,27,49" alt="#339966" /><area style="cursor: pointer" shape="poly"
+      coords="54,45,63,49,63,60,54,64,45,60,45,49" alt="#00CC99" /><area style="cursor: pointer" shape="poly"
+      coords="72,45,81,49,81,60,72,64,63,60,63,49" alt="#00FFCC" /><area style="cursor: pointer" shape="poly"
+      coords="90,45,99,49,99,60,90,64,81,60,81,49" alt="#00FFFF" /><area style="cursor: pointer" shape="poly"
+      coords="108,45,117,49,117,60,108,64,99,60,99,49" alt="#33CCFF" /><area style="cursor: pointer" shape="poly"
+      coords="126,45,135,49,135,60,126,64,117,60,117,49" alt="#3399FF" /><area style="cursor: pointer" shape="poly"
+      coords="144,45,153,49,153,60,144,64,135,60,135,49" alt="#6699FF" /><area style="cursor: pointer" shape="poly"
+      coords="162,45,171,49,171,60,162,64,153,60,153,49" alt="#6666FF" /><area style="cursor: pointer" shape="poly"
+      coords="180,45,189,49,189,60,180,64,171,60,171,49" alt="#6600FF" /><area style="cursor: pointer" shape="poly"
+      coords="198,45,207,49,207,60,198,64,189,60,189,49" alt="#6600CC" /><area style="cursor: pointer" shape="poly"
+      coords="27,60,36,64,36,75,27,79,18,75,18,64" alt="#339933" /><area style="cursor: pointer" shape="poly"
+      coords="45,60,54,64,54,75,45,79,36,75,36,64" alt="#00CC66" /><area style="cursor: pointer" shape="poly"
+      coords="63,60,72,64,72,75,63,79,54,75,54,64" alt="#00FF99" /><area style="cursor: pointer" shape="poly"
+      coords="81,60,90,64,90,75,81,79,72,75,72,64" alt="#66FFCC" /><area style="cursor: pointer" shape="poly"
+      coords="99,60,108,64,108,75,99,79,90,75,90,64" alt="#66FFFF" /><area style="cursor: pointer" shape="poly"
+      coords="117,60,126,64,126,75,117,79,108,75,108,64" alt="#66CCFF" /><area style="cursor: pointer" shape="poly"
+      coords="135,60,144,64,144,75,135,79,126,75,126,64" alt="#99CCFF" /><area style="cursor: pointer" shape="poly"
+      coords="153,60,162,64,162,75,153,79,144,75,144,64" alt="#9999FF" /><area style="cursor: pointer" shape="poly"
+      coords="171,60,180,64,180,75,171,79,162,75,162,64" alt="#9966FF" /><area style="cursor: pointer" shape="poly"
+      coords="189,60,198,64,198,75,189,79,180,75,180,64" alt="#9933FF" /><area style="cursor: pointer" shape="poly"
+      coords="207,60,216,64,216,75,207,79,198,75,198,64" alt="#9900FF" /><area style="cursor: pointer" shape="poly"
+      coords="18,75,27,79,27,90,18,94,9,90,9,79" alt="#006600" /><area style="cursor: pointer" shape="poly"
+      coords="36,75,45,79,45,90,36,94,27,90,27,79" alt="#00CC00" /><area style="cursor: pointer" shape="poly"
+      coords="54,75,63,79,63,90,54,94,45,90,45,79" alt="#00FF00" /><area style="cursor: pointer" shape="poly"
+      coords="72,75,81,79,81,90,72,94,63,90,63,79" alt="#66FF99" /><area style="cursor: pointer" shape="poly"
+      coords="90,75,99,79,99,90,90,94,81,90,81,79" alt="#99FFCC" /><area style="cursor: pointer" shape="poly"
+      coords="108,75,117,79,117,90,108,94,99,90,99,79" alt="#CCFFFF" /><area style="cursor: pointer" shape="poly"
+      coords="126,75,135,79,135,90,126,94,117,90,117,79" alt="#CCCCFF" /><area style="cursor: pointer" shape="poly"
+      coords="144,75,153,79,153,90,144,94,135,90,135,79" alt="#CC99FF" /><area style="cursor: pointer" shape="poly"
+      coords="162,75,171,79,171,90,162,94,153,90,153,79" alt="#CC66FF" /><area style="cursor: pointer" shape="poly"
+      coords="180,75,189,79,189,90,180,94,171,90,171,79" alt="#CC33FF" /><area style="cursor: pointer" shape="poly"
+      coords="198,75,207,79,207,90,198,94,189,90,189,79" alt="#CC00FF" /><area style="cursor: pointer" shape="poly"
+      coords="216,75,225,79,225,90,216,94,207,90,207,79" alt="#9900CC" /><area style="cursor: pointer" shape="poly"
+      coords="9,90,18,94,18,105,9,109,0,105,0,94" alt="#003300" /><area style="cursor: pointer" shape="poly"
+      coords="27,90,36,94,36,105,27,109,18,105,18,94" alt="#009933" /><area style="cursor: pointer" shape="poly"
+      coords="45,90,54,94,54,105,45,109,36,105,36,94" alt="#33CC33" /><area style="cursor: pointer" shape="poly"
+      coords="63,90,72,94,72,105,63,109,54,105,54,94" alt="#66FF66" /><area style="cursor: pointer" shape="poly"
+      coords="81,90,90,94,90,105,81,109,72,105,72,94" alt="#99FF99" /><area style="cursor: pointer" shape="poly"
+      coords="99,90,108,94,108,105,99,109,90,105,90,94" alt="#CCFFCC" /><area style="cursor: pointer" shape="poly"
+      coords="117,90,126,94,126,105,117,109,108,105,108,94" alt="#FFFFFF" /><area style="cursor: pointer" shape="poly"
+      coords="135,90,144,94,144,105,135,109,126,105,126,94" alt="#FFCCFF" /><area style="cursor: pointer" shape="poly"
+      coords="153,90,162,94,162,105,153,109,144,105,144,94" alt="#FF99FF" /><area style="cursor: pointer" shape="poly"
+      coords="171,90,180,94,180,105,171,109,162,105,162,94" alt="#FF66FF" /><area style="cursor: pointer" shape="poly"
+      coords="189,90,198,94,198,105,189,109,180,105,180,94" alt="#FF00FF" /><area style="cursor: pointer" shape="poly"
+      coords="207,90,216,94,216,105,207,109,198,105,198,94" alt="#CC00CC" /><area style="cursor: pointer" shape="poly"
+      coords="225,90,234,94,234,105,225,109,216,105,216,94" alt="#660066" /><area style="cursor: pointer" shape="poly"
+      coords="18,105,27,109,27,120,18,124,9,120,9,109" alt="#336600" /><area style="cursor: pointer" shape="poly"
+      coords="36,105,45,109,45,120,36,124,27,120,27,109" alt="#009900" /><area style="cursor: pointer" shape="poly"
+      coords="54,105,63,109,63,120,54,124,45,120,45,109" alt="#66FF33" /><area style="cursor: pointer" shape="poly"
+      coords="72,105,81,109,81,120,72,124,63,120,63,109" alt="#99FF66" /><area style="cursor: pointer" shape="poly"
+      coords="90,105,99,109,99,120,90,124,81,120,81,109" alt="#CCFF99" /><area style="cursor: pointer" shape="poly"
+      coords="108,105,117,109,117,120,108,124,99,120,99,109" alt="#FFFFCC" /><area style="cursor: pointer" shape="poly"
+      coords="126,105,135,109,135,120,126,124,117,120,117,109" alt="#FFCCCC" /><area style="cursor: pointer"
+      shape="poly" coords="144,105,153,109,153,120,144,124,135,120,135,109" alt="#FF99CC" /><area
+      style="cursor: pointer" shape="poly" coords="162,105,171,109,171,120,162,124,153,120,153,109"
+      alt="#FF66CC" /><area style="cursor: pointer" shape="poly"
+      coords="180,105,189,109,189,120,180,124,171,120,171,109" alt="#FF33CC" /><area style="cursor: pointer"
+      shape="poly" coords="198,105,207,109,207,120,198,124,189,120,189,109" alt="#CC0099" /><area
+      style="cursor: pointer" shape="poly" coords="216,105,225,109,225,120,216,124,207,120,207,109"
+      alt="#993399" /><area style="cursor: pointer" shape="poly" coords="27,120,36,124,36,135,27,139,18,135,18,124"
+      alt="#333300" /><area style="cursor: pointer" shape="poly" coords="45,120,54,124,54,135,45,139,36,135,36,124"
+      alt="#669900" /><area style="cursor: pointer" shape="poly" coords="63,120,72,124,72,135,63,139,54,135,54,124"
+      alt="#99FF33" /><area style="cursor: pointer" shape="poly" coords="81,120,90,124,90,135,81,139,72,135,72,124"
+      alt="#CCFF66" /><area style="cursor: pointer" shape="poly" coords="99,120,108,124,108,135,99,139,90,135,90,124"
+      alt="#FFFF99" /><area style="cursor: pointer" shape="poly"
+      coords="117,120,126,124,126,135,117,139,108,135,108,124" alt="#FFCC99" /><area style="cursor: pointer"
+      shape="poly" coords="135,120,144,124,144,135,135,139,126,135,126,124" alt="#FF9999" /><area
+      style="cursor: pointer" shape="poly" coords="153,120,162,124,162,135,153,139,144,135,144,124"
+      alt="#FF6699" /><area style="cursor: pointer" shape="poly"
+      coords="171,120,180,124,180,135,171,139,162,135,162,124" alt="#FF3399" /><area style="cursor: pointer"
+      shape="poly" coords="189,120,198,124,198,135,189,139,180,135,180,124" alt="#CC3399" /><area
+      style="cursor: pointer" shape="poly" coords="207,120,216,124,216,135,207,139,198,135,198,124"
+      alt="#990099" /><area style="cursor: pointer" shape="poly" coords="36,135,45,139,45,150,36,154,27,150,27,139"
+      alt="#666633" /><area style="cursor: pointer" shape="poly" coords="54,135,63,139,63,150,54,154,45,150,45,139"
+      alt="#99CC00" /><area style="cursor: pointer" shape="poly" coords="72,135,81,139,81,150,72,154,63,150,63,139"
+      alt="#CCFF33" /><area style="cursor: pointer" shape="poly" coords="90,135,99,139,99,150,90,154,81,150,81,139"
+      alt="#FFFF66" /><area style="cursor: pointer" shape="poly" coords="108,135,117,139,117,150,108,154,99,150,99,139"
+      alt="#FFCC66" /><area style="cursor: pointer" shape="poly"
+      coords="126,135,135,139,135,150,126,154,117,150,117,139" alt="#FF9966" /><area style="cursor: pointer"
+      shape="poly" coords="144,135,153,139,153,150,144,154,135,150,135,139" alt="#FF6666" /><area
+      style="cursor: pointer" shape="poly" coords="162,135,171,139,171,150,162,154,153,150,153,139"
+      alt="#FF0066" /><area style="cursor: pointer" shape="poly"
+      coords="180,135,189,139,189,150,180,154,171,150,171,139" alt="#CC6699" /><area style="cursor: pointer"
+      shape="poly" coords="198,135,207,139,207,150,198,154,189,150,189,139" alt="#993366" /><area
+      style="cursor: pointer" shape="poly" coords="45,150,54,154,54,165,45,169,36,165,36,154" alt="#999966" /><area
+      style="cursor: pointer" shape="poly" coords="63,150,72,154,72,165,63,169,54,165,54,154" alt="#CCCC00" /><area
+      style="cursor: pointer" shape="poly" coords="81,150,90,154,90,165,81,169,72,165,72,154" alt="#FFFF00" /><area
+      style="cursor: pointer" shape="poly" coords="99,150,108,154,108,165,99,169,90,165,90,154" alt="#FFCC00" /><area
+      style="cursor: pointer" shape="poly" coords="117,150,126,154,126,165,117,169,108,165,108,154"
+      alt="#FF9933" /><area style="cursor: pointer" shape="poly"
+      coords="135,150,144,154,144,165,135,169,126,165,126,154" alt="#FF6600" /><area style="cursor: pointer"
+      shape="poly" coords="153,150,162,154,162,165,153,169,144,165,144,154" alt="#FF5050" /><area
+      style="cursor: pointer" shape="poly" coords="171,150,180,154,180,165,171,169,162,165,162,154"
+      alt="#CC0066" /><area style="cursor: pointer" shape="poly"
+      coords="189,150,198,154,198,165,189,169,180,165,180,154" alt="#660033" /><area style="cursor: pointer"
+      shape="poly" coords="54,165,63,169,63,180,54,184,45,180,45,169" alt="#996633" /><area style="cursor: pointer"
+      shape="poly" coords="72,165,81,169,81,180,72,184,63,180,63,169" alt="#CC9900" /><area style="cursor: pointer"
+      shape="poly" coords="90,165,99,169,99,180,90,184,81,180,81,169" alt="#FF9900" /><area style="cursor: pointer"
+      shape="poly" coords="108,165,117,169,117,180,108,184,99,180,99,169" alt="#CC6600" /><area style="cursor: pointer"
+      shape="poly" coords="126,165,135,169,135,180,126,184,117,180,117,169" alt="#FF3300" /><area
+      style="cursor: pointer" shape="poly" coords="144,165,153,169,153,180,144,184,135,180,135,169"
+      alt="#FF0000" /><area style="cursor: pointer" shape="poly"
+      coords="162,165,171,169,171,180,162,184,153,180,153,169" alt="#CC0000" /><area style="cursor: pointer"
+      shape="poly" coords="180,165,189,169,189,180,180,184,171,180,171,169" alt="#990033" /><area
+      style="cursor: pointer" shape="poly" coords="63,180,72,184,72,195,63,199,54,195,54,184" alt="#663300" /><area
+      style="cursor: pointer" shape="poly" coords="81,180,90,184,90,195,81,199,72,195,72,184" alt="#996600" /><area
+      style="cursor: pointer" shape="poly" coords="99,180,108,184,108,195,99,199,90,195,90,184" alt="#CC3300" /><area
+      style="cursor: pointer" shape="poly" coords="117,180,126,184,126,195,117,199,108,195,108,184"
+      alt="#993300" /><area style="cursor: pointer" shape="poly"
+      coords="135,180,144,184,144,195,135,199,126,195,126,184" alt="#990000" /><area style="cursor: pointer"
+      shape="poly" coords="153,180,162,184,162,195,153,199,144,195,144,184" alt="#800000" /><area
+      style="cursor: pointer" shape="poly" coords="171,180,180,184,180,195,171,199,162,195,162,184"
+      alt="#993333" /></map>
+
+  <script>
+    // Initialize function that will be called when law data is ready
+    window.showLawViewer = function(data) {
+      // Show the viewer components
+      document.getElementById('viewer-toolbar').style.display = 'block';
+      document.getElementById('viewer-content').style.display = 'block';
+
+      // Hide the API section
+      document.getElementById('app').style.display = 'none';
+
+      // Set the content
+      document.getElementById('content').innerHTML = data.content;
+      document.title = data.lawTitle;
+
+      // Trigger viewer initialization
+      if (window.initialize) {
+        window.initialize();
+      }
+
+      // Call HTML-based initialization
+      initializeViewerEvents();
+
+      // Initialize breadcrumb navigation (DOM更新を待ってから確実に実行)
+      // requestAnimationFrameを使用してDOM更新完了を待つ
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (window.initializeBreadcrumbNavigation) {
+            window.initializeBreadcrumbNavigation();
+          }
+        });
+      });
+    };
+
+    // HTML-based viewer event initialization (from original viewer.html)
+    const initializeViewerEvents = () => {
+      // 括弧のイベント
+      const addBracketEvent = (span) => {
+        if (!span.classList.contains("bracket")) return;
+        span.addEventListener("mouseover", (e) => {
+          const container = e.target.closest("span.bracket");
+          container.style.backgroundColor = "lemonchiffon";
+          Array.from(container.querySelectorAll("span.bracket")).forEach(
+            (childSpan) => {
+              childSpan.style.backgroundColor = "lemonchiffon";
+            }
+          );
+        });
+        span.addEventListener("mouseout", (e) => {
+          const container = e.target.closest("span.bracket");
+          container.style.removeProperty("background-color");
+          Array.from(container.querySelectorAll("span.bracket")).forEach(
+            (childSpan) => {
+              childSpan.style.removeProperty("background-color");
+            }
+          );
+        });
+        span.addEventListener("click", (e) => {
+          if (e.target.closest("span.defined, a")) return;
+          const bracketSpan = e.target.closest("span.bracket");
+          if (!bracketSpan) return;
+
+          bracketSpan.id = "tempAbbr";
+          const abbr = document.createElement("span");
+          abbr.setAttribute("outerHTML", span.outerHTML);
+          abbr.classList.add("abbr");
+          abbr.textContent = `${bracketSpan.textContent.slice(0, 1)}...${bracketSpan.textContent.slice(-1)}`;
+          addBracketAbbrEvent(abbr);
+          bracketSpan.replaceWith(abbr);
+
+          e.stopPropagation();
+        });
+      };
+
+      const addBracketAbbrEvent = (abbr) => {
+        abbr.addEventListener("click", (e) => {
+          e.target.outerHTML = e.target.getAttribute("outerHTML");
+
+          const span = document.getElementById("tempAbbr");
+          span.removeAttribute("id");
+          span.style.removeProperty("background-color");
+
+          addBracketEvent(span);
+          [...span.querySelectorAll("span.bracket")].forEach((childSpan) => {
+            addBracketEvent(childSpan);
+          });
+          [...span.querySelectorAll("span.abbr")].forEach((childAbbr) => {
+            addBracketAbbrEvent(childAbbr);
+          });
+
+          e.stopPropagation();
+        });
+      };
+
+      [...document.querySelectorAll("span.bracket")].forEach((span) => {
+        addBracketEvent(span);
+      });
+
+      function zenkaku2Hankaku(str) {
+        return str.replace(/[Ａ-Ｚａ-ｚ０-９－]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
+        });
+      }
+
+      const articleJump = document.getElementById("article_jump");
+      if (articleJump) {
+        articleJump.addEventListener("keypress", (e) => {
+          if (e.keyCode !== 13) return;
+          e.target.value = zenkaku2Hankaku(e.target.value);
+          const element = document.querySelector(`a[name="article${e.target.value}"]`);
+          if (element) { element.scrollIntoView(); }
+        });
+      }
+
+      // Comment toggle functionality
+      const commentToggle = document.getElementById('comment_toggle');
+      if (commentToggle) {
+        commentToggle.addEventListener('click', () => {
+          const commentContainer = document.getElementById('comment_container');
+          if (commentContainer) {
+            if (commentContainer.style.display === 'none') {
+              commentContainer.style.display = 'block';
+              commentToggle.textContent = 'コメント非表示';
+            } else {
+              commentContainer.style.display = 'none';
+              commentToggle.textContent = 'コメント表示切替';
+            }
+          }
+        });
+      }
+
+      // Tooltip functionality
+      let tooltipElem;
+      document.onclick = (event) => {
+        if (tooltipElem) {
+          if (!event.target.closest(".tooltip")) {
+            tooltipElem.remove();
+            tooltipElem = null;
+            return;
+          } else {
+            return;
+          }
+        }
+
+        let target = event.target.closest("[data-tooltip]");
+        if (!target) return;
+
+        let tooltipHtml = target.dataset.tooltip;
+        if (!tooltipHtml) return;
+
+        tooltipElem = document.createElement('div');
+        tooltipElem.className = 'tooltip';
+        tooltipElem.innerHTML = tooltipHtml;
+        document.body.append(tooltipElem);
+
+        let coords = target.getBoundingClientRect();
+
+        let left = coords.left + (target.offsetWidth - tooltipElem.offsetWidth) / 2;
+        if (left < 0) left = 0;
+
+        let top = coords.top + 20;
+        if (top < 0) {
+          top = coords.top + target.offsetHeight + 5;
+        }
+
+        tooltipElem.style.left = left + 'px';
+        tooltipElem.style.top = top + 'px';
+      };
+    };
+
+    // Browser compatibility check (from original viewer.html)
+    if (
+      window.navigator.userAgent.indexOf(".NET") !== -1 ||
+      window.navigator.userAgent.indexOf("Chrome/64") !== -1
+    ) {
+      alert(
+        "業務用PCではFirefoxのみ、セキュアPCではInternet Explorer以外でのみ正しく動作します。"
+      );
+    }
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "sourceMap": true,
+    "target": "ES2020",
+    "module": "ES2015",
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "lib": [
+      "ES2023",
+      "DOM"
+    ],
+    "paths": {
+      "@api/*": ["./src/api/*"],
+      "@viewer/*": ["./src/viewer/*"],
+      "@/*": ["./src/*"]
+    },
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+    "noUnusedLocals": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "allowJs": true
+  },
+  "include": [
+    "./src/**/*"
+  ]
+}
