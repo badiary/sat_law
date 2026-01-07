@@ -6,6 +6,7 @@ import logger from "@api/lib/utils/logger";
 import { useEffect, useState } from "react";
 import { Result } from "@api/types/result";
 import APIError from "./apiError";
+import { renderLaw } from "@api/typescript-renderer";
 
 // Window インターフェースを拡張してshowLawViewer関数を追加
 declare global {
@@ -65,6 +66,23 @@ export default function Law({
     }, []);
     useEffect(() => {
         if (response && response.result && response.result.isSuccess) {
+            // TypeScript版のレンダラーを使用してHTML生成
+            const laws = getLawComponentData(response.result.value.lawFullText);
+            const lawHtml = renderLaw({
+                Law: [{
+                    LawNum: [laws.lawNum],
+                    LawBody: [laws.lawBody]
+                }],
+                ":@": response.result.value.lawFullText[":@"]
+            });
+
+            // #appにHTMLを設定
+            const appElement = document.getElementById("app");
+            if (appElement) {
+                appElement.innerHTML = lawHtml;
+            }
+
+            // parseLaw関数でHTMLを加工
             const data = parseLaw(document.getElementById("app")?.innerHTML!, response.chikujo);
 
             // 統合HTMLページのshowLawViewer関数を直接呼び出し
@@ -82,27 +100,10 @@ export default function Law({
 
     if (response.result.isSuccess) {
         if (!response.result.value.lawFullText) {
-            // throw Error("法令データがありません。");
-            return <span>法令データが存在しません。</span>
+            return <span>法令データが存在しません。</span>;
         }
-        const laws = getLawComponentData(response.result.value.lawFullText);
-        return (
-            <>
-                {response.chikujo && <div>逐条解説データ：{response.chikujo!.match(/^[^\r\n]*/)![0]}</div>}
-                <EnforcementDate
-                    amendmentPromulgateDate={response.result.value.lawFullText[":@"].AmendmentPromulgateDate}
-                    enforcementDate={response.result.value.lawFullText[":@"].EnforcementDate}
-                    className="truncate"
-                />
-                <LawComponent
-                    lawNum={laws.lawNum}
-                    lawBody={laws.lawBody}
-                    lawTitle={laws.lawTitle}
-                    treeElement={[]}
-                    lawRevisionId={response.result.value.revisionInfo?.lawRevisionId ?? ""}
-                />
-            </>
-        );
+        // TypeScript版レンダラーを使用してHTMLを生成（useEffect内で実行）
+        return <span style={{ display: 'none' }}>法令データを処理中...</span>;
     } else {
         return <APIError message={response.result.error.message}></APIError>;
     }
