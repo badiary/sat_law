@@ -2,41 +2,47 @@
 
 ## プロジェクト概要
 
-現在、統合法令閲覧システムではe-gov法令APIからXMLデータを取得し、Reactを使ってHTMLをレンダリングした後、そのHTMLを通常のJavaScriptで処理する構造になっています。このプロジェクトの目的は、**Reactを完全に脱却し、Node.js（TypeScript）で同じHTMLを出力できるようにする**ことです。
+現在、統合法令閲覧システム（Webツール）ではe-gov法令APIからXMLデータを取得し、Reactを使ってHTMLをレンダリングした後、そのHTMLを通常のJavaScriptで処理する構造になっています。このプロジェクトの目的は、**Webツール内でReactを完全に脱却し、純粋なTypeScript関数で同じHTMLを出力できるようにする**ことです。
 
-### 現在のフロー
+### 現在のフロー（Webツール）
 
 ```
 e-gov API (XML)
   → XMLParser (fast-xml-parser)
-  → React Components (src/api/components/law/*.tsx)
+  → React Components (src/api/components/law/*.tsx)  ← ここをTypeScriptに置き換える
   → HTML生成 (#app.innerHTML)
   → parseLaw() で加工
   → window.showLawViewer() に渡す
   → ビューア表示
 ```
 
-### 目指すフロー
+### 目指すフロー（Webツール）
 
 ```
-ローカルXMLファイル (all_xml/**/*.xml)
-  → XMLParser
-  → TypeScript変換関数（Reactなし）
-  → HTML出力
-  → 既存のビューアで表示
+e-gov API (XML)
+  → XMLParser (fast-xml-parser)
+  → TypeScript変換関数（Reactなし、ブラウザで動作）  ← 新しい実装
+  → HTML生成 (#app.innerHTML)
+  → parseLaw() で加工
+  → window.showLawViewer() に渡す
+  → ビューア表示
 ```
 
 ## 最終ゴール
 
-**Node.js環境（ブラウザなし）でXMLファイルから「これまでのReactが生成していたHTML」と完全に同一のHTMLを出力できるTypeScriptコードを作成する。**
+**Webツール（ブラウザ環境）で動作する法令閲覧システムから、React依存を完全に除去する。具体的には、`src/api/components/law/*.tsx`のReactコンポーネントを、`src/node-renderer/typescript-renderer.ts`で実装したTypeScript関数に置き換え、ブラウザ上で同じHTMLを生成できるようにする。**
+
+## 検証のための3ステップ（完了）
+
+ステップ1-3では、Webツールへの実装前に、Node.js環境で両者が同一のHTML出力を生成できることを検証しました。この検証により、TypeScript実装の正確性が保証されました。
 
 ---
 
-## 実装の3ステップ
+## 実装の4ステップ
 
-### ステップ1: Node.jsでReactのHTML出力を再現する環境構築 ✅ **完了**
+### ステップ1: Node.jsでReactのHTML出力を再現する環境構築 ✅ **完了**（検証ステップ）
 
-**目的**: 現在のReact実装をNode.js環境で動作させ、XMLファイルから「これまでのHTML」を出力できるようにする
+**目的**: 現在のReact実装をNode.js環境で動作させ、XMLファイルから「これまでのHTML」を出力できるようにする（検証用の正解データ作成）
 
 **成果物**:
 - `tests/test-law-ids.json` - テスト対象法令リスト（5件）
@@ -51,9 +57,9 @@ npm run generate:react-html
 
 ---
 
-### ステップ2: TypeScriptでHTMLを出力する新実装 🔄 **進行中**
+### ステップ2: TypeScriptでHTMLを出力する新実装 ✅ **完了**（検証ステップ）
 
-**目的**: Reactを使わずに、純粋なTypeScriptでXMLからHTMLを生成する
+**目的**: Reactを使わずに、純粋なTypeScriptでXMLからHTMLを生成する（検証用の実装）
 
 **方針変更（重要）**:
 - ❌ 当初計画: HTML出力からマッピング仕様を作成
@@ -154,9 +160,9 @@ npm run generate:react-html
 
 ---
 
-### ステップ3: HTMLの同一性テスト ✅ **完了**
+### ステップ3: HTMLの同一性テスト ✅ **完了**（検証ステップ）
 
-**目的**: ステップ1で生成した「これまでのHTML」とステップ2で生成した「新しいHTML」が同一であることを確認する
+**目的**: ステップ1で生成した「これまでのHTML」とステップ2で生成した「新しいHTML」が同一であることを確認する（TypeScript実装の正確性を検証）
 
 **タスク**:
 1. ✅ HTML比較ロジックの実装
@@ -176,28 +182,70 @@ npm run generate:react-html
 
 ---
 
+### ステップ4: Webツールへの適用 ⏳ **未着手**（実装ステップ）
+
+**目的**: 実際のWebツール（ブラウザ環境）で、ReactコンポーネントをTypeScript関数に置き換える
+
+**タスク**:
+1. ⏳ `src/node-renderer/typescript-renderer.ts`をブラウザ環境で動作するように移植
+   - ブラウザ用のビルド設定を追加
+   - Node.js固有のコード（fs、pathなど）を除去
+   - DOMを直接操作する版に変換
+2. ⏳ `src/api/law.tsx`の`renderLawXml`関数を、TypeScript版に置き換え
+   - 現在のReact版: `const html = renderToStaticMarkup(<Law data={parsed} />);`
+   - 新しいTypeScript版: `const html = renderLaw(parsed);`
+3. ⏳ React関連の依存関係を削除
+   - `react`、`react-dom`をpackage.jsonから削除
+   - `src/api/components/law/*.tsx`ファイルを削除（バックアップ後）
+4. ⏳ Webpackビルド設定を更新
+   - JSX/TSXトランスパイルの設定を削除
+   - バンドルサイズの最適化
+5. ⏳ ブラウザでの動作確認
+   - 開発環境でWebツールを起動
+   - 複数の法令を表示してHTMLが正しく生成されることを確認
+   - パフォーマンス測定（React版と比較）
+
+**成果物**（予定）:
+- `src/api/typescript-renderer.ts` - ブラウザ版のTypeScriptレンダラー
+- 更新された`src/api/law.tsx` - TypeScript版を使用
+- 更新された`package.json` - React依存を削除
+- 更新された`webpack.config.js` - ビルド設定の最適化
+- パフォーマンスレポート
+
+**期待される効果**:
+- バンドルサイズの削減（React/ReactDOMが不要）
+- ビルド時間の短縮
+- 実行速度の向上（仮想DOM不要）
+- メンテナンス性の向上（TypeScriptのみ）
+
+---
+
 ## 現在の進捗状況
 
-### ✅ 完了（ステップ1）
-- ✅ プロジェクト概要の理解
-- ✅ XMLファイルの存在確認（all_xml/フォルダに100件以上）
-- ✅ XMLスキーマファイルの確認（XMLSchemaForJapaneseLaw_v3.xsd）
-- ✅ 既存のReactコンポーネント構造の把握（src/api/components/law/*.tsx）
-- ✅ 既存のAPI処理の理解（src/api/lib/api/get-law-data.ts）
-- ✅ parseLaw関数の理解（src/api/law.tsx: 114-1056行）
-- ✅ **ステップ1: Node.jsでReact SSR環境構築**
-  - ✅ テスト対象XMLファイル選定完了（5件）
-  - ✅ React SSRスクリプト作成完了
-  - ✅ parseLaw関数のNode.js移植完了
-  - ✅ 5件のXMLから正解HTML生成完了（18KB〜1.2MB）
+### ✅ 完了（ステップ1-3: 検証フェーズ）
+- ✅ **ステップ1**: Node.jsでReact SSR環境構築
+  - React SSRスクリプト作成
+  - parseLaw関数のNode.js移植
+  - 10,514件のXMLから正解HTML生成完了
+- ✅ **ステップ2**: TypeScript版HTML生成実装
+  - 全法令要素のレンダリング関数実装完了
+  - Article、Paragraph、Item、Table、SupplProvision等すべて対応
+  - `src/node-renderer/typescript-renderer.ts` 完成
+- ✅ **ステップ3**: HTMLの同一性テスト
+  - 10,514件すべてでReact版とTypeScript版が完全一致を確認
+  - テスト自動化ツール一式完成（test:all、test:reset等）
+  - **検証完了: TypeScript実装の正確性を保証**
 
-### 🎯 次のアクション
+### 🎯 次のアクション（ステップ4: 実装フェーズ）
 
-**ステップ2の開始準備**:
-1. 最も単純な法令（141AC0000000057: 386行）からTypeScript実装を開始
-2. Reactコンポーネントの構造を分析し、XML→HTMLのマッピング表を作成
-3. 基本的な法令要素（Article, Paragraph, Item）の変換関数を実装
-4. 段階的に複雑な要素（Table, SupplProvision等）を追加
+**Webツールへの適用準備**:
+1. `typescript-renderer.ts`のブラウザ版移植
+   - Node.js固有のコードを除去
+   - ブラウザで動作するように調整
+2. `src/api/law.tsx`でTypeScript版に切り替え
+   - React版の呼び出しをTypeScript版に置き換え
+3. 動作確認とパフォーマンス測定
+4. React依存の完全除去
 
 ---
 
@@ -385,3 +433,8 @@ const xp = new XMLParser({
   - ✅ 全10,514件のテストを完走し、100%パス達成（失敗: 0件、未テスト: 0件）
   - ✅ React SSR版とTypeScript版のHTML生成が完全に同一であることを実証
   - 📊 最終結果: **総テスト数: 10,514件 / パス: 10,514件 / 失敗: 0件 / 未テスト: 0件**
+- 2026-01-07 06:00: **ドキュメント更新 - プロジェクトゴールの明確化**
+  - プロジェクト概要を更新：Node.js検証→Webツールへの適用という正しいゴールを反映
+  - ステップ1-3を「検証フェーズ」として明確化
+  - ステップ4「Webツールへの適用」を追加（実装フェーズ）
+  - 最終ゴール：ブラウザ環境でReact依存を完全除去
