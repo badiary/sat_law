@@ -191,19 +191,16 @@ const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string
       return renderLawTypeList(quoteStructList, treeElement, 'QuoteStruct');
     } else if ('ArithFormula' in dt) {
       // 算術式 - React側と同じく<div class="pl-4">でラップ
-      // TODO: 【暫定対応】React SSR（beautify処理）がSub/Supタグとその内容を削除している
-      // 本来はXML仕様に従い、Sub/Supタグを<sub>/<sup>として適切にレンダリングすべき
-      // 現在はReact HTMLとの一致を優先してSub/Sup内容を削除しているが、将来的に復活させるべき
-      // 参考: KNOWN_ISSUES.md の「ArithFormula Sub/Supタグ削除問題」を参照
+      // Sub/Supタグを正しく<sub>/<sup>として出力（e-gov法令API仕様に準拠）
       const arithContent = dt.ArithFormula.map((item: any) => {
         if ('Sub' in item) {
-          // 【暫定】Subタグとその内容を完全削除（React SSRの挙動に合わせる）
-          // 【本来あるべき姿】<sub class="Sub">{text}</sub> として出力すべき
-          return '';
+          // 下付き文字を適切に出力
+          const text = getType<TextType>(item.Sub, '_')[0]._;
+          return tag('sub', { class: 'Sub' }, text);
         } else if ('Sup' in item) {
-          // 【暫定】Supタグとその内容を完全削除（React SSRの挙動に合わせる）
-          // 【本来あるべき姿】<sup class="Sup">{text}</sup> として出力すべき
-          return '';
+          // 上付き文字を適切に出力
+          const text = getType<TextType>(item.Sup, '_')[0]._;
+          return tag('sup', { class: 'Sup' }, text);
         } else if ('Fig' in item) {
           // ArithFormula内のFigを処理
           return renderFig(item, treeElement);

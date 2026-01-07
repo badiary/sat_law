@@ -2,11 +2,11 @@
 
 このファイルは、プロジェクトで認識されている技術的な問題や暫定対応をドキュメント化したものです。
 
-## ArithFormula Sub/Supタグ削除問題
+## ArithFormula Sub/Supタグ削除問題 ✅ **解決済み**
 
 ### 問題の概要
 
-化学式などを表すArithFormula要素において、React SSR生成のHTMLではSub（下付き文字）およびSup（上付き文字）タグとその内容が完全に削除されています。
+化学式などを表すArithFormula要素において、React SSR生成のHTMLではSub（下付き文字）およびSup（上付き文字）タグとその内容が完全に削除されていました。TypeScript版も当初はReact版との一致を優先してこの動作を踏襲していましたが、ステップ5で正しいHTML出力に修正しました。
 
 ### 詳細
 
@@ -37,25 +37,31 @@ React SSR生成プロセス（特にbeautify処理）において、Sub/Supタ�
 3. beautifyプロセスでSub/Supタグが不正なタグとして削除される
 4. タグの内容も一緒に削除される
 
-### 現在の暫定対応
+### 解決内容（2026-01-08）
 
 **影響範囲:**
-- `src/node-renderer/typescript-renderer.ts` の `renderTextNode` 関数（180-201行）
+- `src/node-renderer/typescript-renderer.ts` の `renderTextNode` 関数（192-212行）
+- `src/api/typescript-renderer.ts` の `renderTextNode` 関数（192-212行）
 
-**対応内容:**
-- TypeScript版のレンダラーでも、Sub/Supタグの内容を完全に削除してReact HTMLと一致させる
-- 本来はXML仕様に従い、`<sub class="Sub">` および `<sup class="Sup">` として適切にレンダリングすべき
+**修正内容:**
+- TypeScript版レンダラーでSub/Supタグを適切に出力するように修正
+- e-gov法令API仕様に準拠し、`<sub class="Sub">{content}</sub>` および `<sup class="Sup">{content}</sup>` として正しくレンダリング
+- React版は修正せず（既にReactは完全削除済み）、TypeScript版のみが正しいHTML出力を行う
 
-**コード:**
+**修正後のコード:**
 ```typescript
 } else if ('ArithFormula' in dt) {
+  // 算術式 - React側と同じく<div class="pl-4">でラップ
+  // Sub/Supタグを正しく<sub>/<sup>として出力（e-gov法令API仕様に準拠）
   const arithContent = dt.ArithFormula.map((item: any) => {
     if ('Sub' in item) {
-      // 【暫定】Subタグとその内容を完全削除
-      return '';
+      // 下付き文字を適切に出力
+      const text = getType<TextType>(item.Sub, '_')[0]._;
+      return tag('sub', { class: 'Sub' }, text);
     } else if ('Sup' in item) {
-      // 【暫定】Supタグとその内容を完全削除
-      return '';
+      // 上付き文字を適切に出力
+      const text = getType<TextType>(item.Sup, '_')[0]._;
+      return tag('sup', { class: 'Sup' }, text);
     } else if ('_' in item) {
       return item._;
     }
@@ -65,32 +71,25 @@ React SSR生成プロセス（特にbeautify処理）において、Sub/Supタ�
 }
 ```
 
-### 将来の対応方針
+### 結果
 
-1. **React SSR側の修正:**
-   - React側のArithFormulaレンダリングを確認
-   - beautifyの設定を調整して、Sub/Supタグを保持するようにする
-   - または、beautify前にSub/Supタグを適切な形式に変換する
-
-2. **TypeScript側の修正:**
-   - React SSR側が修正されたら、TypeScript側も適切にSub/Supタグをレンダリングする
-   - `<sub class="Sub">{content}</sub>` および `<sup class="Sup">{content}</sup>` として出力する
-
-3. **テストの更新:**
-   - React SSR側の修正後、テストケースを更新して正しいHTML出力を検証する
+- ✅ 化学式や数式の下付き・上付き文字が正しく表示される
+- ✅ e-gov法令API仕様に準拠した正しいHTML出力を実現
+- ✅ ブラウザ版、Node.js版の両方で修正完了
+- ✅ ビルド成功（バンドルサイズ変化なし: 179 KiB）
 
 ### 参考情報
 
-- **影響を受けるテストケース:** `143AC0000000054_20250401_507AC0000000016`
+- **影響を受ける法令:** ArithFormulaを含む法令（例: `143AC0000000054_20250401_507AC0000000016`）
 - **関連ファイル:**
-  - `src/node-renderer/typescript-renderer.ts` (180-201行)
-  - `src/node-renderer/test-single-law.ts` (89-109行：ArithFormula内の括弧処理保護)
+  - `src/node-renderer/typescript-renderer.ts` (192-212行)
+  - `src/api/typescript-renderer.ts` (192-212行)
 - **e-gov法令API仕様:** ArithFormula要素はSub/Supタグを含むことができる
-- **HTMLタグ仕様:** `<sub>` および `<sup>` は標準的なHTMLタグであり、本来保持されるべき
+- **HTMLタグ仕様:** `<sub>` および `<sup>` は標準的なHTMLタグ
 
 ### 備考
 
-この問題は、現在のプロジェクト目的である「React SSR出力との完全一致」のために暫定的に対応していますが、将来的には正しいHTML出力（Sub/Supタグの保持）に戻すべきです。
+ステップ4でReactを完全削除した後、ステップ5で本来あるべき正しいHTML出力に修正しました。これにより、ユーザーは化学式や数式を正確に閲覧できるようになりました。
 
 ---
 
