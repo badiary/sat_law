@@ -470,8 +470,15 @@ export function parseLaw(inputHTML: string, chikujo: string | undefined): { lawT
 
   Array.from(content.querySelectorAll("div._div_ArticleTitle")).forEach(
     (div) => {
-      const a = div.querySelector("a")!;
-      a.setAttribute("name", `${a.getAttribute("href")!.substring(1)}`);
+      const a = div.querySelector("a");
+      if (!a) {
+        console.warn("ArticleTitle div without anchor found:", div.innerHTML.substring(0, 100));
+        return;
+      }
+      const href = a.getAttribute("href");
+      if (href) {
+        a.setAttribute("name", href.substring(1));
+      }
     }
   );
 

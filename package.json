@@ -8,9 +8,15 @@
     "watch": "webpack -w --mode=development",
     "build:api": "webpack --config webpack.config.js --env entry=api",
     "build:viewer": "webpack --config webpack.config.js --env entry=viewer",
-    "generate:react-html": "tsx src/node-renderer/react-ssr.ts",
     "generate:typescript-html": "tsx src/node-renderer/generate-typescript-html.ts",
-    "format:html": "tsx src/node-renderer/format-html.ts"
+    "format:html": "tsx src/node-renderer/format-html.ts",
+    "generate:all-react-html": "tsx src/node-renderer/generate-all-react-html.ts",
+    "test:single": "node --max-old-space-size=16384 --expose-gc ./node_modules/tsx/dist/cli.mjs src/node-renderer/test-single-law.ts",
+    "test:next": "node --max-old-space-size=16384 --expose-gc ./node_modules/tsx/dist/cli.mjs src/node-renderer/test-single-law.ts next",
+    "test:next-unpassed": "node --max-old-space-size=16384 --expose-gc ./node_modules/tsx/dist/cli.mjs src/node-renderer/test-next-unpassed.ts",
+    "test:stats": "tsx src/node-renderer/update-test-status.ts stats",
+    "test:reset": "tsx src/node-renderer/reset-test-status.ts",
+    "test:all": "tsx src/node-renderer/run-all-tests.ts"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",

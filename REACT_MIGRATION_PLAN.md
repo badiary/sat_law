@@ -80,61 +80,99 @@ npm run generate:react-html
 - `renderColumn()` - Column要素のHTML変換
 - `renderParagraphSentence()` - 項文のHTML変換
 - `renderItemSentence()` - 号文のHTML変換
-- `renderItem()` - 号のHTML変換
+- `renderItem()` - 号のHTML変換（Subitem1対応済み）
 - `renderParagraph()` - 項のHTML変換
 - `renderArticle()` - 条のHTML変換
-- `renderSection()` - **節のHTML変換（NEW!）**
-- `renderChapter()` - **章のHTML変換（NEW!）**
-- `renderPart()` - **編のHTML変換（NEW!）**
+- `renderSection()` - 節のHTML変換
+- `renderChapter()` - 章のHTML変換
+- `renderPart()` - 編のHTML変換
 - `renderMainProvision()` - 本則のHTML変換
 - `renderSupplProvision()` - 附則のHTML変換
-- `renderArticleRange()` - **条範囲のHTML変換（NEW!）**
-- `renderTOCArticle()` - **目次条のHTML変換（NEW!）**
-- `renderTOCSection()` - **目次節のHTML変換（NEW!）**
-- `renderTOCChapter()` - **目次章のHTML変換（NEW!）**
-- `renderTOCPart()` - **目次編のHTML変換（NEW!）**
-- `renderTOCSupplProvision()` - **目次附則のHTML変換（NEW!）**
-- `renderTOCAppdxTableLabel()` - **目次別表ラベルのHTML変換（NEW!）**
-- `renderTOC()` - **目次全体のHTML変換（NEW!）**
+- `renderArticleRange()` - 条範囲のHTML変換
+- `renderTOCArticle()` - 目次条のHTML変換
+- `renderTOCSection()` - 目次節のHTML変換
+- `renderTOCChapter()` - 目次章のHTML変換
+- `renderTOCPart()` - 目次編のHTML変換
+- `renderTOCSupplProvision()` - 目次附則のHTML変換
+- `renderTOCAppdxTableLabel()` - 目次別表ラベルのHTML変換
+- `renderTOC()` - 目次全体のHTML変換
 - `renderLawBody()` - 法令本文のHTML変換
 - `renderLaw()` - 法令全体のHTML変換
+- **`renderSubitem1()` - 号細分（イ、ロ、ハ…）のHTML変換（NEW!）**
+- **`renderSubitem2()` - 号細分２のHTML変換（NEW!）**
+- **`renderSubitem3()` - 号細分３のHTML変換（NEW!）**
+- **`renderSubitem4()` - 号細分４のHTML変換（NEW!）**
+- **`renderSubitem5()` - 号細分５のHTML変換（NEW!）**
+- **`renderSubitem6()` - 号細分６のHTML変換（NEW!）**
+- **`renderSubitem7()` - 号細分７のHTML変換（NEW!）**
+- **`renderSubitem8()` - 号細分８のHTML変換（NEW!）**
+- **`renderSubitem9()` - 号細分９のHTML変換（NEW!）**
+- **`renderSubitem10()` - 号細分１０のHTML変換（NEW!）**
+- **`renderSubitem1Sentence()` - 号細分文のHTML変換（NEW!）**
+- **`renderSubitem2Sentence()` - 号細分２文のHTML変換（NEW!）**
+- **`renderSubitem3Sentence()` - 号細分３文のHTML変換（NEW!）**
+- **`renderSubitem4Sentence()` - 号細分４文のHTML変換（NEW!）**
+- **`renderSubitem5Sentence()` - 号細分５文のHTML変換（NEW!）**
+- **`renderSubitem6Sentence()` - 号細分６文のHTML変換（NEW!）**
+- **`renderSubitem7Sentence()` - 号細分７文のHTML変換（NEW!）**
+- **`renderSubitem8Sentence()` - 号細分８文のHTML変換（NEW!）**
+- **`renderSubitem9Sentence()` - 号細分９文のHTML変換（NEW!）**
+- **`renderSubitem10Sentence()` - 号細分１０文のHTML変換（NEW!）**
+- **`isParentParagraphPreceding()` - 親要素のParagraph判定ヘルパー（NEW!）**
+- **`renderRelatedArticleNum()` - 関係条文番号のHTML変換（NEW!）**
+- **`renderRemarks()` - 備考のHTML変換（NEW!）**
+- **`renderTableHeaderColumn()` - 表欄名のHTML変換（NEW!）**
+- **`renderTableHeaderRow()` - 表欄名項のHTML変換（NEW!）**
+- **`renderTableColumn()` - 表欄のHTML変換（NEW!）**
+- **`renderTableRow()` - 表項のHTML変換（NEW!）**
+- **`renderTable()` - 表全体のHTML変換（NEW!）**
+- **`renderAppdxTable()` - 別表のHTML変換（NEW!）**
+- **`getBorderStyle()` - テーブルボーダースタイル生成ヘルパー（NEW!）**
 
-**未実装要素**（現在スキップ中）:
+**実装完了要素**:
 - ✅ ~~SupplProvision（附則）~~ - **実装完了！**
 - ✅ ~~Chapter（章）、Part（編）、Section（節）~~ - **実装完了！**
 - ✅ ~~TOC（目次）~~ - **実装完了！**
-- Preamble（前文）、EnactStatement（制定文） - 一部の法令に必要 ⚠️ 優先度：中
-- AppdxTable（別表）、AppdxNote（別記）、Appdx（別図）等 - 附則の付属要素 ⚠️ 優先度：中
-- Table（表）、QuoteStruct（引用）、ArithFormula（算術式） - 特定の法令に必要 ⚠️ 優先度：低
+- ✅ ~~Subitem1～10（号細分：イ、ロ、ハ…）~~ - **実装完了！**
+- ✅ ~~Table（表）、TableStruct、AppdxTable（別表）~~ - **実装完了！**
+- ✅ ~~Remarks（備考）、RelatedArticleNum（関係条文番号）~~ - **実装完了！**
+
+**未実装要素**（テスト法令5件には含まれない）:
+- Preamble（前文）、EnactStatement（制定文） - 一部の法令に必要
+- AppdxNote（別記）、Appdx（別図）、AppdxStyle（別式）等 - 附則の付属要素
+- QuoteStruct（引用）、ArithFormula（算術式）、FigStruct（図）等 - 特殊要素
 
 **進捗状況**:
-- ✅ **最も単純な法令（141AC0000000057）でReact版とTypeScript版が完全一致！**
-  - ファイルサイズ: 両方とも18KB
-  - `diff`コマンドで確認済み - 差分なし
-  - TOC実装後も一致を維持
-- ✅ 複雑な法令のファイルサイズが大幅改善
-  - 323AC0000000075: React版101KB、TypeScript版79KB（**78%**）
-  - 326AC1000000285: React版135KB、TypeScript版133KB（**99%**）
-  - 405AC0000000088: React版141KB、TypeScript版134KB（**95%**）
-  - 334AC0000000121: React版1.2MB、TypeScript版1.1MB（**92%**）
-- ⏳ 約5-20KBの差があり、まだ未実装要素がある
+- 🎉 **Table/AppdxTable実装により全5ファイルで100%一致達成！**
+  - 141AC0000000057: 19KB（**100%一致**）✅
+  - 323AC0000000075: 110KB（**100%一致**）✅
+  - 326AC1000000285: 139KB（**100%一致**）✅
+  - 405AC0000000088: 147KB（**100%一致**）✅
+  - 334AC0000000121: 1.2MB（**100%一致**）✅
+- ✅ **`diff`コマンドでバイト単位の完全一致を確認！**
+- ✅ **テスト対象5件すべてでReact版とTypeScript版が完全同一のHTMLを生成**
 
 ---
 
-### ステップ3: HTMLの同一性テスト ⏳ **未着手**
+### ステップ3: HTMLの同一性テスト ✅ **完了**
 
 **目的**: ステップ1で生成した「これまでのHTML」とステップ2で生成した「新しいHTML」が同一であることを確認する
 
 **タスク**:
-1. HTML比較ロジックの実装
-2. 複数のlawIdで一括テストを実行
-3. 差分がある場合、詳細なdiffを出力
-4. テストが通るまでステップ2のコードを修正
-5. 全テスト通過を確認
+1. ✅ HTML比較ロジックの実装
+2. ✅ 複数のlawIdで一括テストを実行
+3. ✅ 差分がある場合、詳細なdiffを出力
+4. ✅ テストが通るまでステップ2のコードを修正
+5. ✅ 全テスト通過を確認（**10,514件すべて**）
 
-**成果物**（予定）:
-- `tests/html-comparison.test.ts` - HTML比較テスト
-- テストレポート
+**成果物**:
+- `tests/test-status.csv` - テスト状態管理CSV（全10,514件）
+- `src/node-renderer/test-single-law.ts` - 個別テスト実行スクリプト
+- `src/node-renderer/test-next-unpassed.ts` - 未パステスト自動実行
+- `src/node-renderer/update-test-status.ts` - テスト統計ツール
+- `src/node-renderer/reset-test-status.ts` - テストステータスリセットツール
+- `src/node-renderer/run-all-tests.ts` - 全テスト自動実行スクリプト
+- テストレポート: **10,514件全テストパス（100%）**
 
 ---
 
@@ -324,3 +362,26 @@ const xp = new XMLParser({
 - 2026-01-02 07:30: **SupplProvision実装完了** - 附則のレンダリング関数追加、最も単純な法令でReact版と完全一致を確認！
 - 2026-01-02 07:35: **Chapter/Part/Section実装完了** - 階層構造のレンダリング関数追加、複雑な法令のファイルサイズが大幅改善（92-98%）
 - 2026-01-02 07:40: **TOC（目次）実装完了** - 9つのTOC関連レンダリング関数追加、行政手続法が95%一致（134KB/141KB）
+- 2026-01-02 11:00: **HTMLフォーマッター実装** - js-beautifyを使用してHTMLを整形、差分比較が容易に
+- 2026-01-02 11:05: **Subitem1～10実装完了** - 21個の号細分関連レンダリング函数追加、**4/5ファイルで100%一致達成！**（141AC0000000057、326AC1000000285、405AC0000000088、334AC0000000121）
+- 2026-01-02 11:15: **Table/AppdxTable実装完了** - 11個の表関連レンダリング関数追加、**🎉 全5ファイルで100%一致達成！**（TableStruct構造の理解とParagraph内TableStruct処理により完全一致を実現）
+- 2026-01-02 12:00: **ステップ3開始** - 全XMLファイル（10,514件）のテスト体制構築
+  - テスト状態管理CSV作成（tests/test-status.csv）
+  - 全XML一括React HTML生成スクリプト作成（バックグラウンド実行中）
+  - 個別テストフロー作成（test-single-law.ts）
+  - テスト統計ツール作成（update-test-status.ts）
+  - npmスクリプト追加（test:single, test:next, test:stats）
+- 2026-01-02 12:30: **初回テスト実行と問題発見** - 105DF0000000337でテスト実行
+  - ✅ テーブルボーダースタイル問題修正（getBorderStyle関数をborder=undefinedでも動作するよう修正）
+  - ✅ AppdxNote（別記）実装完了
+  - ✅ RemarksLabel（備考ラベル）の空div出力問題修正
+- 2026-01-06 06:00: **🎉 ステップ3完了 - 全10,514件のテストパス達成！**
+  - ✅ テストリセット機能実装（reset-test-status.ts、test:reset）
+  - ✅ 自動テスト実行機能実装（run-all-tests.ts、test:all）
+    - 既にパスしたテストは自動スキップ
+    - 連続失敗の上限設定（10回）
+    - 100件ごとの進捗レポート表示
+    - リアルタイム統計更新
+  - ✅ 全10,514件のテストを完走し、100%パス達成（失敗: 0件、未テスト: 0件）
+  - ✅ React SSR版とTypeScript版のHTML生成が完全に同一であることを実証
+  - 📊 最終結果: **総テスト数: 10,514件 / パス: 10,514件 / 失敗: 0件 / 未テスト: 0件**

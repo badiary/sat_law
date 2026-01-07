@@ -103,22 +103,11 @@ async function main() {
 
       // parseLaw関数を適用
       console.log('  parseLaw関数を適用中...');
-      const { lawTitle, content } = parseLaw(typescriptHtml, undefined);
+      const { content } = parseLaw(typescriptHtml, undefined);
 
       // HTMLファイルとして保存
       const outputPath = path.join(outputDir, `${lawInfo.lawId}.html`);
-      const fullHtml = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>${lawTitle}</title>
-</head>
-<body>
-${content}
-</body>
-</html>`;
-
-      fs.writeFileSync(outputPath, fullHtml, 'utf-8');
+      fs.writeFileSync(outputPath, content, 'utf-8');
       console.log(`  ✓ 保存完了: ${outputPath}\n`);
 
     } catch (error) {
