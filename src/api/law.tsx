@@ -1,11 +1,6 @@
-// import Link from "next/link";
-import { LawComponent } from "@api/components/law/law";
-import { EnforcementDate } from "@api/components/revision-list/revision-item";
 import { ModifiedLawdataResponse, getLawComponentData, getLawData } from "@api/lib/api/get-law-data";
 import logger from "@api/lib/utils/logger";
-import { useEffect, useState } from "react";
 import { Result } from "@api/types/result";
-import APIError from "./apiError";
 import { renderLaw } from "@api/typescript-renderer";
 
 // Window インターフェースを拡張してshowLawViewer関数を追加
@@ -28,85 +23,76 @@ const chikujoDict: { [lawid: string]: string } = {
 };
 
 /**
- * 法令画面
+ * 法令データをロードして表示
  * @param searchParams 検索条件
- * @returns {JSX.Element} 法令画面
  */
-type Response = { result: Result<ModifiedLawdataResponse>, chikujo?: string }
-export default function Law({
-    searchParams,
-}: {
-    searchParams: {
-        lawId: string;
-        asof?: string;
-    };
-}) {
+const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
     logger.info({
         message: "[law]",
     });
 
-    const [response, setResponse] = useState<Response>();
-    useEffect(() => {
-        const connect = async () => {
-            // 法令本文取得API(/lawdata)を利用した本文情報の取得
-            const response: any = {};
-            const lawData = await getLawData(searchParams);
-            response.result = lawData;
+    try {
+        // 法令本文取得API(/lawdata)を利用した本文情報の取得
+        const lawData = await getLawData(searchParams);
 
-            if (chikujoDict[searchParams.lawId.split("_")[0]]) {
-                const url = `../chikujo/chikujo_${chikujoDict[searchParams.lawId.split("_")[0]]}.txt`;
-                const chikujoData = await (
-                    fetch(url).then((response) => { return response.text() })
-                );
-                response.chikujo = chikujoData;
-            }
-            setResponse(response);
-        };
-        connect();
-    }, []);
-    useEffect(() => {
-        if (response && response.result && response.result.isSuccess) {
-            // TypeScript版のレンダラーを使用してHTML生成
-            const laws = getLawComponentData(response.result.value.lawFullText);
-            const lawHtml = renderLaw(
-                laws.lawNum,
-                laws.lawBody,
-                laws.lawTitle,
-                []
-            );
-
-            // #appにHTMLを設定
+        if (!lawData.isSuccess) {
             const appElement = document.getElementById("app");
             if (appElement) {
-                appElement.innerHTML = lawHtml;
+                appElement.innerHTML = `<span>エラー: ${lawData.error.message}</span>`;
             }
+            return;
+        }
 
-            // parseLaw関数でHTMLを加工
-            const data = parseLaw(document.getElementById("app")?.innerHTML!, response.chikujo);
-
-            // 統合HTMLページのshowLawViewer関数を直接呼び出し
-            if (window.showLawViewer) {
-                window.showLawViewer(data);
-            } else {
-                console.error("showLawViewer function not found");
+        if (!lawData.value.lawFullText) {
+            const appElement = document.getElementById("app");
+            if (appElement) {
+                appElement.innerHTML = '<span>法令データが存在しません。</span>';
             }
+            return;
         }
-    }, [response]);
 
-    if (!response) {
-        return <span>e-govの法令APIからデータを取得中...</span>;
-    }
-
-    if (response.result.isSuccess) {
-        if (!response.result.value.lawFullText) {
-            return <span>法令データが存在しません。</span>;
+        // 逐条解説データの取得
+        let chikujoData: string | undefined;
+        if (chikujoDict[searchParams.lawId.split("_")[0]]) {
+            const url = `../chikujo/chikujo_${chikujoDict[searchParams.lawId.split("_")[0]]}.txt`;
+            chikujoData = await fetch(url).then((response) => response.text());
         }
-        // TypeScript版レンダラーを使用してHTMLを生成（useEffect内で実行）
-        return <span style={{ display: 'none' }}>法令データを処理中...</span>;
-    } else {
-        return <APIError message={response.result.error.message}></APIError>;
+
+        // TypeScript版のレンダラーを使用してHTML生成
+        const laws = getLawComponentData(lawData.value.lawFullText);
+        const lawHtml = renderLaw(
+            laws.lawNum,
+            laws.lawBody,
+            laws.lawTitle,
+            []
+        );
+
+        // #appにHTMLを設定
+        const appElement = document.getElementById("app");
+        if (appElement) {
+            appElement.innerHTML = lawHtml;
+        }
+
+        // parseLaw関数でHTMLを加工
+        const data = parseLaw(document.getElementById("app")?.innerHTML!, chikujoData);
+
+        // 統合HTMLページのshowLawViewer関数を直接呼び出し
+        if (window.showLawViewer) {
+            window.showLawViewer(data);
+        } else {
+            console.error("showLawViewer function not found");
+        }
+    } catch (error) {
+        console.error("法令データの取得に失敗しました:", error);
+        const appElement = document.getElementById("app");
+        if (appElement) {
+            appElement.innerHTML = '<span>法令データの取得に失敗しました。</span>';
+        }
     }
-}
+};
+
+// エクスポート
+export { loadLaw };
 
 const parseLaw = (inputHTML: string, chikujo: string | undefined) => {
     const parseParenthesis = require("parenthesis");
