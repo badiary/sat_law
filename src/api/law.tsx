@@ -68,13 +68,12 @@ export default function Law({
         if (response && response.result && response.result.isSuccess) {
             // TypeScript版のレンダラーを使用してHTML生成
             const laws = getLawComponentData(response.result.value.lawFullText);
-            const lawHtml = renderLaw({
-                Law: [{
-                    LawNum: [laws.lawNum],
-                    LawBody: [laws.lawBody]
-                }],
-                ":@": response.result.value.lawFullText[":@"]
-            });
+            const lawHtml = renderLaw(
+                laws.lawNum,
+                laws.lawBody,
+                laws.lawTitle,
+                []
+            );
 
             // #appにHTMLを設定
             const appElement = document.getElementById("app");
