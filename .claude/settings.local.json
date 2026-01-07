@@ -3,7 +3,23 @@
     "allow": [
       "Bash(tree:*)",
       "WebFetch(domain:laws.e-gov.go.jp)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(Get-Process)",
+      "Bash(Where-Object { $_ProcessName -like \"*node*\" -or $_ProcessName -like \"*tsx*\" })",
+      "Bash(Select-Object Id, ProcessName, CPU)",
+      "Bash(Format-Table)",
+      "Bash(perl:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(tsx src/node-renderer/react-ssr.ts:*)",
+      "Bash(timeout 10 tail:*)",
+      "Bash(exit 0)",
+      "Bash(git add:*)",
+      "Bash(del nul)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

@@ -38,7 +38,6 @@ export const LawItemSentence: React.FC<{
             />
           );
         } else if ("Column" in dt) {
-          console.log(dt);
           return (
             <LawColumn
               key={`${addTreeElement(index).join("_")}`}

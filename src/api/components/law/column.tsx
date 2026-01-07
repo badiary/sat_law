@@ -13,7 +13,6 @@ export const LawColumn: React.FC<{
   columnList: ColumnType[];
   treeElement: string[];
 }> = (props) => {
-  console.log(props);
   const { columnList, treeElement } = props;
   const addTreeElement = (index: number) => [...treeElement, `Column_${index}`];
   let isLineBreak = false;

@@ -124,8 +124,7 @@ export const LawFigImage = (props: { lawRevisionId: string; src: string }) => {
         });
         image.src = blobUrl;
       })
-      .catch((e) => {
-        console.log(e);
+      .catch(() => {
         setIsLoading(false);
       });
 

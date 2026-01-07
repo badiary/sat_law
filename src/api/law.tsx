@@ -76,7 +76,6 @@ export default function Law({
         }
     }, [response]);
 
-    console.log(response);
     if (!response) {
         return <span>e-govの法令APIからデータを取得中...</span>;
     }
@@ -87,7 +86,6 @@ export default function Law({
             return <span>法令データが存在しません。</span>
         }
         const laws = getLawComponentData(response.result.value.lawFullText);
-        console.log(response);
         return (
             <>
                 {response.chikujo && <div>逐条解説データ：{response.chikujo!.match(/^[^\r\n]*/)![0]}</div>}
@@ -417,8 +415,12 @@ const parseLaw = (inputHTML: string, chikujo: string | undefined) => {
         // content.querySelectorAll("section#MainProvision section.Article")
         content.querySelectorAll("section.Article")
     ) as HTMLElement[]).map((section) => {
-        const articleNum = section
-            .querySelector("div._div_ArticleTitle span")!
+        const spanElement = section.querySelector("div._div_ArticleTitle span");
+        if (!spanElement) {
+            console.warn("Article section without ArticleTitle span found:", section.innerHTML.substring(0, 100));
+            return "-1";
+        }
+        const articleNum = spanElement
             // @ts-ignore
             .innerHTML.kansuji2arabic()
             .replace(/[第条]/g, "")
@@ -553,8 +555,15 @@ const parseLaw = (inputHTML: string, chikujo: string | undefined) => {
 
     Array.from(content.querySelectorAll("div._div_ArticleTitle")).forEach(
         (div) => {
-            const a = div.querySelector("a")!;
-            a.setAttribute("name", `${a.getAttribute("href")!.substring(1)}`);
+            const a = div.querySelector("a");
+            if (!a) {
+                console.warn("ArticleTitle div without anchor found:", div.innerHTML.substring(0, 100));
+                return;
+            }
+            const href = a.getAttribute("href");
+            if (href) {
+                a.setAttribute("name", href.substring(1));
+            }
         }
     );
 
