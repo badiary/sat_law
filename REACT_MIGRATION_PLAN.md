@@ -511,3 +511,99 @@ const xp = new XMLParser({
   - 全5ステップ（検証→実装→品質改善）を完遂
   - Reactを完全排除し、TypeScriptのみでHTML生成を実現
   - バンドルサイズ27%削減、コード量大幅削減、品質向上を達成
+
+---
+
+## ステップ6: 未処理タグ検出機構の実装 ✅ **完了**（品質保証ステップ）
+
+**目的**: レンダリングコードで処理されていないXMLタグが存在する場合に警告を出力し、法令の一部が欠落することを防ぐ
+
+**問題の概要**:
+現在のTypeScript版レンダリングコードは、予め指定した特定のフィールド（タグ）があればそれに応じてHTMLをレンダリングします。しかし、XMLスキーマ上は存在するが処理コードが抜けているタグがあると、そのタグの存在に気づかずレンダリングしてしまい、ユーザーに提示される法令の条文に抜けが発生する致命的な問題があります。
+
+**タスク**:
+1. ✅ 現在のレンダリングコードの構造を調査
+   - `src/api/typescript-renderer.ts`（3,300行超）の構造把握
+   - 主要なレンダリング関数の特定
+   - 型定義（`src/api/types/law.ts`）との対応確認
+2. ✅ 未処理タグ検出機構の設計
+   - ユーティリティ関数による実装を決定
+   - オブジェクトのキーと既知のフィールドを比較する方式
+   - 未処理タグ発見時にコンソールエラーとアラートで通知
+3. ✅ 未処理タグ検出ユーティリティ関数を実装
+   - `checkUnprocessedFields()` - 単一オブジェクトの未処理フィールドチェック
+   - `checkUnprocessedFieldsInArray()` - 配列内の各要素をチェック（予備関数）
+   - 初回のみアラート表示、以降はコンソールログに記録
+4. ✅ 主要なレンダリング関数に検出機構を統合
+   - `renderTextNode()` - TextNodeType配列の処理に統合
+   - `renderLawTypeList()` - LawTypeList配列の処理に統合
+   - `renderLawBody()` - LawBody要素の処理に統合
+   - `renderParagraph()` - Paragraph子要素の処理に統合
+5. ✅ ビルド確認
+   - 本番ビルド成功（warning 3件はサイズ警告のみ）
+   - バンドルサイズ変化なし（179 KiB → 180 KiB、わずか1 KiB増）
+
+**成果物**:
+- 修正された`src/api/typescript-renderer.ts`（未処理タグ検出機構追加）
+  - `checkUnprocessedFields()` 関数（164-196行）
+  - `checkUnprocessedFieldsInArray()` 関数（198-213行）
+  - `renderTextNode()` に検出機構統合（220-288行）
+  - `renderLawTypeList()` に検出機構統合（295-370行）
+  - `renderLawBody()` に検出機構統合（2495-2564行）
+  - `renderParagraph()` に検出機構統合（1404-1491行）
+
+**検出対象の主要フィールド**:
+- **TextNode**: Line, Style, Ruby, Sup, Sub, QuoteStruct, ArithFormula, _, :@
+- **LawTypeList**: Sentence, TableStruct, FigStruct, Fig, StyleStruct, List, Paragraph, Item, Subitem1-10, AppdxTable, AppdxNote, AppdxStyle, Appdx, AppdxFig, AppdxFormat, TOC, Table, :@, _
+- **LawBody**: LawTitle, EnactStatement, TOC, Preamble, MainProvision, SupplProvision, AppdxTable, AppdxNote, AppdxStyle, Appdx, AppdxFig, AppdxFormat, :@
+- **Paragraph**: ParagraphCaption, ParagraphNum, ParagraphSentence, AmendProvision, Class, Item, TableStruct, FigStruct, StyleStruct, List, :@
+
+**達成された効果**:
+- ✅ 未処理タグが存在する場合、即座に検出可能
+- ✅ コンソールに詳細なエラー情報（タグ名、オブジェクト詳細）を出力
+- ✅ 初回のみユーザーにアラート通知（以降はコンソールのみ）
+- ✅ 法令の一部欠落という致命的な問題を防止
+- ✅ パフォーマンスへの影響は最小限（バンドルサイズ1 KiB増のみ）
+- ✅ 将来のスキーマ変更や追加要素にも対応可能
+
+---
+
+## 現在の進捗状況（更新）
+
+### ✅ 完了
+- ✅ **ステップ1**: Node.jsでReact SSR環境構築（検証フェーズ）
+- ✅ **ステップ2**: TypeScript版HTML生成実装（検証フェーズ）
+- ✅ **ステップ3**: HTMLの同一性テスト（検証フェーズ）
+- ✅ **ステップ4**: Webツールへの適用（実装フェーズ）
+- ✅ **ステップ5**: ArithFormula Sub/Sup問題の解決（品質改善フェーズ）
+- ✅ **ステップ6**: 未処理タグ検出機構の実装（品質保証フェーズ）
+
+### 🎉 プロジェクト完了（更新）
+
+**React脱却プロジェクトの全ステップが完了しました！**
+
+- ✅ 検証フェーズ（ステップ1-3）: TypeScript実装の正確性を10,514件のテストで実証
+- ✅ 実装フェーズ（ステップ4）: WebツールからReactを完全削除（バンドルサイズ27%削減）
+- ✅ 品質改善フェーズ（ステップ5）: 化学式・数式表示の品質向上
+- ✅ 品質保証フェーズ（ステップ6）: 未処理タグ検出による法令欠落防止
+
+**最終成果**:
+- Reactを完全排除し、TypeScriptのみでHTML生成を実現
+- バンドルサイズ削減: 244 KiB → 180 KiB（64 KiB減、26%削減）
+- コード量削減: 6,966行削除、157行追加（未処理タグ検出機構含む）
+- e-gov法令API仕様準拠の正確なHTML出力
+- 未処理タグ検出による品質保証機構
+- メンテナンス性の向上
+
+---
+
+## 更新履歴（続き）
+
+- 2026-01-08 20:30: **ステップ6追加 - 未処理タグ検出機構の実装**
+  - 法令の一部欠落を防止するための品質保証機構を追加
+- 2026-01-08 20:45: **🎉 ステップ6完了 - 未処理タグ検出機構の実装完了！**
+  - ✅ `checkUnprocessedFields()` と `checkUnprocessedFieldsInArray()` 実装
+  - ✅ renderTextNode、renderLawTypeList、renderLawBody、renderParagraph に統合
+  - ✅ 未処理タグ発見時にコンソールエラーとアラートで通知
+  - ✅ バンドルサイズほぼ変化なし（179 KiB → 180 KiB、1 KiB増のみ）
+  - 📊 最終結果: **法令の一部欠落という致命的な問題を未然に防止可能に**

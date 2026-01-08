@@ -152,11 +152,76 @@ const tag = (
 };
 
 /**
+ * 未処理タグ検出機構
+ *
+ * オブジェクト内に、既知のフィールド以外のキーが存在する場合に警告を出力します。
+ * これにより、スキーマに存在するがレンダリングコードで処理されていないタグを検出できます。
+ *
+ * @param obj - 検査対象のオブジェクト（配列の各要素）
+ * @param knownFields - 既知のフィールド名の配列
+ * @param context - エラーメッセージに表示するコンテキスト情報（タグ名など）
+ */
+const checkUnprocessedFields = (
+  obj: any,
+  knownFields: string[],
+  context: string
+): void => {
+  // オブジェクトでない場合はスキップ
+  if (!obj || typeof obj !== 'object') {
+    return;
+  }
+
+  // オブジェクトの全キーを取得
+  const actualKeys = Object.keys(obj);
+
+  // 既知のフィールドセットを作成（高速な検索のため）
+  const knownFieldsSet = new Set(knownFields);
+
+  // 未処理のキーを検出
+  const unprocessedKeys = actualKeys.filter(key => !knownFieldsSet.has(key));
+
+  // 未処理のキーが存在する場合に警告
+  if (unprocessedKeys.length > 0) {
+    const errorMessage = `[未処理タグ検出] ${context}: 以下のフィールドが処理されていません: ${unprocessedKeys.join(', ')}`;
+
+    console.error(errorMessage);
+    console.error('オブジェクト詳細:', obj);
+
+    // ユーザーへの通知（初回のみアラートを表示）
+    if (!(window as any).__unprocessedFieldsAlertShown) {
+      alert(`法令XMLに未処理のタグが見つかりました。\n\nコンソールで詳細を確認してください。\n\n最初の未処理タグ:\n${errorMessage}`);
+      (window as any).__unprocessedFieldsAlertShown = true;
+    }
+  }
+};
+
+/**
+ * 配列内の各要素に対して未処理フィールドをチェック
+ *
+ * @param arr - 検査対象の配列
+ * @param knownFields - 既知のフィールド名の配列
+ * @param context - エラーメッセージに表示するコンテキスト情報
+ */
+const checkUnprocessedFieldsInArray = (
+  arr: any[],
+  knownFields: string[],
+  context: string
+): void => {
+  arr.forEach((item, index) => {
+    checkUnprocessedFields(item, knownFields, `${context}[${index}]`);
+  });
+};
+
+/**
  * TextNodeType配列をHTMLテキストに変換
  * src/api/components/law/text-node.tsx の getTextNode 関数を再現
  */
 const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string => {
-  return val.map((dt, index) => {
+  return val.map((dt) => {
+    // TextNodeTypeの既知のフィールド: Line, Ruby, Sup, Sub, QuoteStruct, ArithFormula, _
+    const knownFields = ['Line', 'Style', 'Ruby', 'Sup', 'Sub', 'QuoteStruct', 'ArithFormula', '_', ':@'];
+    checkUnprocessedFields(dt, knownFields, 'TextNode');
+
     if ('Line' in dt) {
       // 下線・二重線等のスタイル
       const getLineStyle = (Style?: 'dotted' | 'double' | 'none' | 'solid'): string => {
@@ -193,6 +258,10 @@ const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string
       // 算術式 - React側と同じく<div class="pl-4">でラップ
       // Sub/Supタグを正しく<sub>/<sup>として出力（e-gov法令API仕様に準拠）
       const arithContent = dt.ArithFormula.map((item: any) => {
+        // ArithFormula内の要素も検出対象
+        const arithKnownFields = ['Sub', 'Sup', 'Fig', '_', ':@'];
+        checkUnprocessedFields(item, arithKnownFields, 'ArithFormula内要素');
+
         if ('Sub' in item) {
           // 下付き文字を適切に出力
           const text = getType<TextType>(item.Sub, '_')[0]._;
@@ -229,6 +298,16 @@ const renderLawTypeList = (
   parentElement: string
 ): string => {
   return lawTypeList.map((dt: any, index: number) => {
+    // LawTypeListの既知のフィールド
+    const knownFields = [
+      'Sentence', 'TableStruct', 'FigStruct', 'Fig', 'StyleStruct', 'List',
+      'Paragraph', 'Item', 'Subitem1', 'Subitem2', 'Subitem3', 'Subitem4',
+      'Subitem5', 'Subitem6', 'Subitem7', 'Subitem8', 'Subitem9', 'Subitem10',
+      'AppdxTable', 'AppdxNote', 'AppdxStyle', 'Appdx', 'AppdxFig', 'AppdxFormat',
+      'TOC', 'Table', ':@', '_'
+    ];
+    checkUnprocessedFields(dt, knownFields, `LawTypeList[${parentElement}][${index}]`);
+
     const addTreeElement = [...treeElement, `${parentElement}_${index}`];
 
     if ('Sentence' in dt) {
@@ -1368,6 +1447,13 @@ const renderParagraph = (
     // React版と同じく、dt.Paragraph配列を順番に処理することで正しい順序を維持
     let childrenHtml = '';
     dt.Paragraph.forEach((dt2: any, index2: number) => {
+      // Paragraphの既知のフィールド
+      const paragraphKnownFields = [
+        'ParagraphCaption', 'ParagraphNum', 'ParagraphSentence', 'AmendProvision',
+        'Class', 'Item', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'
+      ];
+      checkUnprocessedFields(dt2, paragraphKnownFields, `Paragraph[${index}].Paragraph[${index2}]`);
+
       const addTreeElementChild = [
         ...treeElement,
         `Paragraph_${index + parentParagraphIndex}_Child_${index2}`
@@ -2455,6 +2541,14 @@ const renderLawBody = (
 
   // SupplProvision, Appdx, AppdxTable, AppdxNote, AppdxFig など
   lawBody.LawBody.forEach((dt, index) => {
+    // LawBodyの既知のフィールド
+    const knownFields = [
+      'LawTitle', 'EnactStatement', 'TOC', 'Preamble', 'MainProvision',
+      'SupplProvision', 'AppdxTable', 'AppdxNote', 'AppdxStyle', 'Appdx',
+      'AppdxFig', 'AppdxFormat', ':@'
+    ];
+    checkUnprocessedFields(dt, knownFields, `LawBody[${index}]`);
+
     const addTreeElementWithIndex = [...treeElement, `LawBody_${index}`];
     if ('SupplProvision' in dt && dt.SupplProvision.length > 0) {
       html += renderSupplProvision(dt, addTreeElement, index);
