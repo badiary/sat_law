@@ -49,10 +49,10 @@ export type XMLParsedAttachedFile = {
 
 /**
  * 添付ファイル情報の型
- * @param attached_files 添付ファイル情報
+ * @param attached_file 添付ファイル情報（単数形）
  */
 export type ParsedAttachedFile = {
-  attached_files: XMLParsedAttachedFile[];
+  attached_file: XMLParsedAttachedFile[];
 };
 
 /**

@@ -166,7 +166,7 @@ function parsedXmlToAttachedFilesInfo(
 function parsedXmlToAttachedFile(
   parsedXmlData: ParsedAttachedFile
 ): AttachedFile {
-  const data = parsedXmlData.attached_files;
+  const data = parsedXmlData.attached_file;  // attached_files -> attached_file (単数形)
   // 各要素を取得してインターフェースにマッピング
   const mapping = {
     lawRevisionId: findByKey<string, XMLParsedAttachedFile>(
@@ -392,7 +392,8 @@ export const getLawData = async ({
 
     // XMLデータをオブジェクト型に変換する
     const convertLaw = xp.parse(xml);
-    console.log(convertLaw);
+    console.log('convertLaw:', convertLaw);
+    console.log('law_data_response:', convertLaw[0]?.law_data_response);
 
     // 型指定
     const lawDataResponse = (convertLaw as LawDataResponseType[])[0];
@@ -402,20 +403,39 @@ export const getLawData = async ({
     // @ts-ignore
     const lawFullText = convertLaw[0].law_data_response[3].law_full_text[0] as LawData;
 
-    // // parseしたXMLをattachedFilesInfoの型に変換
-    // const attachedFilesInfo = parsedXmlToAttachedFilesInfo(
-    //   lawDataResponse.lawdata_response[1] as ParsedAttachedFilesInfo
-    // );
+    // parseしたXMLをattachedFilesInfoの型に変換
+    // attached_files_infoは配列の最初の要素
+    let attachedFilesInfo;
+    try {
+      attachedFilesInfo = parsedXmlToAttachedFilesInfo(
+        convertLaw[0].law_data_response[0] as ParsedAttachedFilesInfo
+      );
+    } catch (error) {
+      console.warn('attachedFilesInfo parse failed:', error);
+      attachedFilesInfo = undefined;
+    }
 
-    // // parseしたXMLをlawInfoの型に変換
-    // const lawInfo = parsedXmlToLawInfo(
-    //   lawDataResponse.lawdata_response[2] as ParsedLawInfo
-    // );
+    // parseしたXMLをlawInfoの型に変換
+    let lawInfo;
+    try {
+      lawInfo = parsedXmlToLawInfo(
+        convertLaw[0].law_data_response[1] as ParsedLawInfo
+      );
+    } catch (error) {
+      console.warn('lawInfo parse failed:', error);
+      lawInfo = undefined;
+    }
 
-    // // parseしたXMLをrevisionInfoの型に変換
-    // const revisionInfo = parsedXmlToRevisionInfo(
-    //   lawDataResponse.lawdata_response[3] as ParsedRevisionInfo
-    // );
+    // parseしたXMLをrevisionInfoの型に変換
+    let revisionInfo;
+    try {
+      revisionInfo = parsedXmlToRevisionInfo(
+        convertLaw[0].law_data_response[2] as ParsedRevisionInfo
+      );
+    } catch (error) {
+      console.warn('revisionInfo parse failed:', error);
+      revisionInfo = undefined;
+    }
 
 
     // APIデータ取得成功時
@@ -424,9 +444,9 @@ export const getLawData = async ({
       isSuccess: true,
       value: {
         lawFullText,
-        // attachedFilesInfo,
-        // lawInfo,
-        // revisionInfo,
+        attachedFilesInfo,
+        lawInfo,
+        revisionInfo,
       },
     };
   } catch (error) {

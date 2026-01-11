@@ -60,11 +60,21 @@ const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
 
         // TypeScript版のレンダラーを使用してHTML生成
         const laws = getLawComponentData(lawData.value.lawFullText);
+        // attached_filesからsrc→law_revision_idのマップを作成
+        const attachedFilesMap = new Map<string, string>();
+        if (lawData.value.attachedFilesInfo?.attachedFiles) {
+            lawData.value.attachedFilesInfo.attachedFiles.forEach(file => {
+                if (file.src && file.lawRevisionId) {
+                    attachedFilesMap.set(file.src, file.lawRevisionId);
+                }
+            });
+        }
         const lawHtml = renderLaw(
             laws.lawNum,
             laws.lawBody,
             laws.lawTitle,
-            []
+            [],
+            attachedFilesMap
         );
 
         // #appにHTMLを設定

@@ -223,14 +223,6 @@ class BreadcrumbNavigation {
         this.recordSiblings(element, 'Article', parent, children, i);
       }
     }
-
-    console.log(`[Breadcrumb] ${provisionType} 解析結果:`);
-    console.log(`  - 編: ${partCount}個`);
-    console.log(`  - 章: ${chapterCount}個`);
-    console.log(`  - 節: ${sectionCount}個`);
-    console.log(`  - 款: ${subsectionCount}個`);
-    console.log(`  - 目: ${divisionCount}個`);
-    console.log(`  - 条: ${articleCount}個`);
   }
 
   /**

@@ -7,6 +7,10 @@
  */
 
 import { getType, getTypeByFind, getParentElement } from './lib/law/law';
+
+// 添付ファイルマップをグローバル変数として保持
+let globalAttachedFilesMap: Map<string, string> | undefined;
+
 import {
   ArticleType,
   ParagraphType,
@@ -2778,12 +2782,30 @@ const renderFig = (
   const src = (typeof figObj === 'string' || !figObj) ? '' : (figObj[':@']?.src || '');
 
   if (/\.pdf$/i.test(src)) {
-    // PDF: buttonタグを出力
-    return tag('button', {
-      type: 'button',
-      'aria-label': 'PDFファイルをダウンロード',
-      title: 'PDFファイルをダウンロード'
-    }, '');
+    // PDF: attached_filesからlaw_revision_idを取得してリンクを生成
+    const lawRevisionId = globalAttachedFilesMap?.get(src);
+    if (lawRevisionId && src) {
+      // APIのURL: https://laws.e-gov.go.jp/api/2/attachment/{law_revision_id}?src={src}
+      const encodedSrc = encodeURIComponent(src);
+      const attachmentUrl = `https://laws.e-gov.go.jp/api/2/attachment/${lawRevisionId}?src=${encodedSrc}`;
+      // Mozilla PDF.js 公式ビューアへのリンク
+      const viewerUrl = `./pdfjs/web/viewer.html?file=${encodeURIComponent(attachmentUrl)}`;
+      return tag('a', {
+        href: viewerUrl,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        class: 'text-blue-600 hover:text-blue-800 underline',
+        'aria-label': 'PDFファイルを開く',
+        title: 'PDFファイルを開く'
+      }, 'PDFを開く');
+    } else {
+      // law_revision_idが見つからない場合は空のspan
+      return tag('span', {
+        class: 'text-gray-400',
+        'aria-label': 'PDFファイル',
+        title: 'PDFファイル'
+      }, '');
+    }
   } else if (src === '') {
     // ブランク: Styleの子要素かどうかで分岐
     if (treeElement.some(dt => /^Style(Struct)?_.*/.test(dt))) {
@@ -2792,16 +2814,35 @@ const renderFig = (
       return tag('span', { class: '_span_Fig_noImg inline-block pl-4' }, '（略）');
     }
   } else {
-    // 画像: LoadingImageプレースホルダーを出力（React SSRと同じ）
-    const innerContent = tag('span', {
-      class: 'text-xs text-light-Text-PlaceHolder font-bold'
-    }, '画像を読み込み中...');
-    const innerWrapper = tag('div', {
-      class: 'flex flex-col justify-center items-center'
-    }, innerContent);
-    return tag('div', {
-      class: 'flex items-center justify-center w-80 h-48 rounded-md bg-light-Background-Secondary animate-pulse'
-    }, innerWrapper);
+    // 画像: attached_filesからlaw_revision_idを取得してリンクを生成
+    const lawRevisionId = globalAttachedFilesMap?.get(src);
+    if (lawRevisionId && src) {
+      const encodedSrc = encodeURIComponent(src);
+      const attachmentUrl = `https://laws.e-gov.go.jp/api/2/attachment/${lawRevisionId}?src=${encodedSrc}`;
+      return tag('a', {
+        href: attachmentUrl,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        class: 'inline-block',
+        'aria-label': '画像を開く',
+        title: '画像を開く'
+      }, tag('img', {
+        src: attachmentUrl,
+        alt: '添付画像',
+        class: 'max-w-full h-auto'
+      }, ''));
+    } else {
+      // law_revision_idが見つからない場合はプレースホルダー
+      const innerContent = tag('span', {
+        class: 'text-xs text-light-Text-PlaceHolder font-bold'
+      }, '画像を読み込み中...');
+      const innerWrapper = tag('div', {
+        class: 'flex flex-col justify-center items-center'
+      }, innerContent);
+      return tag('div', {
+        class: 'flex items-center justify-center w-80 h-48 rounded-md bg-light-Background-Secondary animate-pulse'
+      }, innerWrapper);
+    }
   }
 };
 
@@ -3309,8 +3350,12 @@ const renderLaw = (
   lawNum: LawNumType,
   lawBody: LawBodyType,
   lawTitle: LawTitleType,
-  treeElement: string[]
+  treeElement: string[],
+  attachedFilesMap?: Map<string, string>
 ): string => {
+  // グローバル変数に設定（renderFig等で使用）
+  globalAttachedFilesMap = attachedFilesMap;
+
   const addTreeElement = [...treeElement, 'Law'];
 
   let html = '';

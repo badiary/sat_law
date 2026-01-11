@@ -1282,13 +1282,10 @@ class SatComment {
   // sort関数で生成されたthis.box_sorted_infoに従って、comment_boxのy方向の位置を調整
   // （comment_boxのinputイベントなどではsortの必要がないため、arrange部分だけ別関数として作成）
   arrange = (start_comment_id?: string) => {
-    console.log("=== Comment Arrange Debug ===");
 
     // comment_containerとcontent_rootの位置関係を取得
     const commentContainer = document.getElementById("comment_container")!;
     const commentContainerOffset = this.sat.getOffset(commentContainer, this.sat.content_root);
-
-    console.log(`Comment container offset from content_root: ${commentContainerOffset.offset_top}px`);
 
     for (let i = 0; i < this.box_sorted_info.length; i++) {
       let pos_prev = 0;

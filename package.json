@@ -5,7 +5,8 @@
   "scripts": {
     "build": "webpack --mode=production",
     "build:dev": "webpack --mode=development",
-    "watch": "webpack -w --mode=development"
+    "watch": "webpack -w --mode=development",
+    "test:render": "tsx test-render.ts"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
@@ -19,6 +20,7 @@
     "tailwindcss": "^4.1.13",
     "terser-webpack-plugin": "^5.3.9",
     "ts-loader": "^9.4.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.1.6",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
