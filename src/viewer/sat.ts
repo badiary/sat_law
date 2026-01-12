@@ -19,16 +19,13 @@ export class Sat {
   word: SatWord; // ワード反転を扱うオブジェクト
   cv: SatCanvas; // スペクトルバーの描画を扱うオブジェクト
   decoration: SatDecoration; // マーカー、太字、下線の装飾を扱うオブジェクト
-  comment: SatComment; // コメントを扱うオブジェクト
 
   constructor(
     content_root: HTMLElement,
     content_window: Window,
     cv: HTMLCanvasElement,
     selected_color: { [key: string]: string },
-    lightness: number,
-    block_mode: boolean,
-    auto_sieve_mode: boolean
+    lightness: number
   ) {
     this.content_root = content_root;
     this.content_window = content_window;
@@ -36,12 +33,9 @@ export class Sat {
     this.word = new SatWord(
       this,
       selected_color,
-      lightness,
-      block_mode,
-      auto_sieve_mode
+      lightness
     );
     this.cv = new SatCanvas(this, cv);
-    this.comment = new SatComment(this);
     this.decoration = new SatDecoration(this);
     // this.pdf = new SatPDF(this);
   }
@@ -255,23 +249,15 @@ class SatWord {
   sat: Sat;
   option: { [key: string]: WordOption } = {};
   selected_color: { [key: string]: string } = {};
-  block_mode: boolean;
-  block_mode_pattern: string =
-    "[ァ-ヶーｱ-ﾝﾞﾟ一-龥0-9０-９a-zA-Zａ-ｚＡ-Ｚ.．]*";
-  auto_sieve_mode: boolean;
   lightness: number;
 
   constructor(
     sat: Sat,
     selected_color: { [key: string]: string },
-    lightness: number,
-    block_mode: boolean,
-    auto_sieve_mode: boolean
+    lightness: number
   ) {
     this.sat = sat;
     this.selected_color = selected_color;
-    this.block_mode = block_mode;
-    this.auto_sieve_mode = auto_sieve_mode;
     this.lightness = lightness;
   }
 
@@ -294,8 +280,6 @@ class SatWord {
     // ワード反転解除
     this.clear(root);
 
-    let color_id_now: string = "",
-      word_now: string = "";
     const mark_instance = new Mark(root);
     const mark_options = {
       element: "span",
@@ -308,23 +292,6 @@ class SatWord {
         elem.classList.add("word_inversion");
       },
       className: "",
-      done: (count: number) => {
-        if (
-          count === 0 &&
-          this.auto_sieve_mode &&
-          this.option[color_id_now] &&
-          this.option[color_id_now]!.words
-        ) {
-          this.option[color_id_now]!.words = this.option[
-            color_id_now
-          ]!.words.filter((word) => {
-            return word !== word_now;
-          });
-          if (this.option[color_id_now]!.words.length === 0) {
-            delete this.option[color_id_now];
-          }
-        }
-      },
     };
 
     const colorStyle = document.createElement("style");
@@ -343,8 +310,6 @@ class SatWord {
       );
 
       this.option[color_id]!.words.forEach((word: string) => {
-        (color_id_now = color_id), (word_now = word); // ヒット件数０で削除する際に必要なので格納
-
         if (/^\/.*\/[dgimsuy]*$/.test(word)) {
           // 元々正規表現の場合
           let re_option = "";
@@ -352,31 +317,12 @@ class SatWord {
             re_option = word.match(/([dgimsuy]+)$/)![0]!;
             word = word.slice(0, -re_option.length);
           }
-          let reg_ex: RegExp;
-
-          if (this.block_mode) {
-            reg_ex = new RegExp(
-              `${this.block_mode_pattern}${word.slice(1, -1)}${this.block_mode_pattern
-              }`,
-              re_option
-            );
-          } else {
-            reg_ex = new RegExp(word.slice(1, -1), re_option);
-          }
+          const reg_ex = new RegExp(word.slice(1, -1), re_option);
           mark_instance.markRegExp(reg_ex, mark_options);
         } else {
           // 正規表現でない場合
-          if (this.block_mode) {
-            word = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // メタ文字をエスケープ
-            const reg_ex = new RegExp(
-              `${this.block_mode_pattern}${word}${this.block_mode_pattern}`,
-              "i"
-            );
-            mark_instance.markRegExp(reg_ex, mark_options);
-          } else {
-            mark_instance.mark(word, mark_options);
-          }
-          // egov専用：条文番号検索（例: a1-2,5-7）
+          mark_instance.mark(word, mark_options);
+          // 条文番号検索（例: a1-2,5-7）
           if (/^a[0-9]+(-[0-9]+)*(,[0-9]+(-[0-9]+)*)?$/.test(word)) {
             Array.from(
               this.sat.content_root.querySelectorAll("span[article_num]")
@@ -462,7 +408,7 @@ class SatWord {
 
     return brightness >= 140 ? "#111" : "#eed";
   };
-  // egov専用の条文番号検索用関数
+  // 条文番号検索用関数
   hasIntersection = (articleNum1: string, articleNum2: string): boolean => {
     const compareArticleNum = (
       inputNum1: string,
@@ -536,7 +482,6 @@ class SatCanvas {
   sat: Sat;
   element: HTMLCanvasElement;
   word_rect: Rect[] = [];
-  comment_circle: { y: number; color: string }[] = [];
   highlight_rect: { y: number; color: string }[] = [];
   constructor(sat: Sat, element: HTMLCanvasElement) {
     this.sat = sat;
@@ -599,90 +544,6 @@ class SatCanvas {
       ]);
     });
 
-
-    // コメント部分の●の位置を更新
-    this.comment_circle = [];
-
-    // comment_idごとにグループ化したspan要素の配列を作成する
-    const span_element_dic: { [comment_id: string]: HTMLSpanElement[] } =
-      Array.from(
-        this.sat.content_root.querySelectorAll<HTMLSpanElement>(
-          "span.commented"
-        )
-      )
-        .map((span: HTMLSpanElement) => {
-          // それぞれのspanの位置（ページ最初からのoffsetTop, offsetLeft）を計算しておく
-          // Split.js削除後のレイアウトに対応した位置計算
-          const offset = this.sat.getOffset(
-            span,
-            this.sat.content_root
-          );
-          span.setAttribute("offset_top", offset.offset_top.toString());
-          span.setAttribute("offset_left", offset.offset_left.toString());
-          return span;
-        })
-        .reduce(
-          (
-            r: { [comment_id: string]: HTMLSpanElement[] },
-            a: HTMLSpanElement
-          ) => {
-            r[a.getAttribute("comment_id")!] = [
-              ...(r[a.getAttribute("comment_id")!] || []),
-              a,
-            ];
-            return r;
-          },
-          {}
-        ); // ひとまずcommment_idごとにグループ化した連想配列を作成
-    const span_element_arr: HTMLSpanElement[][] = Object.keys(span_element_dic)
-      .map((key: string) => {
-        // ここで連想配列を配列に変更
-        return span_element_dic[key]!.sort(
-          (a: HTMLSpanElement, b: HTMLSpanElement) => {
-            // グループ内ではoffsetTop、offsetLeftの順にソートしておく
-            if (a.getAttribute("offset_top") !== b.getAttribute("offset_top")) {
-              return a.getAttribute("offset_top")! <
-                b.getAttribute("offset_top")!
-                ? -1
-                : 1;
-            } else {
-              return a.getAttribute("offset_left")! <
-                b.getAttribute("offset_left")!
-                ? -1
-                : 1;
-            }
-          }
-        );
-      })
-      .sort((a: HTMLSpanElement[], b: HTMLSpanElement[]) => {
-        // グループ間では、最初のspanのoffsetTop、offsetLeftの順にソートしておく
-        if (
-          a[0]!.getAttribute("offset_top") !== b[0]!.getAttribute("offset_top")
-        ) {
-          return a[0]!.getAttribute("offset_top")! <
-            b[0]!.getAttribute("offset_top")!
-            ? -1
-            : 1;
-        } else {
-          return a[0]!.getAttribute("offset_left")! <
-            b[0]!.getAttribute("offset_left")!
-            ? -1
-            : 1;
-        }
-      });
-    span_element_arr.forEach((span: HTMLSpanElement[]) => {
-      this.comment_circle.push({
-        y:
-          this.element.height *
-          (this.sat.getOffset(
-            span[0]!,
-            this.sat.content_root
-          ).offset_top /
-            span_parent_height),
-        color: span[0]!.style.backgroundColor,
-      });
-    });
-
     // ハイライト部分の●の位置を更新
     this.highlight_rect = [];
     Array.from(
@@ -713,14 +574,6 @@ class SatCanvas {
       ctx.fillRect(rect_arr[1], rect_arr[2], rect_arr[3], rect_arr[4]);
     });
 
-    this.comment_circle.forEach(
-      (comment_circle: { y: number; color: string }): void => {
-        ctx.fillStyle = comment_circle.color;
-        ctx.beginPath();
-        ctx.arc(10, comment_circle.y, 5, 0, 2 * Math.PI, false);
-        ctx.fill();
-      }
-    );
     this.highlight_rect.forEach(
       (highlight_rect: { y: number; color: string }): void => {
         ctx.fillStyle = highlight_rect.color;
@@ -802,14 +655,6 @@ class SatDecoration {
         span.classList.remove("highlighted_tmp");
         span.classList.add("highlighted");
       });
-    const parent_highlighted_span = sel
-      .getRangeAt(0)
-      .commonAncestorContainer.parentElement.closest("span.commented");
-    if (parent_highlighted_span) {
-      parent_highlighted_span.style.backgroundColor = color_code;
-      parent_highlighted_span.classList.remove("highlighted_tmp");
-      parent_highlighted_span.classList.add("highlighted");
-    }
 
     this.sat.cv.updateData();
     this.sat.cv.draw();
@@ -864,462 +709,6 @@ class SatDecoration {
     }
     this.sat.cv.updateData();
     this.sat.cv.draw();
-  };
-}
-
-class SatComment {
-  sat: Sat;
-  comment_index: number = 0;
-  span_info: {
-    [comment_id: string]: {
-      selector: string;
-      page_number: number;
-      class_name: string;
-      start: number;
-      length: number;
-    }[]; // （PDF版用）コメントされたspanの情報とページ番号を保持
-  } = {};
-  box_info: { [comment_id: string]: { content: string; page_number: number } } =
-    {}; // （PDF版用）コメント内容とページ番号を保持
-  box_sorted_info: {
-    comment_id: string;
-    first_span: HTMLSpanElement;
-    div: HTMLDivElement;
-    polygon: SVGPolygonElement;
-  }[] = [];
-
-  constructor(sat: Sat) {
-    this.sat = sat;
-  }
-  addComment = (color_code: string): void => {
-    const comment_id = this.addSpan(color_code);
-    this.addBox(comment_id, color_code);
-    this.sort();
-    this.arrange();
-
-    // コメントボックスにカーソルを移動
-    const range = window.document.createRange();
-    const el = window.document.querySelector<HTMLDivElement>(
-      `div.comment[comment_id="${comment_id}"] > p`
-    )!;
-    range.setStart(el, 0);
-    range.setEnd(el, 0);
-
-    window.focus();
-    window.getSelection()!.removeAllRanges();
-    window.getSelection()!.addRange(range);
-
-    this.sat.cv.updateData();
-    this.sat.cv.draw();
-  };
-
-  remove = (comment_id: string): void => {
-    this.sat.content_root
-      .querySelectorAll<HTMLSpanElement>(
-        `span.commented[comment_id="${comment_id}"]`
-      )
-      .forEach((element, i) => {
-        this.sat.removeSpan(
-          element,
-          ["commented", "span_onmouse"],
-          ["comment_id"]
-        );
-      });
-
-    // コメントに対応するdiv、polygonを削除
-    document
-      .getElementById("comment_div")!
-      .querySelector(`div.comment[comment_id="${comment_id}"]`)
-      ?.remove();
-    Array.from(
-      document
-        .getElementById("comment_svg")!
-        .querySelectorAll(`polygon[comment_id="${comment_id}"]`)
-    ).forEach((polygon) => {
-      polygon.remove();
-    });
-
-    // 記憶情報の対応部分を削除
-    delete this.span_info[comment_id];
-    delete this.box_info[comment_id];
-  };
-
-  addSpan = (color_code: string): string => {
-    createClassApplier("commented", {
-      elementTagName: "span",
-      normalize: true,
-    }).toggleSelection(this.sat.content_window);
-
-    // comment_idを決定
-    const comment_id_arr: { [comment_id: string]: string } = {};
-    const added_span_elements: HTMLSpanElement[] = [];
-    Array.from(
-      this.sat.content_root.querySelectorAll<HTMLSpanElement>(`span.commented`)
-    ).forEach((span) => {
-      if (span.getAttribute("comment_id") !== null) {
-        comment_id_arr[span.getAttribute("comment_id")!] = "commented";
-      } else {
-        added_span_elements.push(span);
-      }
-    });
-    while (comment_id_arr[this.comment_index]) {
-      this.comment_index++;
-    }
-    const comment_id = this.comment_index;
-    this.comment_index++;
-
-    // comment_id等の属性の付与
-    added_span_elements.forEach((span) => {
-      span.setAttribute("comment_id", comment_id.toString());
-      // if (!span.classList.contains("highlighted")) {
-      span.style.backgroundColor = color_code;
-      span.style.borderColor = color_code;
-      // }
-
-      // Split.js削除後のレイアウトに対応した位置計算
-      const offset = this.sat.getOffset(
-        span,
-        this.sat.content_root
-      );
-      span.setAttribute("offset_top", offset.offset_top.toString());
-      span.setAttribute("offset_left", offset.offset_left.toString());
-    });
-
-    // イベントハンドラ追加（span）
-    added_span_elements.forEach((span) => {
-      span.addEventListener("mouseover", (e) => {
-        this.onMouseOver(span.getAttribute("comment_id")!);
-      });
-    });
-
-    added_span_elements.forEach((span) => {
-      span.addEventListener("mouseout", (e) => {
-        // 子要素への移動であれば無視
-        if (
-          e.relatedTarget instanceof HTMLElement &&
-          e.relatedTarget.parentElement !== null &&
-          e.relatedTarget.parentElement.closest(
-            `span.commented[comment_id="${span.getAttribute("comment_id")}"]`
-          ) !== null
-        ) {
-          return;
-        }
-        this.onMouseOut(span.getAttribute("comment_id")!);
-      });
-    });
-
-    // if (this.sat.tool_type === "pdf") {
-    //   this.sat.pdf.memorize("commented");
-    // }
-
-    return comment_id.toString();
-  };
-
-  addBox = (comment_id: string, color_code: string): void => {
-    const p_element = document.createElement("p");
-
-    const comment_div_element = document.createElement("div");
-    comment_div_element.classList.add("comment");
-    comment_div_element.contentEditable = "true";
-    comment_div_element.id = comment_id;
-    comment_div_element.setAttribute("comment_id", comment_id);
-    comment_div_element.style.backgroundColor = color_code;
-    comment_div_element.style.borderColor = color_code;
-    comment_div_element.appendChild(p_element);
-    document.getElementById("comment_div")!.appendChild(comment_div_element);
-
-    // 吹き出しのsvg（三角形）追加
-    const polygon = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "polygon"
-    );
-    polygon.setAttribute("comment_id", comment_id);
-    polygon.style.fill = color_code;
-    polygon.style.stroke = color_code;
-    document
-      .getElementById("comment_svg")!
-      .querySelector("svg")!
-      .appendChild(polygon);
-
-    // イベントハンドラ追加
-    comment_div_element.addEventListener("mouseover", (e) => {
-      this.onMouseOver(comment_div_element.getAttribute("comment_id")!);
-    });
-
-    comment_div_element.addEventListener("mouseout", (e) => {
-      // 子要素への移動であれば無視
-      if (
-        e.relatedTarget instanceof HTMLElement &&
-        e.relatedTarget.parentElement !== null &&
-        e.relatedTarget.parentElement.closest(
-          `div.comment[comment_id="${comment_div_element.getAttribute(
-            "comment_id"
-          )}"]`
-        ) !== null
-      ) {
-        return;
-      }
-      this.onMouseOut(comment_div_element.getAttribute("comment_id")!);
-    });
-
-    comment_div_element.addEventListener("input", this.onInput);
-    comment_div_element.addEventListener("blur", this.onBlur);
-    comment_div_element.addEventListener("paste", this.onPaste);
-
-    polygon.addEventListener("click", (e) => {
-      this.onPolygonClick(comment_div_element.getAttribute("comment_id")!);
-    });
-  };
-
-  onMouseOver = (comment_id: string): void => {
-    document
-      .getElementById("comment_div")!
-      .querySelector(`div.comment[comment_id="${comment_id}"]`)
-      ?.classList.add("div_onmouse");
-
-    Array.from(
-      this.sat.content_root.querySelectorAll(
-        `span.commented[comment_id="${comment_id}"]`
-      )
-    ).forEach((span) => {
-      span.classList.add("span_onmouse");
-    });
-  };
-  onMouseOut = (comment_id: string): void => {
-    document
-      .getElementById("comment_div")!
-      .querySelector(`div.comment[comment_id="${comment_id}"]`)
-      ?.classList.remove("div_onmouse");
-    Array.from(
-      this.sat.content_root.querySelectorAll(
-        `span.commented[comment_id="${comment_id}"]`
-      )
-    ).forEach((span) => {
-      span.classList.remove("span_onmouse");
-    });
-  };
-  onInput = () => {
-  };
-  onBlur = (event: Event) => {
-    const { target } = event;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const container = target.closest("div.comment");
-    if (!container) return;
-    this.linkify(container);
-  }
-  onPaste = (event: Event) => {
-    // pasteイベントは文字列貼り付け直前に実行されるので、貼り付け後に処理するためsetTimeoutを利用
-    setTimeout(() => {
-      const { target } = event;
-      if (!(target instanceof HTMLElement)) {
-        return;
-      }
-
-      const container = target.closest("div.comment");
-      if (!container) return;
-      this.linkify(container);
-    }, 0);
-  }
-  linkify = (el: Element) => {
-    el.querySelectorAll("p").forEach((p) => {
-      if (/^https?:\/\/.+$/.test(p.textContent!)) {
-        const a = document.createElement('a');
-        a.textContent = p.textContent!;
-        a.href = p.textContent!;
-        p.innerHTML = "";
-        p.appendChild(a);
-      }
-    });
-
-    el.querySelectorAll("a").forEach((a) => {
-      a.onclick = ((e: Event) => {
-        const a_target = e.target;
-        if (!(a_target instanceof HTMLAnchorElement)) {
-          return;
-        }
-        window.open(a_target.href, "_blank");
-      })
-    });
-  }
-
-  onPolygonClick = (comment_id: string): void => {
-    const comment_div = document
-      .getElementById("comment_div")!
-      .querySelector<HTMLDivElement>(
-        `div.comment[comment_id="${comment_id}"]`
-      )!;
-    const color_picker = document.getElementById("color_picker")!;
-    const color_picker_comment = document.getElementById(
-      "color_picker_comment"
-    )!;
-    color_picker_comment.setAttribute("color_id", "comment_color");
-    color_picker_comment.style.display = "block";
-    const offsets = this.sat.getOffset(comment_div, this.sat.content_root);
-    color_picker_comment.style.top = `${Math.max(
-      offsets.offset_top - color_picker_comment.offsetHeight / 2 + 10,
-      40
-    )}px`;
-    color_picker_comment.style.left = `${offsets.offset_left - color_picker_comment.offsetWidth - 15
-      }px`;
-    
-
-    color_picker.setAttribute("mode", "comment");
-    color_picker.setAttribute("comment_id", comment_id);
-    color_picker.setAttribute(
-      "comment_color",
-      comment_div.style.backgroundColor
-    );
-  };
-
-  // comment_boxの高さ順を判定し、this.box_sorted_infoを設定
-  sort = () => {
-    // comment_idごとにグループ化したspan要素の配列を作成する
-    const span_element_dic: { [comment_id: string]: HTMLSpanElement[] } =
-      Array.from(
-        this.sat.content_root.querySelectorAll<HTMLSpanElement>(
-          "span.commented"
-        )
-      ).reduce(
-        (
-          r: { [comment_id: string]: HTMLSpanElement[] },
-          a: HTMLSpanElement
-        ) => {
-          r[a.getAttribute("comment_id")!] = [
-            ...(r[a.getAttribute("comment_id")!] || []),
-            a,
-          ];
-          return r;
-        },
-        {}
-      ); // ひとまずcommment_idごとにグループ化した連想配列を作成
-
-    const span_element_arr: HTMLSpanElement[][] = Object.keys(span_element_dic)
-      .map((key) => {
-        // ここで連想配列を配列に変更
-        return span_element_dic[key]!.sort((a, b) => {
-          // グループ内ではoffsetTop、offsetLeftの順にソートしておく
-          if (
-            Number(a.getAttribute("offset_top")) !==
-            Number(b.getAttribute("offset_top"))
-          ) {
-            return Number(a.getAttribute("offset_top")) <
-              Number(b.getAttribute("offset_top"))
-              ? -1
-              : 1;
-          } else {
-            return Number(a.getAttribute("offset_left")) <
-              Number(b.getAttribute("offset_left"))
-              ? -1
-              : 1;
-          }
-        });
-      })
-      .sort((a: HTMLSpanElement[], b: HTMLSpanElement[]) => {
-        // グループ間では、最初のspanのoffsetTop、offsetLeftの順にソートしておく
-        if (
-          Number(a[0]!.getAttribute("offset_top")) !==
-          Number(b[0]!.getAttribute("offset_top"))
-        ) {
-          return Number(a[0]!.getAttribute("offset_top")) <
-            Number(b[0]!.getAttribute("offset_top"))
-            ? -1
-            : 1;
-        } else {
-          return Number(a[0]!.getAttribute("offset_left")) <
-            Number(b[0]!.getAttribute("offset_left"))
-            ? -1
-            : 1;
-        }
-      });
-
-    const div_elements = Array.from(
-      document
-        .getElementById("comment_div")!
-        .querySelectorAll<HTMLDivElement>("div.comment")
-    ).reduce(
-      (
-        result: { [comment_id: string]: HTMLDivElement },
-        current: HTMLDivElement
-      ) => {
-        result[current.getAttribute("comment_id")!] = current;
-        return result;
-      },
-      {}
-    );
-
-    const polygon_elements = Array.from(
-      document
-        .getElementById("comment_svg")!
-        .querySelectorAll<SVGPolygonElement>("polygon")
-    ).reduce(
-      (
-        result: { [comment_id: string]: SVGPolygonElement },
-        current: SVGPolygonElement
-      ) => {
-        result[current.getAttribute("comment_id")!] = current;
-        return result;
-      },
-      {}
-    );
-
-    this.box_sorted_info = span_element_arr
-      .filter((span: HTMLSpanElement[]) => {
-        return span.length > 0;
-      })
-      .map((span: HTMLSpanElement[]) => {
-        return {
-          comment_id: span[0]!.getAttribute("comment_id")!,
-          first_span: span[0]!,
-          div: div_elements[span[0]!.getAttribute("comment_id")!]!,
-          polygon: polygon_elements[span[0]!.getAttribute("comment_id")!]!,
-        };
-      });
-  };
-
-  // sort関数で生成されたthis.box_sorted_infoに従って、comment_boxのy方向の位置を調整
-  // （comment_boxのinputイベントなどではsortの必要がないため、arrange部分だけ別関数として作成）
-  arrange = (start_comment_id?: string) => {
-
-    // comment_containerとcontent_rootの位置関係を取得
-    const commentContainer = document.getElementById("comment_container")!;
-    const commentContainerOffset = this.sat.getOffset(commentContainer, this.sat.content_root);
-
-    for (let i = 0; i < this.box_sorted_info.length; i++) {
-      let pos_prev = 0;
-      if (i > 0) {
-        pos_prev =
-          this.box_sorted_info[i - 1]!.div.offsetTop +
-          this.box_sorted_info[i - 1]!.div.offsetHeight;
-      }
-
-      const spanOffsetTop = parseInt(
-        this.box_sorted_info[i]!.first_span.getAttribute("offset_top")!
-      );
-
-      // 座標系を統一：spanのoffset_topからcomment_containerのoffset_topを引く
-      const adjustedSpanTop = spanOffsetTop - commentContainerOffset.offset_top;
-      const calculatedTop = Math.max(pos_prev + 10, adjustedSpanTop);
-
-      this.box_sorted_info[i]!.div.style.top = `${calculatedTop}px`;
-
-      // デバッグ情報出力
-      const commentId = this.box_sorted_info[i]!.comment_id;
-      console.log(`Comment ${commentId}:`);
-      console.log(`  - Span offset_top (absolute): ${spanOffsetTop}px`);
-      console.log(`  - Span offset_top (relative to comment_container): ${adjustedSpanTop}px`);
-      console.log(`  - Calculated div top: ${calculatedTop}px`);
-      console.log(`  - Actual div offsetTop: ${this.box_sorted_info[i]!.div.offsetTop}px`);
-
-      // SVG三角形の位置も調整
-      this.box_sorted_info[i]!.polygon.setAttribute(
-        "points",
-        `0 ${adjustedSpanTop + 8}, 15 ${calculatedTop + 5}, 15 ${calculatedTop + 30}`
-      );
-    }
-    console.log("=== End Comment Arrange Debug ===");
   };
 }
 

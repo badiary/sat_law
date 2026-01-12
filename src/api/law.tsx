@@ -36,17 +36,18 @@ const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
         const lawData = await getLawData(searchParams);
 
         if (!lawData.isSuccess) {
-            const appElement = document.getElementById("app");
-            if (appElement) {
-                appElement.innerHTML = `<span>エラー: ${lawData.error.message}</span>`;
+            const contentElement = document.getElementById("content");
+            if (contentElement) {
+                const error = (lawData as { isSuccess: false; error: Error }).error;
+                contentElement.innerHTML = `<span>エラー: ${error.message}</span>`;
             }
             return;
         }
 
         if (!lawData.value.lawFullText) {
-            const appElement = document.getElementById("app");
-            if (appElement) {
-                appElement.innerHTML = '<span>法令データが存在しません。</span>';
+            const contentElement = document.getElementById("content");
+            if (contentElement) {
+                contentElement.innerHTML = '<span>法令データが存在しません。</span>';
             }
             return;
         }
@@ -77,14 +78,8 @@ const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
             attachedFilesMap
         );
 
-        // #appにHTMLを設定
-        const appElement = document.getElementById("app");
-        if (appElement) {
-            appElement.innerHTML = lawHtml;
-        }
-
         // parseLaw関数でHTMLを加工
-        const data = parseLaw(document.getElementById("app")?.innerHTML!, chikujoData);
+        const data = parseLaw(lawHtml, chikujoData);
 
         // 統合HTMLページのshowLawViewer関数を直接呼び出し
         if (window.showLawViewer) {
@@ -94,9 +89,9 @@ const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
         }
     } catch (error) {
         console.error("法令データの取得に失敗しました:", error);
-        const appElement = document.getElementById("app");
-        if (appElement) {
-            appElement.innerHTML = '<span>法令データの取得に失敗しました。</span>';
+        const contentElement = document.getElementById("content");
+        if (contentElement) {
+            contentElement.innerHTML = '<span>法令データの取得に失敗しました。</span>';
         }
     }
 };

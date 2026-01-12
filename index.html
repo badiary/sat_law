@@ -283,10 +283,16 @@
     }
 
     /* パンくずナビゲーションのスタイル */
+    nav {
+      background-color: #fff7e6;
+      border: solid #000 1px;
+    }
+
     #breadcrumb-navigation {
       flex-shrink: 0;
       height: 2rem; /* 固定高さ */
       overflow: hidden; /* オーバーフローを隠す */
+      margin: 0; /* .topのpaddingによる隙間をなくす */
     }
 
     #breadcrumb-list {
@@ -311,7 +317,6 @@
     .text-Sumi-600 { color: #757578; }
     .text-light-Text-Body { color: #1A1A1C; }
     .text-light-Text-PlaceHolder { color: #757578; }
-    .bg-White-1000 { background-color: #FFFFFF; }
     .border-Sumi-200 { border-color: #E8E8EB; }
     .hover\:underline:hover { text-decoration: underline; }
     .hover\:text-Sea-700:hover { color: #0000B3; }
@@ -355,7 +360,7 @@
       .md\:space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
     }
   </style>
-  <link rel="stylesheet" href="./css/style_egov.css" />
+  <link rel="stylesheet" href="./css/style.css" />
   <script defer src="dist/api.js"></script>
   <script defer src="dist/viewer.js"></script>
   <script defer src="js/breadcrumb-navigation.js"></script>
@@ -375,60 +380,14 @@
     </div>
   </div>
 
-  <!-- API section for law data fetching -->
-  <div id="app" style="padding: 20px;">
-    <!-- This will be populated by the API component -->
-  </div>
-
   <!-- Viewer UI components -->
-  <div class="top" style="display: none;" id="viewer-toolbar">
+  <div class="top" id="viewer-toolbar">
     <ul>
-      <li>
-        <img src="./img/comment.png" class="icon" id="btn_comment" style="background-color: #ffcccc"
-          commentColor="#ffcccc" title="コメント (Ctrl+1)" />
-        <img src="./img/color_select.png" class="icon_bottom" id="btn_select_comment_color" title="コメント色の選択" />
-      </li>
-      <li>
-        <img src="./img/bold.png" class="icon" id="btn_bold" title="太字 (Ctrl+B)" />
-      </li>
-      <li>
-        <img src="./img/underline.png" class="icon" id="btn_underline" title="下線 (Ctrl+U)" />
-      </li>
-      <li>
-        <img src="./img/highlight.png" class="icon" id="btn_highlight" title="マーカー (Ctrl+H)" highlightColor="#ffff60"
-          style="background-color: #ffff60" />
-        <img src="./img/color_select.png" class="icon_bottom" id="btn_select_highlight_color" title="マーカー色の選択" />
-      </li>
-      <li>
-        <img src="./img/eraser.png" class="icon" id="btn_erase" title="マーカー削除(Ctrl+D)" />
-      </li>
-      <li class="blank"></li>
-      <li id="li_figureOn" class="hidden">
-        <img src="./img/figure_on.png" class="icon" id="btn_figureOn" title="図面表示" />
-      </li>
-      <li id="li_figureOff" class="hidden">
-        <img src="./img/figure_off.png" class="icon" id="btn_figureOff" title="図面非表示" />
-      </li>
-      <li id="li_editUnlock" class="hidden">
-        <img src="./img/edit_unlock.png" class="icon" id="btn_editUnlock" title="本文ロック解除（本文の編集を可能にします）" />
-      </li>
-      <li id="li_editLock" class="hidden">
-        <img src="./img/edit_lock.png" class="icon" id="btn_editLock" title="本文ロック（本文の変更を禁止します）" />
-      </li>
-      <li class="blank"></li>
       <li id="word_menu">
         <div>
           <label><img src="./img/lightness.png" class="icon2" title="ワード反転色の輝度" /></label>
           <input type="range" id="word_inversion_lightness" name="word_inversion_lightness" min="0.2" max="0.8"
             step="0.1" />
-        </div>
-        <div>
-          <label><input type="checkbox" id="block_mode" checked /><img src="./img/block_inversion.png" class="icon2"
-              title="ブロック反転（反転範囲を漢字・カタカナ・英語が連続する範囲まで広げます）" /></label>
-        </div>
-        <div>
-          <label><input type="checkbox" id="auto_sieve_mode" checked /><img src="./img/scissors.png" class="icon2"
-              title="ワードトリミング（ヒットしなかったワードを自動で削除します）" /></label>
         </div>
       </li>
       <li>
@@ -437,30 +396,23 @@
       <li>
         <span id="fusoku_display" class="chikujo">附則表示切替</span>
       </li>
-      <li>
-        <span id="comment_toggle" class="chikujo">コメント表示切替</span>
-      </li>
-      <li>
-        <a href="https://www.legislative-affairs-office.general-affairs-division.general-affairs-department.jpo.go.jp/higuchi/sat_law/manual/manual.html"
-          target="_blank"><img src="./img/help.png" class="icon" title="ヘルプを表示します" /></a>
-      </li>
       <li class="blank"><input id="article_jump" type="text" placeholder="条文番号ジャンプ（Ctrl+/）" /></li>
       <li id="zumen_analysis"></li>
     </ul>
-
-    <!-- Breadcrumb Navigation -->
-    <nav id="breadcrumb-navigation" class="bg-White-1000" aria-label="法令構造ナビゲーション">
-      <div class="container mx-auto px-2 md:px-4 py-1">
-        <div class="flex items-center">
-          <ul id="breadcrumb-list" class="flex items-center space-x-1 md:space-x-2 text-xs overflow-x-auto whitespace-nowrap flex-1 min-w-0" role="navigation" aria-label="パンくずリスト">
-            <!-- パンくずアイテムが動的に挿入される -->
-          </ul>
-        </div>
-      </div>
-    </nav>
   </div>
 
-  <div class="bottom" style="display: none;" id="viewer-content">
+  <!-- Breadcrumb Navigation -->
+  <nav id="breadcrumb-navigation" aria-label="法令構造ナビゲーション">
+    <div class="container mx-auto px-2 md:px-4 py-1">
+      <div class="flex items-center">
+        <ul id="breadcrumb-list" class="flex items-center space-x-1 md:space-x-2 text-xs overflow-x-auto whitespace-nowrap flex-1 min-w-0" role="navigation" aria-label="パンくずリスト">
+          <!-- パンくずアイテムが動的に挿入される -->
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="bottom" id="viewer-content">
     <div id="color_picker">
       <img style="margin-right: 2px" src="./img/colormap.gif" usemap="#colormap" alt="colormap" />
     </div>
@@ -468,14 +420,7 @@
     <div id="text" class="column">
       <div id="main">
         <div id="contenteditable_container">
-          <div id="content">データ読み込み中...</div>
-          <div id="comment_container">
-            <div id="color_picker_comment">
-              <img style="margin-right: 2px" src="./img/colormap.gif" usemap="#colormap" alt="colormap" />
-            </div>
-            <div id="comment_svg"><svg></svg></div>
-            <div id="comment_div"></div>
-          </div>
+          <div id="content">e-govの法令APIからデータを読み込み中...</div>
         </div>
       </div>
       <div id="spectrum">
@@ -626,13 +571,6 @@
   <script>
     // Initialize function that will be called when law data is ready
     window.showLawViewer = function(data) {
-      // Show the viewer components
-      document.getElementById('viewer-toolbar').style.display = 'block';
-      document.getElementById('viewer-content').style.display = 'block';
-
-      // Hide the API section
-      document.getElementById('app').style.display = 'none';
-
       // Set the content
       document.getElementById('content').innerHTML = data.content;
       document.title = data.lawTitle;
@@ -733,23 +671,6 @@
           e.target.value = zenkaku2Hankaku(e.target.value);
           const element = document.querySelector(`a[name="article${e.target.value}"]`);
           if (element) { element.scrollIntoView(); }
-        });
-      }
-
-      // Comment toggle functionality
-      const commentToggle = document.getElementById('comment_toggle');
-      if (commentToggle) {
-        commentToggle.addEventListener('click', () => {
-          const commentContainer = document.getElementById('comment_container');
-          if (commentContainer) {
-            if (commentContainer.style.display === 'none') {
-              commentContainer.style.display = 'block';
-              commentToggle.textContent = 'コメント非表示';
-            } else {
-              commentContainer.style.display = 'none';
-              commentToggle.textContent = 'コメント表示切替';
-            }
-          }
         });
       }
 

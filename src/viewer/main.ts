@@ -1,15 +1,10 @@
 "use strict";
 import * as sat_modules from "./sat";
-// @ts-ignore
-import { getSelection } from "rangy2/bundles/index.umd";
 // Split.js を削除して自作の幅調整機能を実装
 // @ts-ignore
 import hotkeys from "hotkeys-js/dist/hotkeys";
 
 let sat: sat_modules.Sat;
-let commentVisible: boolean = true;
-let contentWidth: number = 70; // 本文領域の幅（%）
-let isResizing: boolean = false;
 
 // Window インターフェースを拡張してinitialize関数を追加
 declare global {
@@ -43,9 +38,7 @@ const initialize = async () => {
     Number(
       (document.getElementById("word_inversion_lightness")! as HTMLInputElement)
         .value
-    ),
-    (document.getElementById("block_mode")! as HTMLInputElement).checked,
-    (document.getElementById("auto_sieve_mode")! as HTMLInputElement).checked
+    )
   );
 
   initializeHTML();
@@ -60,8 +53,6 @@ const initialize = async () => {
   setTimeout(() => {
     sat.cv.updateData();
     sat.cv.draw();
-    sat.comment.sort();
-    sat.comment.arrange();
   }, 100);
 };
 
@@ -74,30 +65,6 @@ function setKeyboardPreference() {
   hotkeys.filter = (event: any) => {
     return true; // contenteditableな要素の中でもショートカットを有効にする
   };
-
-  // egov版のショートカットキー
-  hotkeys("ctrl+b", (event: Event, _handler: any) => {
-    event.preventDefault();
-    decorate("bold");
-  });
-  hotkeys("ctrl+u", (event: Event, _handler: any) => {
-    event.preventDefault();
-    decorate("underline");
-  });
-  hotkeys("ctrl+h", (event: Event, _handler: any) => {
-    event.preventDefault();
-    highlight();
-    sat.content_window.getSelection()?.removeAllRanges();
-  });
-  hotkeys("ctrl+d", (event: Event, _handler: any) => {
-    event.preventDefault();
-    dehighlight();
-    sat.content_window.getSelection()?.removeAllRanges();
-  });
-  hotkeys("ctrl+1", (event: Event, _handler: any) => {
-    event.preventDefault();
-    comment();
-  });
 
   hotkeys("ctrl+shift+f", (event: Event, _handler: any) => {
     event.preventDefault();
@@ -136,24 +103,6 @@ function setKeyboardPreference() {
         doPrevent = false;
       } else if (d.isContentEditable) {
         doPrevent = false;
-
-        const div_element = window
-          .getSelection()
-          ?.anchorNode?.parentElement?.closest("div.comment") as HTMLElement;
-
-        // コメントが空のときにBackspaceが押されたら、コメントを削除
-        if (
-          div_element &&
-          (div_element.innerText === "\n" || div_element.innerText === "")
-        ) {
-          doPrevent = true;
-
-          sat.comment.remove(div_element.getAttribute("comment_id")!);
-          sat.cv.updateData();
-          sat.cv.draw();
-          sat.comment.sort();
-          sat.comment.arrange();
-        }
       } else if (d.tagName === "INPUT") {
         doPrevent = false;
       } else if (d.tagName === "TEXTAREA") {
@@ -181,88 +130,7 @@ async function initializeHTML() {
     ) {
       color_picker.style.display = "none";
     }
-    const color_picker_comment = document.getElementById(
-      "color_picker_comment"
-    )!;
-    if (
-      color_picker_comment.style.display !== "none" &&
-      !color_picker_comment.contains(e.target)
-    ) {
-      color_picker_comment.style.display = "none";
-      color_picker.setAttribute("comment_id", "");
-    }
   });
-
-  // イベントハンドラ追加（コメント側）
-  Array.from(document.querySelectorAll("div.comment")).forEach(
-    (div_element) => {
-      sat.comment.linkify(div_element);
-      div_element.addEventListener("mouseover", (e) => {
-        sat.comment.onMouseOver(div_element.getAttribute("comment_id")!);
-      });
-      div_element.addEventListener("input", (e) => {
-        sat.comment.onInput();
-      });
-      div_element.addEventListener("blur", (e) => {
-        sat.comment.onBlur(e);
-      });
-      div_element.addEventListener("paste", (e) => {
-        sat.comment.onPaste(e);
-      });
-
-      div_element.addEventListener("mouseout", (e) => {
-        // 子要素への移動であれば無視
-        if (
-          e instanceof MouseEvent &&
-          e.relatedTarget instanceof HTMLElement &&
-          e.relatedTarget.parentElement !== null &&
-          e.relatedTarget.parentElement.closest(
-            `div.comment[comment_id="${div_element.getAttribute(
-              "comment_id"
-            )}"]`
-          ) !== null
-        ) {
-          return;
-        }
-        sat.comment.onMouseOut(div_element.getAttribute("comment_id")!);
-      });
-    }
-  );
-  Array.from(
-    document.getElementById("comment_svg")!.querySelectorAll("polygon")
-  ).forEach((polygon_element) => {
-    polygon_element.addEventListener("click", (e) => {
-      if (e.target instanceof SVGPolygonElement) {
-        sat.comment.onPolygonClick(e.target.getAttribute("comment_id")!);
-      }
-    });
-  });
-
-  // イベントハンドラ追加（被コメント側）
-  Array.from(sat.content_root.querySelectorAll("span.commented")).forEach(
-    (span_element) => {
-      span_element.addEventListener("mouseover", (e) => {
-        sat.comment.onMouseOver(span_element.getAttribute("comment_id")!);
-      });
-
-      span_element.addEventListener("mouseout", (e) => {
-        // 子要素への移動であれば無視
-        if (
-          e instanceof MouseEvent &&
-          e.relatedTarget instanceof HTMLElement &&
-          e.relatedTarget.parentElement !== null &&
-          e.relatedTarget.parentElement.closest(
-            `span.commented[comment_id="${span_element.getAttribute(
-              "comment_id"
-            )}"]`
-          ) !== null
-        ) {
-          return;
-        }
-        sat.comment.onMouseOut(span_element.getAttribute("comment_id")!);
-      });
-    }
-  );
 
   // スペクトルバー関連
   document.getElementById("main")!.addEventListener("scroll", (e) => {
@@ -278,11 +146,8 @@ async function initializeHTML() {
       cv.width = Number(div_style.width.replace("px", ""));
       cv.height = Number(div_style.height.replace("px", ""));
 
-      // 何故か、sat.cv.updateData();を先にしないとsat.comment.sort()とarrange()が機能しない。。。
       sat.cv.updateData();
       sat.cv.draw();
-      sat.comment.sort();
-      sat.comment.arrange();
     }, 0);
   });
 
@@ -333,88 +198,6 @@ async function initializeHTML() {
         sat.cv.draw();
       }
     });
-  document.getElementById("block_mode")!.addEventListener("change", (e) => {
-    // @ts-ignore
-    localStorage.setItem("SAT_block_mode", e.target.checked.toString());
-
-    showSpinner("ワード反転中...", 10, () => {
-      if (e.target instanceof HTMLInputElement && e.target.checked) {
-        sat.word.block_mode = true;
-        sat.word.invert(sat.content_root);
-        sat.cv.updateData();
-        sat.cv.draw();
-      } else {
-        sat.word.block_mode = false;
-        sat.word.invert(sat.content_root);
-        sat.cv.updateData();
-        sat.cv.draw();
-      }
-    });
-  });
-  document
-    .getElementById("auto_sieve_mode")!
-    .addEventListener("change", (e) => {
-      // @ts-ignore
-      localStorage.setItem("SAT_auto_sieve_mode", e.target.checked.toString());
-      if (e.target instanceof HTMLInputElement) {
-        sat.word.auto_sieve_mode = e.target.checked;
-      }
-    });
-  document.getElementById("btn_bold")!.addEventListener("click", () => {
-    decorate("bold");
-  });
-  document.getElementById("btn_underline")!.addEventListener("click", () => {
-    decorate("underline");
-  });
-  document.getElementById("btn_highlight")!.addEventListener("click", () => {
-    highlight();
-    sat.content_window.getSelection()?.removeAllRanges();
-  });
-  document
-    .getElementById("btn_select_highlight_color")!
-    .addEventListener("click", (e) => {
-      if (!(e.target instanceof HTMLElement)) return;
-      const color_picker = document.getElementById("color_picker")!;
-      color_picker.setAttribute("mode", "highlight");
-      color_picker.style.display = "block";
-      color_picker.style.left = `${sat.getOffset(e.target, document.body).offset_left +
-        e.target.offsetWidth / 2 -
-        document.getElementById("color_picker")!.offsetWidth / 2
-        }px`;
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  document
-    .getElementById("btn_select_comment_color")!
-    .addEventListener("click", (e) => {
-      if (!(e.target instanceof HTMLElement)) return;
-      const color_picker = document.getElementById("color_picker")!;
-      color_picker.setAttribute("mode", "comment");
-      color_picker.style.display = "block";
-      color_picker.style.left = `${sat.getOffset(e.target, document.body).offset_left +
-        e.target.offsetWidth / 2 -
-        document.getElementById("color_picker")!.offsetWidth / 2
-        }px`;
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  document.getElementById("btn_erase")!.addEventListener("click", (e) => {
-    dehighlight();
-    sat.content_window.getSelection()?.removeAllRanges();
-  });
-  document.getElementById("btn_comment")!.addEventListener("click", () => {
-    comment();
-  });
-  document.getElementById("btn_editUnlock")!.addEventListener("click", () => {
-    document.getElementById("content")!.contentEditable = "true";
-    document.getElementById("li_editUnlock")!.classList.add("hidden");
-    document.getElementById("li_editLock")!.classList.remove("hidden");
-  });
-  document.getElementById("btn_editLock")!.addEventListener("click", () => {
-    document.getElementById("content")!.contentEditable = "false";
-    document.getElementById("li_editLock")!.classList.add("hidden");
-    document.getElementById("li_editUnlock")!.classList.remove("hidden");
-  });
   document.getElementById("word_query")!.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -447,48 +230,9 @@ async function initializeHTML() {
   });
 
   // オブザーバ関係（サイズ変更の監視）
-  const comment_removal_observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.removedNodes.forEach((node) => {
-        if (node instanceof HTMLSpanElement) {
-          if (node.classList.contains("commented")) {
-            const comment_id = node.getAttribute("comment_id")!;
-            const span_with_same_comment_id = document
-              .getElementById("content")!
-              .querySelector(`span.commented[comment_id="${comment_id}"]`);
-            if (!span_with_same_comment_id) {
-              sat.comment.remove(comment_id);
-            }
-            sat.cv.updateData();
-            sat.cv.draw();
-            sat.comment.sort();
-            sat.comment.arrange();
-          }
-        }
-      });
-    });
-  });
-  comment_removal_observer.observe(document.getElementById("content")!, {
-    childList: true,
-    subtree: true,
-  });
-
-  const comment_resize_observer = new MutationObserver((mutations) => {
-    sat.comment.arrange();
-  });
-  comment_resize_observer.observe(document.getElementById("comment_div")!, {
-    attributes: true,
-    childList: true,
-    subtree: true,
-    characterData: true,
-    attributeFilter: ["offsetHeight", "clientHeight", "scrollHeight", "height"],
-  });
-
   const body_resize_observer = new MutationObserver((mutations) => {
     sat.cv.updateData();
     sat.cv.draw();
-    sat.comment.sort();
-    sat.comment.arrange();
   });
   body_resize_observer.observe(document.body, {
     attributes: true,
@@ -507,8 +251,6 @@ async function initializeHTML() {
   const cv_resize_observer = new MutationObserver((mutations) => {
     sat.cv.updateData();
     sat.cv.draw();
-    sat.comment.sort();
-    sat.comment.arrange();
   });
   cv_resize_observer.observe(document.getElementById("spectrum")!, {
     attributes: true,
@@ -522,11 +264,6 @@ async function initializeHTML() {
       "scrollWidth",
       "width",
     ],
-  });
-
-  // 本文部分のイベントハンドラ登録
-  document.getElementById("content")!.addEventListener("input", (e) => {
-    sat.comment.arrange();
   });
 
   // 簡易ワード反転のクリックイベント（color_pickerのクリックイベント時にこのイベントの実行を中止させたいので、focusでなくclickイベントを選択）
@@ -545,24 +282,6 @@ async function initializeHTML() {
     document.execCommand("insertHTML", false, text);
   });
 
-  // コメント表示状態の復元
-  const savedCommentVisible = localStorage.getItem("SAT_comment_visible");
-  if (savedCommentVisible !== null) {
-    commentVisible = savedCommentVisible === "true";
-  }
-
-  // 幅設定の復元
-  const savedContentWidth = localStorage.getItem("SAT_content_width");
-  if (savedContentWidth !== null) {
-    contentWidth = parseFloat(savedContentWidth);
-  }
-
-  // 自作リサイズ機能の初期化
-  initializeResizer();
-
-  // パネルサイズの初期設定
-  updatePanelSizes();
-
   // マーカー色設定などのロード
   if (localStorage.getItem("SAT_word_inversion_lightness")) {
     (
@@ -572,150 +291,7 @@ async function initializeHTML() {
       localStorage.getItem("SAT_word_inversion_lightness")!
     );
   }
-  if (
-    (
-      document.getElementById("block_mode")! as HTMLInputElement
-    ).checked.toString() !== localStorage.getItem("SAT_block_mode")
-  ) {
-    document.getElementById("block_mode")!.click();
-  }
-  if (
-    (
-      document.getElementById("auto_sieve_mode")! as HTMLInputElement
-    ).checked.toString() !== localStorage.getItem("SAT_auto_sieve_mode")
-  ) {
-    document.getElementById("auto_sieve_mode")!.click();
-  }
-  let highlight_color: string | null, comment_color: string | null;
-  if ((highlight_color = localStorage.getItem("SAT_highlight_color"))) {
-    const btn_highlight = document.getElementById("btn_highlight")!;
-    btn_highlight.setAttribute("highlightColor", highlight_color);
-    btn_highlight.style.backgroundColor = highlight_color;
-  }
-  if ((comment_color = localStorage.getItem("SAT_comment_color"))) {
-    const btn_comment = document.getElementById("btn_comment")!;
-    btn_comment.setAttribute("commentColor", comment_color);
-    btn_comment.style.backgroundColor = comment_color;
-  }
-
-  // コメント表示切り替えボタンのイベント
-  document
-    .getElementById("comment_toggle")
-    ?.addEventListener("click", () => {
-      toggleCommentVisibility();
-    });
-
-  // egov版の逐条関係のイベント
-  Array.from(document.querySelectorAll("details")).forEach((details) => {
-      const commentSVG = document.getElementById("comment_svg")!;
-      const commentDiv = document.getElementById("comment_div")!;
-      details.addEventListener("toggle", (e) => {
-        Array.from(
-          new Set(
-            Array.from(details.querySelectorAll("span.commented")).map(
-              (span) => {
-                return span.getAttribute("comment_id");
-              }
-            )
-          )
-        ).forEach((comment_id) => {
-          if (details.open) {
-            (
-              commentDiv.querySelector(
-                `div.comment[comment_id="${comment_id}"]`
-              )! as HTMLDivElement
-            ).style.display = "";
-            (
-              commentSVG.querySelector(
-                `polygon[comment_id="${comment_id}"]`
-              )! as SVGPolygonElement
-            ).style.display = "";
-          } else {
-            (
-              commentDiv.querySelector(
-                `div.comment[comment_id="${comment_id}"]`
-              )! as HTMLDivElement
-            ).style.display = "none";
-            (
-              commentSVG.querySelector(
-                `polygon[comment_id="${comment_id}"]`
-              )! as SVGPolygonElement
-            ).style.display = "none";
-          }
-          sat.cv.updateData();
-          sat.comment.sort();
-          sat.comment.arrange();
-        });
-      });
-    });
-
-    document
-      .getElementById("chikujo_display")
-      ?.addEventListener("click", () => {
-        const flag =
-          document.querySelector("details")!.style.display === "none";
-        if (flag) {
-          Array.from(document.querySelectorAll("details")).forEach(
-            (details) => {
-              details.style.display = "";
-            }
-          );
-        } else {
-          Array.from(document.querySelectorAll("details")).forEach(
-            (details) => {
-              details.style.display = "none";
-            }
-          );
-        }
-
-        const commentSVG = document.getElementById("comment_svg")!;
-        const commentDiv = document.getElementById("comment_div")!;
-        const content = document.getElementById("content")!;
-        Array.from(
-          new Set(
-            Array.from(document.querySelectorAll("details span.commented")).map(
-              (span) => {
-                return span.getAttribute("comment_id");
-              }
-            )
-          )
-        ).forEach((comment_id) => {
-          const details = content
-            .querySelector(`[comment_id="${comment_id}"]`)
-            ?.closest("details");
-          if (details && !details.open) return;
-          if (flag) {
-            (
-              commentDiv.querySelector(
-                `div.comment[comment_id="${comment_id}"]`
-              )! as HTMLDivElement
-            ).style.display = "";
-            (
-              commentSVG.querySelector(
-                `polygon[comment_id="${comment_id}"]`
-              )! as SVGPolygonElement
-            ).style.display = "";
-          } else {
-            (
-              commentDiv.querySelector(
-                `div.comment[comment_id="${comment_id}"]`
-              )! as HTMLDivElement
-            ).style.display = "none";
-            (
-              commentSVG.querySelector(
-                `polygon[comment_id="${comment_id}"]`
-              )! as SVGPolygonElement
-            ).style.display = "none";
-          }
-        });
-
-
-        sat.cv.updateData();
-        sat.comment.sort();
-        sat.comment.arrange();
-      });
-
-    // TODO!
+  // TODO!
     document
       .getElementById("fusoku_display")
       ?.addEventListener("click", () => {
@@ -741,275 +317,8 @@ async function initializeHTML() {
           (window as any).initializeBreadcrumbNavigation();
         }
 
-        const commentSVG = document.getElementById("comment_svg")!;
-        const commentDiv = document.getElementById("comment_div")!;
-        // const content = document.getElementById("content")!;
-        Array.from(
-          new Set(
-            Array.from(document.querySelectorAll("SupplProvision span.commented")).map(
-              (span) => {
-                return span.getAttribute("comment_id");
-              }
-            )
-          )
-        ).forEach((comment_id) => {
-          // const SupplProvision = content
-          //   .querySelector(`[comment_id="${comment_id}"]`)
-          //   ?.closest("section.SupplProvision");
-          // if (SupplProvision && !SupplProvision.open) return;
-          if (flag) {
-            (
-              commentDiv.querySelector(
-                `div.comment[comment_id="${comment_id}"]`
-              )! as HTMLDivElement
-            ).style.display = "";
-            (
-              commentSVG.querySelector(
-                `polygon[comment_id="${comment_id}"]`
-              )! as SVGPolygonElement
-            ).style.display = "";
-          } else {
-            (
-              commentDiv.querySelector(
-                `div.comment[comment_id="${comment_id}"]`
-              )! as HTMLDivElement
-            ).style.display = "none";
-            (
-              commentSVG.querySelector(
-                `polygon[comment_id="${comment_id}"]`
-              )! as SVGPolygonElement
-            ).style.display = "none";
-          }
-        });
-
-
         sat.cv.updateData();
-        sat.comment.sort();
-        sat.comment.arrange();
       });
-}
-
-/*
- * ====================== ダウンロード、ロード関連 ======================
- */
-
-/*
- * ====================== コメント表示切り替え関連 ======================
- */
-
-/**
- * 領域の幅を設定する
- */
-function updatePanelSizes() {
-  const content = document.getElementById("content")!;
-  const commentContainer = document.getElementById("comment_container")!;
-  const resizer = document.getElementById("resizer")!;
-
-  if (commentVisible) {
-    content.style.width = `${contentWidth}%`;
-    commentContainer.style.width = `${100 - contentWidth}%`;
-    commentContainer.style.display = "block";
-    resizer.style.display = "block";
-  } else {
-    content.style.width = "100%";
-    commentContainer.style.width = "0%";
-    commentContainer.style.display = "none";
-    resizer.style.display = "none";
-  }
-}
-
-/**
- * リサイザーの初期化
- */
-function initializeResizer() {
-  const resizer = document.createElement("div");
-  resizer.id = "resizer";
-  resizer.className = "resizer";
-
-  // contentとcomment_containerの間にリサイザーを配置
-  const contenteditable_container = document.getElementById("contenteditable_container")!;
-  const content = document.getElementById("content")!;
-  const commentContainer = document.getElementById("comment_container")!;
-
-  // contentの後、comment_containerの前に配置
-  contenteditable_container.insertBefore(resizer, commentContainer);
-
-  let startX: number;
-  let startWidth: number;
-
-  resizer.addEventListener("mousedown", (e) => {
-    if (!commentVisible) return;
-
-    isResizing = true;
-    startX = e.clientX;
-    startWidth = contentWidth;
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    resizer.style.cursor = "col-resize";
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  });
-
-  function handleMouseMove(e: MouseEvent) {
-    if (!isResizing || !commentVisible) return;
-
-    const container = document.getElementById("text")!;
-    const containerWidth = container.offsetWidth;
-    const deltaX = e.clientX - startX;
-    const deltaPercent = (deltaX / containerWidth) * 100;
-
-    let newWidth = startWidth + deltaPercent;
-
-    // 最小・最大幅の制限
-    newWidth = Math.max(30, Math.min(80, newWidth));
-
-    contentWidth = newWidth;
-    updatePanelSizes();
-
-    // リアルタイムでコメント位置を調整
-    sat.comment.arrange();
-  }
-
-  function handleMouseUp() {
-    if (!isResizing) return;
-
-    isResizing = false;
-    resizer.style.cursor = "";
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
-
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
-
-    // 最終的な描画更新
-    setTimeout(() => {
-      sat.cv.updateData();
-      sat.cv.draw();
-      sat.comment.sort();
-      sat.comment.arrange();
-    }, 0);
-
-    // 幅設定をlocalStorageに保存
-    localStorage.setItem("SAT_content_width", contentWidth.toString());
-  }
-}
-
-/**
- * コメント領域の表示・非表示を切り替える
- */
-function toggleCommentVisibility() {
-  commentVisible = !commentVisible;
-  localStorage.setItem("SAT_comment_visible", commentVisible.toString());
-
-  updatePanelSizes();
-
-  // スペクトルバーの再描画
-  setTimeout(() => {
-    sat.cv.updateData();
-    sat.cv.draw();
-    sat.comment.sort();
-    sat.comment.arrange();
-  }, 100);
-}
-
-/*
- * ====================== decoration, comment関連 ======================
- */
-
-/**
- * 選択された領域の修飾
- * @param {string} class_name 修飾に対応するclassの名前
- */
-function decorate(class_name: string) {
-  const selection = sat.content_window.getSelection();
-  if (!selection) return;
-  // 選択範囲がsat.content_rootに含まれていなければ終了
-  if (
-    !sat.content_root.contains(selection.anchorNode) ||
-    !sat.content_root.contains(selection.focusNode)
-  ) {
-    return;
-  }
-  sat.decoration.add(class_name);
-}
-
-/**
- * 選択された領域のハイライト
- */
-function highlight() {
-  const color_code = document
-    .getElementById("btn_highlight")!
-    .getAttribute("highlightColor")!;
-
-  const selection = sat.content_window.getSelection();
-  if (!selection) return;
-
-  // 選択範囲がsat.content_rootに含まれていなければ終了
-  if (
-    !sat.content_root.contains(selection.anchorNode) ||
-    !sat.content_root.contains(selection.focusNode)
-  ) {
-    return;
-  }
-  sat.decoration.highlight(color_code);
-}
-
-/**
- * 選択された領域のハイライト削除
- */
-function dehighlight() {
-  sat.decoration.dehighlight();
-}
-
-/**
- * 選択された領域へのコメントを追加
- */
-function comment() {
-  const color_code = document
-    .getElementById("btn_comment")!
-    .getAttribute("commentColor")!;
-
-  const selection = sat.content_window.getSelection();
-  if (!selection) return;
-
-  // 選択範囲がsat.content_rootに含まれていなければ終了
-  if (
-    !sat.content_root.contains(selection.anchorNode) ||
-    !sat.content_root.contains(selection.focusNode)
-  ) {
-    return;
-  }
-
-  // Selectionにコメントが含まれている場合、コメントを追加しない
-  const sel = getSelection(sat.content_window);
-  if (sel.rangeCount) {
-    if (
-      sel.getRangeAt(0).getNodes([], (node: Node) => {
-        return node instanceof Element && node.classList.contains("commented");
-      }).length > 0
-    ) {
-      alert("同じ領域に複数のコメントをつけることはできません。");
-      return;
-    }
-    if (
-      sel
-        .getRangeAt(0)
-        .commonAncestorContainer.parentElement.closest("span.commented") !==
-      null
-    ) {
-      alert("同じ領域に複数のコメントをつけることはできません。");
-      return;
-    }
-  }
-
-  // コメント非表示時にコメントを作成した場合、表示状態に切り替え
-  if (!commentVisible) {
-    toggleCommentVisibility();
-  }
-
-  sat.comment.addComment(color_code);
 }
 
 /*
@@ -1136,53 +445,17 @@ function setColoredQuery() {
  */
 // @ts-ignore
 function colorPickerMouseOver(color_code: string) {
-  const mode = document.getElementById("color_picker")!.getAttribute("mode");
-  if (mode === "highlight") {
-    return;
-  } else if (mode === "comment") {
-    const comment_id = document
-      .getElementById("color_picker")!
-      .getAttribute("comment_id");
-
-    if (comment_id) {
-      const comment_div = document
-        .getElementById("comment_div")!
-        .querySelector<HTMLDivElement>(
-          `div.comment[comment_id="${comment_id}"]`
-        )!;
-
-      const polygon_element = document
-        .getElementById("comment_svg")!
-        .querySelector<SVGPolygonElement>(
-          `polygon[comment_id="${comment_id}"]`
-        )!;
-
-      const commented_span_arr = document.querySelectorAll<HTMLSpanElement>(
-        `span.commented[comment_id="${comment_id}"]`
-      );
-
-      comment_div.style.backgroundColor = color_code;
-      comment_div.style.borderColor = color_code;
-      polygon_element.style.fill = color_code;
-      polygon_element.style.stroke = color_code;
-      commented_span_arr.forEach((span) => {
-        span.style.backgroundColor = color_code;
-        span.style.borderColor = color_code;
-      });
-    }
-  } else {
-    const color_id = document
-      .getElementById("color_picker")!
-      .getAttribute("color_id");
-    Array.from(document.getElementById("word_query")!.querySelectorAll("span"))
-      .filter((span) => {
-        return span.getAttribute("color_id") === color_id;
-      })
-      .forEach((span) => {
-        span.style.setProperty("background-color", color_code, "important");
-        span.style.color = sat.word.calcWordColor(color_code);
-      });
-  }
+  const color_id = document
+    .getElementById("color_picker")!
+    .getAttribute("color_id");
+  Array.from(document.getElementById("word_query")!.querySelectorAll("span"))
+    .filter((span) => {
+      return span.getAttribute("color_id") === color_id;
+    })
+    .forEach((span) => {
+      span.style.setProperty("background-color", color_code, "important");
+      span.style.color = sat.word.calcWordColor(color_code);
+    });
 }
 
 /**
@@ -1190,52 +463,16 @@ function colorPickerMouseOver(color_code: string) {
  */
 // @ts-ignore
 function colorPickerMouseOut() {
-  const mode = document.getElementById("color_picker")!.getAttribute("mode");
-  if (mode === "highlight") {
-    return;
-  } else if (mode === "comment") {
-    const comment_id = document
-      .getElementById("color_picker")!
-      .getAttribute("comment_id");
-
-    if (comment_id) {
-      const comment_div = document
-        .getElementById("comment_div")!
-        .querySelector<HTMLDivElement>(
-          `div.comment[comment_id="${comment_id}"]`
-        )!;
-      const polygon_element = document
-        .getElementById("comment_svg")!
-        .querySelector<SVGPolygonElement>(
-          `polygon[comment_id="${comment_id}"]`
-        )!;
-      const commented_span_arr = document.querySelectorAll<HTMLSpanElement>(
-        `span.commented[comment_id="${comment_id}"]`
-      );
-      const color_code = document
-        .getElementById("color_picker")!
-        .getAttribute("comment_color")!;
-      comment_div.style.backgroundColor = color_code;
-      comment_div.style.borderColor = color_code;
-      polygon_element.style.fill = color_code;
-      polygon_element.style.stroke = color_code;
-      commented_span_arr.forEach((span) => {
-        span.style.backgroundColor = color_code;
-        span.style.borderColor = color_code;
-      });
-    }
-  } else {
-    const color_id = document
-      .getElementById("color_picker")!
-      .getAttribute("color_id");
-    Array.from(document.getElementById("word_query")!.querySelectorAll("span"))
-      .filter((span) => {
-        return span.getAttribute("color_id") === color_id;
-      })
-      .forEach((span) => {
-        span.removeAttribute("style");
-      });
-  }
+  const color_id = document
+    .getElementById("color_picker")!
+    .getAttribute("color_id");
+  Array.from(document.getElementById("word_query")!.querySelectorAll("span"))
+    .filter((span) => {
+      return span.getAttribute("color_id") === color_id;
+    })
+    .forEach((span) => {
+      span.removeAttribute("style");
+    });
 }
 
 /**
@@ -1246,34 +483,18 @@ function colorPickerMouseOut() {
 function colorPickerClick(color_code: string) {
   color_code = color_code.toLowerCase();
 
-  const mode = document.getElementById("color_picker")!.getAttribute("mode");
-  if (mode === "highlight") {
-    localStorage.setItem("SAT_highlight_color", color_code);
-    const btn_highlight = document.getElementById("btn_highlight")!;
-    btn_highlight.setAttribute("highlightColor", color_code);
-    btn_highlight.style.backgroundColor = color_code;
-  } else if (mode === "comment") {
-    localStorage.setItem("SAT_comment_color", color_code);
-    document.getElementById("btn_comment")!.style.backgroundColor = color_code;
-    document
-      .getElementById("btn_comment")!
-      .setAttribute("commentColor", color_code);
-    document.getElementById("color_picker")!.setAttribute("comment_id", "");
+  const color_id = document
+    .getElementById("color_picker")!
+    .getAttribute("color_id")!;
+
+  showSpinner("ワード反転中...", 0, () => {
+    sat.word.setColor(Number(color_id), color_code);
+    sat.word.invert(sat.content_root);
+    setColoredQuery();
     sat.cv.updateData();
     sat.cv.draw();
-  } else {
-    const color_id = document
-      .getElementById("color_picker")!
-      .getAttribute("color_id")!;
+  });
 
-    showSpinner("ワード反転中...", 0, () => {
-      sat.word.setColor(Number(color_id), color_code);
-      sat.word.invert(sat.content_root);
-      setColoredQuery();
-      sat.cv.updateData();
-      sat.cv.draw();
-    });
-  }
   document.getElementById("color_picker")!.style.display = "none";
 }
 

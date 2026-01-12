@@ -36,7 +36,7 @@ div {
 
 .top {
   background-color: #333;
-  padding: 3px;
+  padding: 0px;
   flex-shrink: 0;
   flex-grow: 0;
   overflow-y: auto;
@@ -388,12 +388,11 @@ body #zumen img {
 }
 
 #content {
-  width: 70%;
+  width: 100%;
   flex-grow: 0;
   flex-shrink: 0;
   padding: 10px;
   word-wrap: break-word;
-  border: 1px solid #000;
   line-height: 1.6;
 }
 
