@@ -1,11 +1,4 @@
-// @ts-ignore
-import { getSelection } from "rangy2/bundles/index.umd";
-// @ts-ignore
-import { createClassApplier } from "rangy-classapplier/bundles/index.umd";
-// @ts-ignore
 import Mark from "mark.js/dist/mark";
-// @ts-ignore
-import Tesseract from "tesseract.js/dist/tesseract.min.js";
 
 export type WordOption = {
   words: string[];
@@ -18,7 +11,6 @@ export class Sat {
 
   word: SatWord; // ワード反転を扱うオブジェクト
   cv: SatCanvas; // スペクトルバーの描画を扱うオブジェクト
-  decoration: SatDecoration; // マーカー、太字、下線の装飾を扱うオブジェクト
 
   constructor(
     content_root: HTMLElement,
@@ -36,8 +28,6 @@ export class Sat {
       lightness
     );
     this.cv = new SatCanvas(this, cv);
-    this.decoration = new SatDecoration(this);
-    // this.pdf = new SatPDF(this);
   }
 
   /**
@@ -156,47 +146,6 @@ export class Sat {
       `0${Math.floor(b * 255).toString(16)}`.slice(-2)
     );
   }
-  /**
-   * HSLをRGBのカラーコードに変換
-   * @param _h
-   * @param s
-   * @param l
-   * @returns "#000000"形式のカラーコード
-   */
-  // hslToRgb = (_h: number, s: number, l: number): string => {
-  //   const h = Math.min(_h, 359) / 60;
-
-  //   const c = (1 - Math.abs(2 * l - 1)) * s;
-  //   const x = c * (1 - Math.abs((h % 2) - 1));
-  //   const m = l - 0.5 * c;
-
-  //   let r = m,
-  //     g = m,
-  //     b = m;
-
-  //   if (h < 1) {
-  //     (r += c), (g = +x), (b += 0);
-  //   } else if (h < 2) {
-  //     (r += x), (g += c), (b += 0);
-  //   } else if (h < 3) {
-  //     (r += 0), (g += c), (b += x);
-  //   } else if (h < 4) {
-  //     (r += 0), (g += x), (b += c);
-  //   } else if (h < 5) {
-  //     (r += x), (g += 0), (b += c);
-  //   } else if (h < 6) {
-  //     (r += c), (g += 0), (b += x);
-  //   } else {
-  //     (r = 0), (g = 0), (b = 0);
-  //   }
-
-  //   return (
-  //     "#" +
-  //     `0${Math.floor(r * 255).toString(16)}`.slice(-2) +
-  //     `0${Math.floor(g * 255).toString(16)}`.slice(-2) +
-  //     `0${Math.floor(b * 255).toString(16)}`.slice(-2)
-  //   );
-  // };
 
   /**
    * 要素のセレクタを取得（参考：https://akabeko.me/blog/2015/06/get-element-selector/）
@@ -482,7 +431,6 @@ class SatCanvas {
   sat: Sat;
   element: HTMLCanvasElement;
   word_rect: Rect[] = [];
-  highlight_rect: { y: number; color: string }[] = [];
   constructor(sat: Sat, element: HTMLCanvasElement) {
     this.sat = sat;
     this.element = element;
@@ -520,10 +468,9 @@ class SatCanvas {
       const fill_color = this.sat.rgbTo16(
         window.getComputedStyle(span).backgroundColor
       );
-      const left_offset = 35;
+      
       const rect_x =
-        left_offset +
-        (this.element.width - left_offset) *
+        this.element.width *
         (color_dic[fill_color]! / color_num);
 
       const offset = this.sat.getOffset(
@@ -538,49 +485,21 @@ class SatCanvas {
         fill_color,
         Math.round(rect_x) - 0.5,
         Math.round(rect_y - rect_height / 2.0) - 0.5,
-        Math.round((this.element.width - left_offset) / color_num) + 0,
+        Math.round(this.element.width / color_num) + 0,
         5,
         Math.round(rect_height / 2.0),
       ]);
-    });
-
-    // ハイライト部分の●の位置を更新
-    this.highlight_rect = [];
-    Array.from(
-      document.querySelectorAll<HTMLSpanElement>("span.highlighted")
-    ).forEach((span) => {
-      this.highlight_rect.push({
-        y:
-          this.element.height *
-          ((this.sat.getOffset(
-            span,
-            this.sat.content_root
-          ).offset_top -
-            3) /
-            span_parent_height),
-        color: span.style.backgroundColor,
-      });
     });
   };
 
   draw = () => {
     const ctx = this.element.getContext("2d")!;
     ctx.clearRect(0, 0, this.element.width, this.element.height);
-    ctx.fillStyle = "#333333";
-    ctx.fillRect(0, 0, 30, window.innerHeight);
 
     this.word_rect.forEach((rect_arr): void => {
       ctx.fillStyle = rect_arr[0];
       ctx.fillRect(rect_arr[1], rect_arr[2], rect_arr[3], rect_arr[4]);
     });
-
-    this.highlight_rect.forEach(
-      (highlight_rect: { y: number; color: string }): void => {
-        ctx.fillStyle = highlight_rect.color;
-        ctx.fillRect(20, highlight_rect.y - 5, 10, 10);
-      }
-    );
-
     ctx.strokeStyle = "white";
     ctx.lineWidth = 5;
     const scroll_div = document.getElementById("main") as HTMLElement;
@@ -599,116 +518,3 @@ class SatCanvas {
     );
   };
 }
-
-class SatDecoration {
-  sat: Sat;
-  // element_info: {
-  //   selector: string;
-  //   page_number: number;
-  //   class_name: string;
-  //   start: number;
-  //   length: number;
-  // }[] = [];
-  constructor(sat: Sat) {
-    this.sat = sat;
-  }
-
-  add = (class_name: string): void => {
-    if (class_name === "underline") {
-      createClassApplier(class_name, {
-        elementTagName: "u", // uタグにしておくと、起案エディタにコピペしても下線が残る
-        normalize: true,
-      }).toggleSelection(this.sat.content_window);
-    } else {
-      createClassApplier(class_name, {
-        elementTagName: "span",
-        normalize: true,
-      }).toggleSelection(this.sat.content_window);
-    }
-  };
-
-  highlight = (color_code: string): void => {
-    createClassApplier("highlighted_tmp", {
-      elementTagName: "span",
-      normalize: false,
-    }).toggleSelection(this.sat.content_window);
-    const sel = getSelection(this.sat.content_window);
-    console.log(sel.getRangeAt(0));
-    sel
-      .getRangeAt(0)
-      .getNodes([], (node: Node) => {
-        let tmpNode = node;
-        if (node.nodeType === 3) {
-          tmpNode = node.parentNode!;
-        }
-        return (
-          tmpNode instanceof HTMLSpanElement &&
-          tmpNode.classList.contains("highlighted_tmp")
-        );
-      })
-      .forEach((span: HTMLSpanElement) => {
-        if (span.nodeType === 3) {
-          span = span.parentElement!;
-        }
-        span.style.backgroundColor = color_code;
-        span.style.borderBottomColor = color_code;
-        span.classList.remove("highlighted_tmp");
-        span.classList.add("highlighted");
-      });
-
-    this.sat.cv.updateData();
-    this.sat.cv.draw();
-  };
-
-  dehighlight = (): void => {
-    const sel = getSelection(this.sat.content_window);
-
-    // 選択領域に包含されるspanのハイライトを削除
-    if (sel.rangeCount) {
-      sel
-        .getRangeAt(0)
-        .getNodes([1])
-        .forEach((node: Node) => {
-          if (!(node instanceof HTMLSpanElement)) return;
-          if (node.classList.length > 0) {
-            Array.from(node.classList).forEach((class_name) => {
-              if (class_name === "highlighted") {
-                node.style.backgroundColor = "";
-                node.style.borderBottomColor = "";
-                this.sat.removeSpan(node, [class_name], []);
-              }
-            });
-          } else {
-            node.style.backgroundColor = "";
-          }
-        });
-
-      // 選択領域を包含するspanのハイライトを削除
-      [
-        getSelection(this.sat.content_window).getRangeAt(0).startContainer,
-        getSelection(this.sat.content_window).getRangeAt(0).endContainer,
-      ].forEach((container) => {
-        while (container && container !== this.sat.content_root) {
-          const parent_element = container.parentElement;
-          if (container instanceof HTMLSpanElement) {
-            if (container.classList.length > 0) {
-              Array.from(container.classList).forEach((class_name) => {
-                if (class_name === "highlighted") {
-                  container.style.backgroundColor = "";
-                  container.style.borderBottomColor = "";
-                  this.sat.removeSpan(container, [class_name], []);
-                }
-              });
-            } else {
-              container.style.backgroundColor = "";
-            }
-          }
-          container = parent_element;
-        }
-      });
-    }
-    this.sat.cv.updateData();
-    this.sat.cv.draw();
-  };
-}
-
