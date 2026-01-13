@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TypeScriptでXMLからHTMLを生成する（Reactなし）
  *
  * 目的:
@@ -191,8 +191,8 @@ const checkUnprocessedFields = (
     console.error(errorMessage);
     console.error('オブジェクト詳細:', obj);
 
-    // ユーザーへの通知（初回のみアラートを表示）
-    if (!(window as any).__unprocessedFieldsAlertShown) {
+    // ユーザーへの通知（初回のみアラートを表示、ブラウザ環境のみ)
+    if (typeof window !== 'undefined' && !(window as any).__unprocessedFieldsAlertShown) {
       alert(`法令XMLに未処理のタグが見つかりました。\n\nコンソールで詳細を確認してください。\n\n最初の未処理タグ:\n${errorMessage}`);
       (window as any).__unprocessedFieldsAlertShown = true;
     }
@@ -216,6 +216,36 @@ const checkUnprocessedFieldsInArray = (
   });
 };
 
+
+/**
+ * 既知のフィールド名のマップ
+ * 各要素タイプに対して、既知のフィールド名を定義します
+ */
+const KNOWN_FIELDS_MAP = {
+  // Subitem3: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem3: ['Subitem3', 'Subitem3Title', 'Subitem3Sentence', 'Subitem4', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem4: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem4: ['Subitem4', 'Subitem4Title', 'Subitem4Sentence', 'Subitem5', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem5: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem5: ['Subitem5', 'Subitem5Title', 'Subitem5Sentence', 'Subitem6', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem6: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem6: ['Subitem6', 'Subitem6Title', 'Subitem6Sentence', 'Subitem7', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem7: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem7: ['Subitem7', 'Subitem7Title', 'Subitem7Sentence', 'Subitem8', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem8: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem8: ['Subitem8', 'Subitem8Title', 'Subitem8Sentence', 'Subitem9', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem9: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem9: ['Subitem9', 'Subitem9Title', 'Subitem9Sentence', 'Subitem10', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+  
+  // Subitem10: トップレベルフィールド + 配列内の可能な子要素フィールド
+  Subitem10: ['Subitem10', 'Subitem10Title', 'Subitem10Sentence', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
+};
 /**
  * TextNodeType配列をHTMLテキストに変換
  * src/api/components/law/text-node.tsx の getTextNode 関数を再現
@@ -1768,6 +1798,10 @@ const renderMainProvision = (
   return mainProvision.MainProvision.map((dt, index) => {
     const addTreeElement = [...treeElement, `MainProvision_${index}`];
 
+    // MainProvision内要素のフィールドチェック
+    const knownFields = ['Part', 'Chapter', 'Section', 'Article', 'Paragraph', ':@'];
+    checkUnprocessedFields(dt, knownFields, `MainProvision[${index}]`);
+
     if ('Chapter' in dt) {
       return renderChapter([dt], addTreeElement);
     } else if ('Paragraph' in dt) {
@@ -1875,6 +1909,10 @@ const renderSupplProvisionAppdxTable = (
   return supplProvisionAppdxTableList.map((dt, index) => {
     const addTreeElement = [...treeElement, `SupplProvisionAppdxTable_${index}`];
 
+    // SupplProvisionAppdxTable要素のフィールドチェック
+    const knownFields = ['SupplProvisionAppdxTableTitle', 'RelatedArticleNum', 'TableStruct', ':@'];
+    checkUnprocessedFields(dt, knownFields, `SupplProvisionAppdxTable[${index}]`);
+
     const SupplProvisionAppdxTableTitle = getType<SupplProvisionAppdxTableTitleType>(
       dt.SupplProvisionAppdxTable,
       'SupplProvisionAppdxTableTitle'
@@ -1916,6 +1954,10 @@ const renderSupplProvisionAppdxStyle = (
   return supplProvisionAppdxStyleList.map((dt, index) => {
     const addTreeElement = [...treeElement, `SupplProvisionAppdxStyle_${index}`];
 
+    // SupplProvisionAppdxStyle要素のフィールドチェック
+    const knownFields = ['SupplProvisionAppdxStyleTitle', 'RelatedArticleNum', 'StyleStruct', ':@'];
+    checkUnprocessedFields(dt, knownFields, `SupplProvisionAppdxStyle[${index}]`);
+
     const SupplProvisionAppdxStyleTitle = getType<SupplProvisionAppdxStyleTitleType>(
       dt.SupplProvisionAppdxStyle,
       'SupplProvisionAppdxStyleTitle'
@@ -1956,6 +1998,10 @@ const renderSupplProvisionAppdx = (
 ): string => {
   return supplProvisionAppdxList.map((dt, index) => {
     const addTreeElement = [...treeElement, `SupplProvisionAppdx_${index}`];
+
+    // SupplProvisionAppdx隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+    const knownFields = ['ArithFormulaNum', 'RelatedArticleNum', 'ArithFormula', ':@'];
+    checkUnprocessedFields(dt.SupplProvisionAppdx, knownFields, `SupplProvisionAppdx[${index}]`);
 
     const ArithFormulaNum = getType<ArithFormulaNumType>(
       dt.SupplProvisionAppdx,
@@ -2492,6 +2538,10 @@ const renderEnactStatement = (
   treeElement: string[]
 ): string => {
   return enactStatementList.map((dt, index) => {
+    // EnactStatement要素のフィールドチェック
+    const knownFields = ['_', 'Line', 'Ruby', 'Sup', 'Sub', 'QuoteStruct', 'ArithFormula', 'Style', ':@'];
+    checkUnprocessedFields(dt.EnactStatement, knownFields, `EnactStatement[${index}]`);
+
     const addTreeElement = [...treeElement, `EnactStatement_${index}`];
     return tag('div', { class: '_div_EnactStatement' },
       renderTextNode(dt.EnactStatement, addTreeElement)
@@ -2640,6 +2690,10 @@ const renderStyleStruct = (
       ...treeElement,
       `StyleStruct_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
+
+    // StyleStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+    const knownFields = ['StyleStructTitle', 'RelatedArticleNum', 'Style', 'Remarks', ':@'];
+    checkUnprocessedFieldsInArray(styleStructList, knownFields, 'StyleStruct');
 
     const StyleStructTitle = getType<any>(dt.StyleStruct, 'StyleStructTitle');
     const Remarks = getType<RemarksType>(dt.StyleStruct, 'Remarks');
@@ -2859,6 +2913,10 @@ const renderFormatStruct = (
       ...treeElement,
       `FormatStruct_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
+
+    // FormatStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+    const knownFields = ['FormatStructTitle', 'RelatedArticleNum', 'Format', 'Remarks', ':@'];
+    checkUnprocessedFieldsInArray(formatStructList, knownFields, 'FormatStruct');
 
     const FormatStructTitle = getType<FormatStructTitleType>(
       dt.FormatStruct,
@@ -3118,6 +3176,10 @@ const renderTableRow = (
   treeElement: string[]
 ): string => {
   return tableRowList.map((dt, index) => {
+    // TableRow隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+    const knownFields = ['TableColumn', ':@'];
+    checkUnprocessedFields(dt.TableRow, knownFields, `TableRow[${index}]`);
+
     const addTreeElement = [...treeElement, `TableRow_${index}`];
     return tag('tr', { class: 'TableRow' },
       renderTableColumn(dt.TableRow, [...treeElement, 'TableRow'])
@@ -3134,6 +3196,10 @@ const renderTable = (
   treeElement: string[]
 ): string => {
   const addTreeElement = [...treeElement, 'Table'];
+  
+  // Table隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+  const knownFields = ['TableHeaderRow', 'TableRow', 'TableColumn', ':@'];
+  checkUnprocessedFields(table.Table, knownFields, 'Table');
   const TableHeaderRow = getType<TableHeaderRowType>(table.Table, 'TableHeaderRow');
   const TableRow = getType<TableRowType>(table.Table, 'TableRow');
 
@@ -3154,6 +3220,11 @@ const renderTableStruct = (
 ): string => {
   return tableStructList.map((dt, index) => {
     const addTreeElement = [...treeElement, `TableStruct_${index}`];
+    
+    // TableStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+    const knownFields = ['TableStructTitle', 'RelatedArticleNum', 'Table', 'Remarks', ':@'];
+    checkUnprocessedFields(dt.TableStruct, knownFields, `TableStruct[${index}]`);
+
     const TableStructTitle = getType<any>(dt.TableStruct, 'TableStructTitle');
 
     let content = '';
@@ -3271,6 +3342,11 @@ const renderFigStruct = (
     const addTreeElement = [...treeElement, `FigStruct_${index}`];
     const FigStructTitle = getType<any>(dt.FigStruct, 'FigStructTitle');
     const Remarks = getType<RemarksType>(dt.FigStruct, 'Remarks');
+
+    
+    // FigStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
+    const knownFields = ['FigStructTitle', 'RelatedArticleNum', 'Fig', 'TableStruct', 'Remarks', ':@'];
+    checkUnprocessedFields(dt.FigStruct, knownFields, `FigStruct[${index}]`);
 
     let content = '';
 
