@@ -34,20 +34,27 @@ try {
   const convertLaw = xp.parse(xml);
   console.log('XMLパース完了');
 
-  // law_data_responseの構造を確認
-  const lawDataResponse = convertLaw[0]?.law_data_response;
-  if (!lawDataResponse) {
-    throw new Error('law_data_response が見つかりません');
+  // XMLの構造を確認し、適切な形式を選択
+  let lawFullText: any;
+  let attachedFilesInfo: any = {};
+
+  if (convertLaw[0]?.law_data_response) {
+    // law_data_response形式（e-gov API形式）
+    const lawDataResponse = convertLaw[0].law_data_response;
+    console.log(`law_data_response 要素数: ${lawDataResponse.length}`);
+
+    lawFullText = lawDataResponse[3].law_full_text[0];
+    attachedFilesInfo = lawDataResponse[0];
+    console.log('attached_files_info:', JSON.stringify(attachedFilesInfo, null, 2).substring(0, 500));
+  } else if (convertLaw[0]?.Law) {
+    // Law形式（直接的なXML形式）
+    console.log('Law形式のXMLを検出');
+    lawFullText = convertLaw[0];
+    console.log('法令データ:', JSON.stringify(lawFullText, null, 2).substring(0, 500));
+  } else {
+    throw new Error('未知のXML構造です');
   }
-  console.log(`law_data_response 要素数: ${lawDataResponse.length}`);
-
-  // lawFullTextを取得
-  const lawFullText = lawDataResponse[3].law_full_text[0];
   console.log('lawFullText 取得完了');
-
-  // attached_files_infoを取得
-  const attachedFilesInfo = lawDataResponse[0];
-  console.log('attached_files_info:', JSON.stringify(attachedFilesInfo, null, 2).substring(0, 500));
 
   // attached_filesからマップを作成
   const attachedFilesMap = new Map<string, string>();

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法令</LawTitle>
+    <EnactStatement>
+      内閣は、テスト法に基づき、この政令を制定する。
+      <InvalidEnactTag>EnactStatement内の不正タグ</InvalidEnactTag>
+    </EnactStatement>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>テスト条文。</Sentence>
+          </ParagraphSentence>
+        </Paragraph>
+      </Article>
+    </MainProvision>
+  </LawBody>
+</Law>

@@ -1,14 +1,14 @@
-﻿/**
- * TypeScriptでXMLからHTMLを生成する（Reactなし）
+/**
+ * TypeScript��XML����HTML�𐶐�����iReact�Ȃ��j
  *
- * 目的:
- * - 既存のReactコンポーネントと同じHTMLを純粋なTypeScriptで生成
- * - Reactコンポーネントのロジックを忠実に再現
+ * �ړI:
+ * - ������React�R���|�[�l���g�Ɠ���HTML��������TypeScript�Ő���
+ * - React�R���|�[�l���g�̃��W�b�N�𒉎��ɍČ�
  */
 
 import { getType, getTypeByFind, getParentElement } from './lib/law/law';
 
-// 添付ファイルマップをグローバル変数として保持
+// �Y�t�t�@�C���}�b�v���O���[�o���ϐ��Ƃ��ĕێ�
 let globalAttachedFilesMap: Map<string, string> | undefined;
 
 import {
@@ -94,7 +94,6 @@ import {
   FigStructType,
   RelatedArticleNumType,
   RemarksType,
-  RemarksLabelType,
   TableType,
   TableRowType,
   TableHeaderRowType,
@@ -125,8 +124,6 @@ import {
   AppdxFormatType,
   AppdxFormatTitleType,
   FormatStructType,
-  FormatStructTitleType,
-  FormatType,
   StyleStructType,
   AppdxType,
   ArithFormulaType,
@@ -137,7 +134,7 @@ import {
 } from '../api/types/law';
 
 /**
- * HTMLタグを生成する補助関数
+ * HTML�^�O�𐶐�����⏕�֐�
  */
 const tag = (
   name: string,
@@ -156,108 +153,80 @@ const tag = (
 };
 
 /**
- * 未処理タグ検出機構
+ * �ǐՃA�v���[�`�ɂ�関�����^�O���o�@�\
  *
- * オブジェクト内に、既知のフィールド以外のキーが存在する場合に警告を出力します。
- * これにより、スキーマに存在するがレンダリングコードで処理されていないタグを検出できます。
- *
- * @param obj - 検査対象のオブジェクト（配列の各要素）
- * @param knownFields - 既知のフィールド名の配列
- * @param context - エラーメッセージに表示するコンテキスト情報（タグ名など）
+ * �����_�����O���ɏ��������t�B�[���h��Set�ɋL�^���A
+ * �֐��̍Ō�ɂ��ׂẴt�B�[���h���������ꂽ���`�F�b�N���܂��B
  */
-const checkUnprocessedFields = (
+
+/**
+ * �����ς݃t�B�[���h��ǐՂ���Set�^
+ */
+type ProcessedFieldsSet = Set<string>;
+
+/**
+ * �����ς݃t�B�[���h��Set��������
+ * ���^�f�[�^ (':@', '#text') �͍ŏ����珜�O���܂�
+ */
+const initProcessedFields = (): ProcessedFieldsSet => {
+  return new Set<string>([':@', '#text']);
+};
+
+/**
+ * ���ׂẴt�B�[���h���������ꂽ���`�F�b�N
+ *
+ * @param obj - �����Ώۂ̃I�u�W�F�N�g
+ * @param processed - �����ς݃t�B�[���h��Set
+ * @param context - �G���[���b�Z�[�W�ɕ\������R���e�L�X�g���
+ */
+const checkAllFieldsProcessed = (
   obj: any,
-  knownFields: string[],
+  processed: ProcessedFieldsSet,
   context: string
 ): void => {
-  // オブジェクトでない場合はスキップ
+  // �I�u�W�F�N�g�łȂ��ꍇ�̓X�L�b�v
   if (!obj || typeof obj !== 'object') {
     return;
   }
 
-  // オブジェクトの全キーを取得
-  const actualKeys = Object.keys(obj);
+  // �I�u�W�F�N�g�̑S�L�[���擾
+  const actualFields = Object.keys(obj);
 
-  // 既知のフィールドセットを作成（高速な検索のため）
-  const knownFieldsSet = new Set(knownFields);
+  // �������̃t�B�[���h�����o
+  const unprocessedFields = actualFields.filter(field => !processed.has(field));
 
-  // 未処理のキーを検出
-  const unprocessedKeys = actualKeys.filter(key => !knownFieldsSet.has(key));
-
-  // 未処理のキーが存在する場合に警告
-  if (unprocessedKeys.length > 0) {
-    const errorMessage = `[未処理タグ検出] ${context}: 以下のフィールドが処理されていません: ${unprocessedKeys.join(', ')}`;
+  // �������̃t�B�[���h�����݂���ꍇ�Ɍx��
+  if (unprocessedFields.length > 0) {
+    const errorMessage = `[�������^�O���o] ${context}: �ȉ��̃t�B�[���h����������Ă��܂���: ${unprocessedFields.join(', ')}`;
 
     console.error(errorMessage);
-    console.error('オブジェクト詳細:', obj);
+    console.error('�I�u�W�F�N�g�ڍ�:', obj);
 
-    // ユーザーへの通知（初回のみアラートを表示、ブラウザ環境のみ)
+    // ���[�U�[�ւ̒ʒm�i����̂݃A���[�g��\���A�u���E�U���̂݁j
     if (typeof window !== 'undefined' && !(window as any).__unprocessedFieldsAlertShown) {
-      alert(`法令XMLに未処理のタグが見つかりました。\n\nコンソールで詳細を確認してください。\n\n最初の未処理タグ:\n${errorMessage}`);
+      alert(`�@��XML�ɖ������̃^�O��������܂����B\n\n�R���\�[���ŏڍׂ��m�F���Ă��������B\n\n�ŏ��̖������^�O:\n${errorMessage}`);
       (window as any).__unprocessedFieldsAlertShown = true;
+    }
+
+    // Node.js���ł̓G���[��throw
+    if (typeof window === 'undefined' && typeof process !== 'undefined') {
+      throw new Error(errorMessage);
     }
   }
 };
-
 /**
- * 配列内の各要素に対して未処理フィールドをチェック
- *
- * @param arr - 検査対象の配列
- * @param knownFields - 既知のフィールド名の配列
- * @param context - エラーメッセージに表示するコンテキスト情報
- */
-const checkUnprocessedFieldsInArray = (
-  arr: any[],
-  knownFields: string[],
-  context: string
-): void => {
-  arr.forEach((item, index) => {
-    checkUnprocessedFields(item, knownFields, `${context}[${index}]`);
-  });
-};
-
-
-/**
- * 既知のフィールド名のマップ
- * 各要素タイプに対して、既知のフィールド名を定義します
- */
-const KNOWN_FIELDS_MAP = {
-  // Subitem3: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem3: ['Subitem3', 'Subitem3Title', 'Subitem3Sentence', 'Subitem4', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem4: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem4: ['Subitem4', 'Subitem4Title', 'Subitem4Sentence', 'Subitem5', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem5: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem5: ['Subitem5', 'Subitem5Title', 'Subitem5Sentence', 'Subitem6', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem6: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem6: ['Subitem6', 'Subitem6Title', 'Subitem6Sentence', 'Subitem7', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem7: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem7: ['Subitem7', 'Subitem7Title', 'Subitem7Sentence', 'Subitem8', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem8: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem8: ['Subitem8', 'Subitem8Title', 'Subitem8Sentence', 'Subitem9', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem9: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem9: ['Subitem9', 'Subitem9Title', 'Subitem9Sentence', 'Subitem10', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-  
-  // Subitem10: トップレベルフィールド + 配列内の可能な子要素フィールド
-  Subitem10: ['Subitem10', 'Subitem10Title', 'Subitem10Sentence', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'],
-};
-/**
- * TextNodeType配列をHTMLテキストに変換
- * src/api/components/law/text-node.tsx の getTextNode 関数を再現
+ * TextNodeType�z���HTML�e�L�X�g�ɕϊ�
+ * src/api/components/law/text-node.tsx �� getTextNode �֐����Č�
  */
 const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string => {
   return val.map((dt) => {
     // TextNodeTypeの既知のフィールド: Line, Ruby, Sup, Sub, QuoteStruct, ArithFormula, _
-    const knownFields = ['Line', 'Style', 'Ruby', 'Sup', 'Sub', 'QuoteStruct', 'ArithFormula', '_', ':@'];
-    checkUnprocessedFields(dt, knownFields, 'TextNode');
+    const processed = initProcessedFields();
 
     if ('Line' in dt) {
-      // 下線・二重線等のスタイル
+      processed.add('Line');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
+      // �����E��d�����̃X�^�C��
       const getLineStyle = (Style?: 'dotted' | 'double' | 'none' | 'solid'): string => {
         switch (Style) {
           case undefined:
@@ -271,60 +240,138 @@ const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string
       const style = getLineStyle(dt.Style);
       return tag('span', { style }, renderTextNode(dt.Line, treeElement));
     } else if ('Ruby' in dt) {
-      // ルビ
+      // ���r
+      processed.add('Ruby');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
       const text = getType<TextType>(dt.Ruby, '_')[0]._;
       const rt = getType<RtType>(dt.Ruby, 'Rt')[0].Rt[0]._;
       return `<ruby>${text}<rt>${rt}</rt></ruby>`;
     } else if ('Sup' in dt) {
-      // 上付き文字
+      // ��t������
+      processed.add('Sup');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
       const text = getType<TextType>(dt.Sup, '_')[0]._;
       return tag('sup', { class: 'Sup' }, text);
     } else if ('Sub' in dt) {
-      // 下付き文字
+      // ���t������
+      processed.add('Sub');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
       const text = getType<TextType>(dt.Sub, '_')[0]._;
       return tag('sub', { class: 'Sub' }, text);
     } else if ('QuoteStruct' in dt) {
-      // 引用構造 - QuoteStruct内の要素を処理（TableStruct等が含まれる可能性がある）
-      // QuoteStructは配列でない場合があるので、配列に変換
+      // ���p�\�� - QuoteStruct���̗v�f�������iTableStruct�����܂܂��\��������j
+      // QuoteStruct�͔z��łȂ��ꍇ������̂ŁA�z��ɕϊ�
+      processed.add('QuoteStruct');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
       const quoteStructList = Array.isArray(dt.QuoteStruct) ? dt.QuoteStruct : [dt.QuoteStruct];
       return renderLawTypeList(quoteStructList, treeElement, 'QuoteStruct');
     } else if ('ArithFormula' in dt) {
-      // 算術式 - React側と同じく<div class="pl-4">でラップ
-      // Sub/Supタグを正しく<sub>/<sup>として出力（e-gov法令API仕様に準拠）
-      const arithContent = dt.ArithFormula.map((item: any) => {
-        // ArithFormula内の要素も検出対象
-        const arithKnownFields = ['Sub', 'Sup', 'Fig', '_', ':@'];
-        checkUnprocessedFields(item, arithKnownFields, 'ArithFormula内要素');
+      // �Z�p�� - React���Ɠ�����<div class="pl-4">�Ń��b�v
+      // Sub/Sup�^�O�𐳂���<sub>/<sup>�Ƃ��ďo�́ie-gov�@��API�d�l�ɏ����j
+      processed.add('ArithFormula');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
+      const arithContent = dt.ArithFormula.map((item: any, itemIdx: number) => {
+        // ArithFormula���̗v�f�����o�Ώہi�ǐՃA�v���[�`�j
+        const arithProcessed = initProcessedFields();
 
         if ('Sub' in item) {
-          // 下付き文字を適切に出力
+          arithProcessed.add('Sub');
+          // ���t��������K�؂ɏo��
           const text = getType<TextType>(item.Sub, '_')[0]._;
+          checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
           return tag('sub', { class: 'Sub' }, text);
         } else if ('Sup' in item) {
-          // 上付き文字を適切に出力
+          arithProcessed.add('Sup');
+          // ��t��������K�؂ɏo��
           const text = getType<TextType>(item.Sup, '_')[0]._;
+          checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
           return tag('sup', { class: 'Sup' }, text);
         } else if ('Fig' in item) {
-          // ArithFormula内のFigを処理
-          return renderFig(item, treeElement);
+          arithProcessed.add('Fig');
+          checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+          // ArithFormula内のFig要素処理
+          const result = renderFig(item, treeElement);
+          return result;
+        } else if ('QuoteStruct' in item) {
+          arithProcessed.add('QuoteStruct');
+          checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+          // ArithFormula内のQuoteStruct要素処理
+          const quoteStructList = Array.isArray(item.QuoteStruct) ? item.QuoteStruct : [item.QuoteStruct];
+          return renderLawTypeList(quoteStructList, treeElement, 'ArithFormula');
         } else if ('_' in item) {
+          arithProcessed.add('_');
+          checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
           return item._;
         }
+        checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
         return '';
       }).join('');
       return tag('div', { class: 'pl-4' }, arithContent);
     } else {
-      // プレーンテキスト
-      // 注意: dt._が数値の0の場合も正しく返す必要がある
+      processed.add('_');
+      checkAllFieldsProcessed(dt, processed, 'TextNode');
+      // �v���[���e�L�X�g
+      // ����: dt._�����l��0�̏ꍇ���������Ԃ��K�v������
       return dt._ !== undefined && dt._ !== null ? String(dt._) : '';
     }
   }).join('');
 };
 
 /**
- * LawTypeList配列をHTMLに変換
- * src/api/components/law/any.tsx の LawAny コンポーネントを再現
- * QuoteStruct, ArithFormula等の中に含まれる様々な要素を処理
+ * ArithFormula要素をHTMLに変換
+ * 算術式を含む要素を処理し、Sub/Sup/Fig/QuoteStruct/テキストを適切にレンダリング
+ */
+const renderArithFormula = (
+  arithFormulaObj: any,
+  treeElement: string[]
+): string => {
+  const processed = initProcessedFields();
+  processed.add('ArithFormula');
+  checkAllFieldsProcessed(arithFormulaObj, processed, 'ArithFormula');
+
+  const arithContent = arithFormulaObj.ArithFormula.map((item: any, itemIdx: number) => {
+    // ArithFormula内の要素を個別に処理（追跡アプローチ）
+    const arithProcessed = initProcessedFields();
+
+    if ('Sub' in item) {
+      arithProcessed.add('Sub');
+      // 下付き文字を適切に出力
+      const text = getType<TextType>(item.Sub, '_')[0]._;
+      checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+      return tag('sub', { class: 'Sub' }, text);
+    } else if ('Sup' in item) {
+      arithProcessed.add('Sup');
+      // 上付き文字を適切に出力
+      const text = getType<TextType>(item.Sup, '_')[0]._;
+      checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+      return tag('sup', { class: 'Sup' }, text);
+    } else if ('Fig' in item) {
+      arithProcessed.add('Fig');
+      checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+      // ArithFormula内のFig要素処理
+      const result = renderFig(item, treeElement);
+      return result;
+    } else if ('QuoteStruct' in item) {
+      arithProcessed.add('QuoteStruct');
+      checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+      // ArithFormula内のQuoteStruct要素処理
+      const quoteStructList = Array.isArray(item.QuoteStruct) ? item.QuoteStruct : [item.QuoteStruct];
+      return renderLawTypeList(quoteStructList, treeElement, 'ArithFormula');
+    } else if ('_' in item) {
+      arithProcessed.add('_');
+      checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+      return item._;
+    }
+    checkAllFieldsProcessed(item, arithProcessed, `ArithFormula[${itemIdx}]`);
+    return '';
+  }).join('');
+  return tag('div', { class: 'pl-4' }, arithContent);
+};
+
+/**
+ * LawTypeList�z���HTML�ɕϊ�
+ * src/api/components/law/any.tsx �� LawAny �R���|�[�l���g���Č�
+ * QuoteStruct, ArithFormula���̒��Ɋ܂܂��l�X�ȗv�f������
  */
 const renderLawTypeList = (
   lawTypeList: any[],
@@ -332,80 +379,165 @@ const renderLawTypeList = (
   parentElement: string
 ): string => {
   return lawTypeList.map((dt: any, index: number) => {
-    // LawTypeListの既知のフィールド
-    const knownFields = [
-      'Sentence', 'TableStruct', 'FigStruct', 'Fig', 'StyleStruct', 'List',
-      'Paragraph', 'Item', 'Subitem1', 'Subitem2', 'Subitem3', 'Subitem4',
-      'Subitem5', 'Subitem6', 'Subitem7', 'Subitem8', 'Subitem9', 'Subitem10',
-      'AppdxTable', 'AppdxNote', 'AppdxStyle', 'Appdx', 'AppdxFig', 'AppdxFormat',
-      'TOC', 'Table', ':@', '_'
-    ];
-    checkUnprocessedFields(dt, knownFields, `LawTypeList[${parentElement}][${index}]`);
+    // LawTypeList�̊��m�̃t�B�[���h
+    const processed = initProcessedFields();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const addTreeElement = [...treeElement, `${parentElement}_${index}`];
 
     if ('Sentence' in dt) {
+      processed.add('Sentence');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSentence([dt], addTreeElement, false);
     } else if ('TableStruct' in dt) {
+      processed.add('TableStruct');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderTableStruct([dt], addTreeElement);
+    } else if ('Table' in dt) {
+      processed.add('Table');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
+      return renderTable(dt, addTreeElement);
     } else if ('FigStruct' in dt) {
+      processed.add('FigStruct');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderFigStruct([dt], addTreeElement);
     } else if ('Fig' in dt) {
-      // QuoteStruct内に直接Figが含まれる場合の処理
-      // dt自体を渡す（dt[':@'].srcにsrc属性がある）
+      processed.add('Fig');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
+      // QuoteStruct���ɒ���Fig���܂܂��ꍇ�̏���
+      // dt���̂�n���idt[':@'].src��src����������j
       return renderFig(dt, addTreeElement);
     } else if ('StyleStruct' in dt) {
+      processed.add('StyleStruct');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderStyleStruct([dt], addTreeElement);
     } else if ('List' in dt) {
+      processed.add('List');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderList([dt], addTreeElement);
     } else if ('Paragraph' in dt) {
+      processed.add('Paragraph');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderParagraph([dt], addTreeElement, 0);
     } else if ('Item' in dt) {
+      processed.add('Item');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderItem([dt], addTreeElement, false);
     } else if ('Subitem1' in dt) {
+      processed.add('Subitem1');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem1([dt], addTreeElement);
     } else if ('Subitem2' in dt) {
+      processed.add('Subitem2');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem2([dt], addTreeElement);
     } else if ('Subitem3' in dt) {
+      processed.add('Subitem3');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem3([dt], addTreeElement);
     } else if ('Subitem4' in dt) {
+      processed.add('Subitem4');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem4([dt], addTreeElement);
     } else if ('Subitem5' in dt) {
+      processed.add('Subitem5');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem5([dt], addTreeElement);
     } else if ('Subitem6' in dt) {
+      processed.add('Subitem6');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem6([dt], addTreeElement);
     } else if ('Subitem7' in dt) {
+      processed.add('Subitem7');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem7([dt], addTreeElement);
     } else if ('Subitem8' in dt) {
+      processed.add('Subitem8');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem8([dt], addTreeElement);
     } else if ('Subitem9' in dt) {
+      processed.add('Subitem9');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem9([dt], addTreeElement);
     } else if ('Subitem10' in dt) {
+      processed.add('Subitem10');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderSubitem10([dt], addTreeElement);
     } else if ('AppdxTable' in dt) {
+      processed.add('AppdxTable');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderAppdxTable([dt], addTreeElement);
     } else if ('AppdxNote' in dt) {
+      processed.add('AppdxNote');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderAppdxNote([dt], addTreeElement);
     } else if ('AppdxStyle' in dt) {
+      processed.add('AppdxStyle');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderAppdxStyle(dt, addTreeElement);
     } else if ('Appdx' in dt) {
+      processed.add('Appdx');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderAppdx([dt], addTreeElement);
     } else if ('AppdxFig' in dt) {
+      processed.add('AppdxFig');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderAppdxFig(dt, addTreeElement);
     } else if ('AppdxFormat' in dt) {
+      processed.add('AppdxFormat');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderAppdxFormat(dt, addTreeElement);
     } else if ('TOC' in dt) {
+      processed.add('TOC');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return renderTOC(dt, addTreeElement);
+    } else if ('ArithFormula' in dt) {
+      processed.add('ArithFormula');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
+      // QuoteStruct内のArithFormula要素処理
+      return renderArithFormula(dt, addTreeElement);
+    } else if ('TOCSection' in dt) {
+      processed.add('TOCSection');
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
+      // QuoteStruct内のTOCSection要素処理
+      return renderTOCSection([dt], addTreeElement);
     } else {
-      // その他の要素型は空文字列を返す（React側と同じくTableは処理しない）
+      // その他の要素型は空文字を返す
+      checkAllFieldsProcessed(dt, processed, `LawTypeList[${parentElement}][${index}]`);
       return '';
     }
   }).join('');
 };
 
 /**
- * SentenceType配列をHTMLに変換
- * src/api/components/law/sentence.tsx の LawSentence コンポーネントを再現
+ * SentenceType�z���HTML�ɕϊ�
+ * src/api/components/law/sentence.tsx �� LawSentence �R���|�[�l���g���Č�
  */
 const renderSentence = (
   sentenceList: SentenceType[],
@@ -413,25 +545,33 @@ const renderSentence = (
   isPrecedingSentence: boolean
 ): string => {
   return sentenceList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Sentence');
+
     const addTreeElement = [...treeElement, `Sentence_${index}`];
     const textContent = renderTextNode(dt.Sentence, addTreeElement);
+
+    checkAllFieldsProcessed(dt, processed, `Sentence[${index}]`);
 
     if (getParentElement(treeElement) === 'Remarks') {
       return tag('div', {}, textContent + ' ');
     } else {
-      // TableColumn, ArithFormula の場合は改行が入る可能性あり（Reactコードでは空文字列出力）
+      // TableColumn, ArithFormula �̏ꍇ�͉��s������\������iReact�R�[�h�ł͋󕶎���o�́j
       return textContent;
     }
   }).join('');
 };
 
 /**
- * ColumnType配列をHTMLに変換
- * src/api/components/law/column.tsx の LawColumn コンポーネントを再現
+ * ColumnType�z���HTML�ɕϊ�
+ * src/api/components/law/column.tsx �� LawColumn �R���|�[�l���g���Č�
  */
 const renderColumn = (columnList: ColumnType[], treeElement: string[]): string => {
   let isLineBreak = false;
   return columnList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Column');
+
     const addTreeElement = [...treeElement, `Column_${index}`];
 
     if (!isLineBreak && (dt[':@'].LineBreak === undefined || !dt[':@'].LineBreak)) {
@@ -440,14 +580,14 @@ const renderColumn = (columnList: ColumnType[], treeElement: string[]): string =
 
     let result = '';
 
-    // index > 0 && isLineBreak の場合、全角スペース追加
+    // index > 0 && isLineBreak �̏ꍇ�A�S�p�X�y�[�X�ǉ�
     if (index > 0 && isLineBreak) {
-      result += '　';
+      result += '�@';
     }
 
-    // Num > 1 の場合も全角スペース追加（樋口追記コメントより）
+    // Num > 1 �̏ꍇ���S�p�X�y�[�X�ǉ��i����ǋL�R�����g���j
     if (dt[':@'].Num && Number(dt[':@'].Num) > 1) {
-      result += '　';
+      result += '�@';
     }
 
     result += renderSentence(dt.Column, addTreeElement, false);
@@ -456,70 +596,98 @@ const renderColumn = (columnList: ColumnType[], treeElement: string[]): string =
       result += '<br>';
     }
 
+    checkAllFieldsProcessed(dt, processed, `Column[${index}]`);
+
     return result;
   }).join('');
 };
 
 /**
- * ParagraphSentenceTypeをHTMLに変換
- * src/api/components/law/paragraph-sentence.tsx の LawParagraphSentence コンポーネントを再現
+ * ParagraphSentenceType��HTML�ɕϊ�
+ * src/api/components/law/paragraph-sentence.tsx �� LawParagraphSentence �R���|�[�l���g���Č�
  */
 const renderParagraphSentence = (
   paragraphSentence: ParagraphSentenceType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('ParagraphSentence');
+
   const Sentence = getType<SentenceType>(
     paragraphSentence.ParagraphSentence,
     'Sentence'
   );
+
+  // ParagraphSentence配列要素をチェック
+  paragraphSentence.ParagraphSentence.forEach((elem, idx) => {
+    const childProcessed = initProcessedFields();
+    if ('Sentence' in elem) childProcessed.add('Sentence');
+    checkAllFieldsProcessed(elem, childProcessed, `ParagraphSentence.ParagraphSentence[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(paragraphSentence, processed, 'ParagraphSentence');
   return renderSentence(Sentence, [...treeElement, 'ParagraphSentence'], false);
 };
 
 /**
- * ItemSentenceTypeをHTMLに変換
- * src/api/components/law/item-sentence.tsx の LawItemSentence コンポーネントを再現
+ * ItemSentenceType��HTML�ɕϊ�
+ * src/api/components/law/item-sentence.tsx �� LawItemSentence �R���|�[�l���g���Č�
  */
 const renderItemSentence = (
   itemSentence: ItemSentenceType,
   treeElement: string[]
 ): string => {
-  return itemSentence.ItemSentence.map((dt, index) => {
+  const processed = initProcessedFields();
+  processed.add('ItemSentence');
+
+  const result = itemSentence.ItemSentence.map((dt, index) => {
     const addTreeElement = [...treeElement, `ItemSentence_${index}`];
+    const childProcessed = initProcessedFields();
 
     if ('Sentence' in dt) {
       const isPrecedingSentence =
         index > 0 &&
         itemSentence.ItemSentence.slice(0, index).some((dt) => 'Sentence' in dt);
+      childProcessed.add('Sentence');
+      checkAllFieldsProcessed(dt, childProcessed, `ItemSentence.ItemSentence[${index}]`);
       return renderSentence([dt], addTreeElement, isPrecedingSentence);
     } else if ('Column' in dt) {
+      childProcessed.add('Column');
+      checkAllFieldsProcessed(dt, childProcessed, `ItemSentence.ItemSentence[${index}]`);
       return renderColumn([dt], addTreeElement);
     } else if ('Table' in dt) {
+      childProcessed.add('Table');
+      checkAllFieldsProcessed(dt, childProcessed, `ItemSentence.ItemSentence[${index}]`);
       return renderTable(dt, addTreeElement);
     } else {
+      checkAllFieldsProcessed(dt, childProcessed, `ItemSentence.ItemSentence[${index}]`);
       return '';
     }
   }).join('');
+
+  checkAllFieldsProcessed(itemSentence, processed, 'ItemSentence');
+  return result;
 };
 
 /**
- * 項番号ラベルを取得
- * src/api/components/law/paragraph.tsx の getOldNumLabel 関数を再現
+ * ���ԍ����x�����擾
+ * src/api/components/law/paragraph.tsx �� getOldNumLabel �֐����Č�
  */
 const getOldNumLabel = (val: number): string => {
   const numLabelList = [
-    '⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨',
-    '⑩', '⑪', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱',
-    '⑲', '⑳', '㉑', '㉒', '㉓', '㉔', '㉕', '㉖', '㉗', '㉘',
-    '㉙', '㉚', '㉛', '㉜', '㉝', '㉞', '㉟', '㊱', '㊲', '㊳',
-    '㊴', '㊵', '㊶', '㊷', '㊸', '㊹', '㊺', '㊻', '㊼', '㊽',
-    '㊾', '㊿',
+    '?', '�@', '�A', '�B', '�C', '�D', '�E', '�F', '�G', '�H',
+    '�I', '�J', '�J', '�K', '�L', '�M', '�N', '�O', '�P', '�Q',
+    '�R', '�S', '?', '?', '?', '?', '?', '?', '?', '?',
+    '?', '?', '?', '?', '?', '?', '?', '?', '?', '?',
+    '?', '?', '?', '?', '?', '?', '?', '?', '?', '?',
+    '?', '?',
   ];
   return val < numLabelList.length ? numLabelList[val] : val.toString();
 };
 
 /**
- * 祖先ノードの内に２件目以降のParagraphが存在するか
- * src/api/components/law/subitem.tsx の isParentParagraphPreceding 関数を再現
+ * �c��m�[�h�̓��ɂQ���ڈȍ~��Paragraph�����݂��邩
+ * src/api/components/law/subitem.tsx �� isParentParagraphPreceding �֐����Č�
  */
 const isParentParagraphPreceding = (treeElement: string[]): boolean => {
   return treeElement.some((dt) => {
@@ -532,58 +700,84 @@ const isParentParagraphPreceding = (treeElement: string[]): boolean => {
 };
 
 /**
- * Subitem1SentenceType をHTMLに変換
- * src/api/components/law/subitem-sentence.tsx の LawSubitem1Sentence コンポーネントを再現
+ * Subitem1SentenceType ��HTML�ɕϊ�
+ * src/api/components/law/subitem-sentence.tsx �� LawSubitem1Sentence �R���|�[�l���g���Č�
  */
 const renderSubitem1Sentence = (
   subitem1Sentence: Subitem1SentenceType,
   treeElement: string[]
 ): string => {
-  return subitem1Sentence.Subitem1Sentence.map((dt, index) => {
+  const processed = initProcessedFields();
+  processed.add('Subitem1Sentence');
+
+  const result = subitem1Sentence.Subitem1Sentence.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem1Sentence_${index}`];
     const isPrecedingSentence =
       index > 0 &&
       subitem1Sentence.Subitem1Sentence.slice(0, index).some((dt) => 'Sentence' in dt);
+    const childProcessed = initProcessedFields();
 
     if ('Sentence' in dt) {
+      childProcessed.add('Sentence');
+      checkAllFieldsProcessed(dt, childProcessed, `Subitem1Sentence.Subitem1Sentence[${index}]`);
       return renderSentence([dt], addTreeElement, isPrecedingSentence);
     } else if ('Column' in dt) {
+      childProcessed.add('Column');
+      checkAllFieldsProcessed(dt, childProcessed, `Subitem1Sentence.Subitem1Sentence[${index}]`);
       return renderColumn([dt], addTreeElement);
     } else if ('Table' in dt) {
+      childProcessed.add('Table');
+      checkAllFieldsProcessed(dt, childProcessed, `Subitem1Sentence.Subitem1Sentence[${index}]`);
       return renderTable(dt, addTreeElement);
     } else {
       return '';
     }
   }).join('');
+
+  checkAllFieldsProcessed(subitem1Sentence, processed, 'Subitem1Sentence');
+  return result;
 };
 
 /**
- * Subitem2SentenceType をHTMLに変換
+ * Subitem2SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem2Sentence = (
   subitem2Sentence: Subitem2SentenceType,
   treeElement: string[]
 ): string => {
-  return subitem2Sentence.Subitem2Sentence.map((dt, index) => {
+  const processed = initProcessedFields();
+  processed.add('Subitem2Sentence');
+
+  const result = subitem2Sentence.Subitem2Sentence.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem2Sentence_${index}`];
     const isPrecedingSentence =
       index > 0 &&
       subitem2Sentence.Subitem2Sentence.slice(0, index).some((dt) => 'Sentence' in dt);
+    const childProcessed = initProcessedFields();
 
     if ('Sentence' in dt) {
+      childProcessed.add('Sentence');
+      checkAllFieldsProcessed(dt, childProcessed, `Subitem2Sentence.Subitem2Sentence[${index}]`);
       return renderSentence([dt], addTreeElement, isPrecedingSentence);
     } else if ('Column' in dt) {
+      childProcessed.add('Column');
+      checkAllFieldsProcessed(dt, childProcessed, `Subitem2Sentence.Subitem2Sentence[${index}]`);
       return renderColumn([dt], addTreeElement);
     } else if ('Table' in dt) {
+      childProcessed.add('Table');
+      checkAllFieldsProcessed(dt, childProcessed, `Subitem2Sentence.Subitem2Sentence[${index}]`);
       return renderTable(dt, addTreeElement);
     } else {
       return '';
     }
   }).join('');
+
+  checkAllFieldsProcessed(subitem2Sentence, processed, 'Subitem2Sentence');
+  return result;
 };
 
 /**
- * Subitem3SentenceType をHTMLに変換
+ * Subitem3SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem3Sentence = (
   subitem3Sentence: Subitem3SentenceType,
@@ -609,7 +803,7 @@ const renderSubitem3Sentence = (
 };
 
 /**
- * Subitem4SentenceType をHTMLに変換
+ * Subitem4SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem4Sentence = (
   subitem4Sentence: Subitem4SentenceType,
@@ -635,7 +829,7 @@ const renderSubitem4Sentence = (
 };
 
 /**
- * Subitem5SentenceType をHTMLに変換
+ * Subitem5SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem5Sentence = (
   subitem5Sentence: Subitem5SentenceType,
@@ -661,7 +855,7 @@ const renderSubitem5Sentence = (
 };
 
 /**
- * Subitem6SentenceType をHTMLに変換
+ * Subitem6SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem6Sentence = (
   subitem6Sentence: Subitem6SentenceType,
@@ -687,7 +881,7 @@ const renderSubitem6Sentence = (
 };
 
 /**
- * Subitem7SentenceType をHTMLに変換
+ * Subitem7SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem7Sentence = (
   subitem7Sentence: Subitem7SentenceType,
@@ -713,7 +907,7 @@ const renderSubitem7Sentence = (
 };
 
 /**
- * Subitem8SentenceType をHTMLに変換
+ * Subitem8SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem8Sentence = (
   subitem8Sentence: Subitem8SentenceType,
@@ -739,7 +933,7 @@ const renderSubitem8Sentence = (
 };
 
 /**
- * Subitem9SentenceType をHTMLに変換
+ * Subitem9SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem9Sentence = (
   subitem9Sentence: Subitem9SentenceType,
@@ -765,7 +959,7 @@ const renderSubitem9Sentence = (
 };
 
 /**
- * Subitem10SentenceType をHTMLに変換
+ * Subitem10SentenceType ��HTML�ɕϊ�
  */
 const renderSubitem10Sentence = (
   subitem10Sentence: Subitem10SentenceType,
@@ -791,13 +985,16 @@ const renderSubitem10Sentence = (
 };
 
 /**
- * Subitem10Type配列をHTMLに変換
+ * Subitem10Type�z���HTML�ɕϊ�
  */
 const renderSubitem10 = (
   subitem10List: Subitem10Type[],
   treeElement: string[]
 ): string => {
   return subitem10List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem10');
+
     const addTreeElement = [...treeElement, `Subitem10_${index}`];
     const Subitem10Title = getType<Subitem10TitleType>(dt.Subitem10, 'Subitem10Title');
     const Subitem10Sentence = getType<Subitem10SentenceType>(dt.Subitem10, 'Subitem10Sentence')[0];
@@ -807,35 +1004,48 @@ const renderSubitem10 = (
     let content = '';
     if (Subitem10Title.length > 0) {
       const titleText = renderTextNode(Subitem10Title[0].Subitem10Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem10Sentence(Subitem10Sentence, addTreeElement);
 
     dt.Subitem10.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem10_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem10Title' in dt2) childProcessed.add('Subitem10Title');
+      if ('Subitem10Sentence' in dt2) childProcessed.add('Subitem10Sentence');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem10[${index}].Subitem10[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem10[${index}]`);
 
     return tag('div', { class: `_div_Subitem10Sentence ${paddingClass} indent-1` }, content);
   }).join('');
 };
 
 /**
- * Subitem9Type配列をHTMLに変換
+ * Subitem9Type�z���HTML�ɕϊ�
  */
 const renderSubitem9 = (
   subitem9List: Subitem9Type[],
   treeElement: string[]
 ): string => {
   return subitem9List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem9');
+
     const addTreeElement = [...treeElement, `Subitem9_${index}`];
     const Subitem9Title = getType<Subitem9TitleType>(dt.Subitem9, 'Subitem9Title');
     const Subitem9Sentence = getType<Subitem9SentenceType>(dt.Subitem9, 'Subitem9Sentence')[0];
@@ -846,22 +1056,33 @@ const renderSubitem9 = (
     let content = '';
     if (Subitem9Title.length > 0) {
       const titleText = renderTextNode(Subitem9Title[0].Subitem9Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem9Sentence(Subitem9Sentence, addTreeElement);
 
     dt.Subitem9.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem9_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem9Title' in dt2) childProcessed.add('Subitem9Title');
+      if ('Subitem9Sentence' in dt2) childProcessed.add('Subitem9Sentence');
+      if ('Subitem10' in dt2) childProcessed.add('Subitem10');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem9[${index}].Subitem9[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem9[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem9Sentence ${paddingClass} indent-1` }, content) +
@@ -871,13 +1092,16 @@ const renderSubitem9 = (
 };
 
 /**
- * Subitem8Type配列をHTMLに変換
+ * Subitem8Type�z���HTML�ɕϊ�
  */
 const renderSubitem8 = (
   subitem8List: Subitem8Type[],
   treeElement: string[]
 ): string => {
   return subitem8List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem8');
+
     const addTreeElement = [...treeElement, `Subitem8_${index}`];
     const Subitem8Title = getType<Subitem8TitleType>(dt.Subitem8, 'Subitem8Title');
     const Subitem8Sentence = getType<Subitem8SentenceType>(dt.Subitem8, 'Subitem8Sentence')[0];
@@ -888,22 +1112,33 @@ const renderSubitem8 = (
     let content = '';
     if (Subitem8Title.length > 0) {
       const titleText = renderTextNode(Subitem8Title[0].Subitem8Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem8Sentence(Subitem8Sentence, addTreeElement);
 
     dt.Subitem8.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem8_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem8Title' in dt2) childProcessed.add('Subitem8Title');
+      if ('Subitem8Sentence' in dt2) childProcessed.add('Subitem8Sentence');
+      if ('Subitem9' in dt2) childProcessed.add('Subitem9');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem8[${index}].Subitem8[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem8[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem8Sentence ${paddingClass} indent-1` }, content) +
@@ -913,13 +1148,16 @@ const renderSubitem8 = (
 };
 
 /**
- * Subitem7Type配列をHTMLに変換
+ * Subitem7Type�z���HTML�ɕϊ�
  */
 const renderSubitem7 = (
   subitem7List: Subitem7Type[],
   treeElement: string[]
 ): string => {
   return subitem7List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem7');
+
     const addTreeElement = [...treeElement, `Subitem7_${index}`];
     const Subitem7Title = getType<Subitem7TitleType>(dt.Subitem7, 'Subitem7Title');
     const Subitem7Sentence = getType<Subitem7SentenceType>(dt.Subitem7, 'Subitem7Sentence')[0];
@@ -930,22 +1168,33 @@ const renderSubitem7 = (
     let content = '';
     if (Subitem7Title.length > 0) {
       const titleText = renderTextNode(Subitem7Title[0].Subitem7Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem7Sentence(Subitem7Sentence, addTreeElement);
 
     dt.Subitem7.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem7_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem7Title' in dt2) childProcessed.add('Subitem7Title');
+      if ('Subitem7Sentence' in dt2) childProcessed.add('Subitem7Sentence');
+      if ('Subitem8' in dt2) childProcessed.add('Subitem8');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem7[${index}].Subitem7[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem7[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem7Sentence ${paddingClass} indent-1` }, content) +
@@ -955,13 +1204,16 @@ const renderSubitem7 = (
 };
 
 /**
- * Subitem6Type配列をHTMLに変換
+ * Subitem6Type�z���HTML�ɕϊ�
  */
 const renderSubitem6 = (
   subitem6List: Subitem6Type[],
   treeElement: string[]
 ): string => {
   return subitem6List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem6');
+
     const addTreeElement = [...treeElement, `Subitem6_${index}`];
     const Subitem6Title = getType<Subitem6TitleType>(dt.Subitem6, 'Subitem6Title');
     const Subitem6Sentence = getType<Subitem6SentenceType>(dt.Subitem6, 'Subitem6Sentence')[0];
@@ -972,22 +1224,33 @@ const renderSubitem6 = (
     let content = '';
     if (Subitem6Title.length > 0) {
       const titleText = renderTextNode(Subitem6Title[0].Subitem6Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem6Sentence(Subitem6Sentence, addTreeElement);
 
     dt.Subitem6.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem6_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem6Title' in dt2) childProcessed.add('Subitem6Title');
+      if ('Subitem6Sentence' in dt2) childProcessed.add('Subitem6Sentence');
+      if ('Subitem7' in dt2) childProcessed.add('Subitem7');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem6[${index}].Subitem6[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem6[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem6Sentence ${paddingClass} indent-1` }, content) +
@@ -997,13 +1260,16 @@ const renderSubitem6 = (
 };
 
 /**
- * Subitem5Type配列をHTMLに変換
+ * Subitem5Type�z���HTML�ɕϊ�
  */
 const renderSubitem5 = (
   subitem5List: Subitem5Type[],
   treeElement: string[]
 ): string => {
   return subitem5List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem5');
+
     const addTreeElement = [...treeElement, `Subitem5_${index}`];
     const Subitem5Title = getType<Subitem5TitleType>(dt.Subitem5, 'Subitem5Title');
     const Subitem5Sentence = getType<Subitem5SentenceType>(dt.Subitem5, 'Subitem5Sentence')[0];
@@ -1014,22 +1280,33 @@ const renderSubitem5 = (
     let content = '';
     if (Subitem5Title.length > 0) {
       const titleText = renderTextNode(Subitem5Title[0].Subitem5Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem5Sentence(Subitem5Sentence, addTreeElement);
 
     dt.Subitem5.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem5_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem5Title' in dt2) childProcessed.add('Subitem5Title');
+      if ('Subitem5Sentence' in dt2) childProcessed.add('Subitem5Sentence');
+      if ('Subitem6' in dt2) childProcessed.add('Subitem6');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem5[${index}].Subitem5[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem5[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem5Sentence ${paddingClass} indent-1` }, content) +
@@ -1039,13 +1316,16 @@ const renderSubitem5 = (
 };
 
 /**
- * Subitem4Type配列をHTMLに変換
+ * Subitem4Type�z���HTML�ɕϊ�
  */
 const renderSubitem4 = (
   subitem4List: Subitem4Type[],
   treeElement: string[]
 ): string => {
   return subitem4List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subitem4');
+
     const addTreeElement = [...treeElement, `Subitem4_${index}`];
     const Subitem4Title = getType<Subitem4TitleType>(dt.Subitem4, 'Subitem4Title');
     const Subitem4Sentence = getType<Subitem4SentenceType>(dt.Subitem4, 'Subitem4Sentence')[0];
@@ -1056,23 +1336,34 @@ const renderSubitem4 = (
     let content = '';
     if (Subitem4Title.length > 0) {
       const titleText = renderTextNode(Subitem4Title[0].Subitem4Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem4Sentence(Subitem4Sentence, addTreeElement);
 
-    // React版と同様に、dt.Subitem4配列からTableStruct, FigStruct, StyleStruct, Listを処理
+    // React�łƓ��l�ɁAdt.Subitem4�z�񂩂�TableStruct, FigStruct, StyleStruct, List������
     dt.Subitem4.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem4_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem4Title' in dt2) childProcessed.add('Subitem4Title');
+      if ('Subitem4Sentence' in dt2) childProcessed.add('Subitem4Sentence');
+      if ('Subitem5' in dt2) childProcessed.add('Subitem5');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
       } else if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
       } else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
       } else if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem4[${index}].Subitem4[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem4[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem4Sentence ${paddingClass} indent-1` }, content) +
@@ -1082,7 +1373,7 @@ const renderSubitem4 = (
 };
 
 /**
- * Subitem3Type配列をHTMLに変換
+ * Subitem3Type�z���HTML�ɕϊ�
  */
 const renderSubitem3 = (
   subitem3List: Subitem3Type[],
@@ -1090,6 +1381,11 @@ const renderSubitem3 = (
 ): string => {
   return subitem3List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem3_${index}`];
+
+    // Subitem3要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Subitem3');
+
     const Subitem3Title = getType<Subitem3TitleType>(dt.Subitem3, 'Subitem3Title');
     const Subitem3Sentence = getType<Subitem3SentenceType>(dt.Subitem3, 'Subitem3Sentence')[0];
     const Subitem4 = getType<Subitem4Type>(dt.Subitem3, 'Subitem4');
@@ -1099,23 +1395,37 @@ const renderSubitem3 = (
     let content = '';
     if (Subitem3Title.length > 0) {
       const titleText = renderTextNode(Subitem3Title[0].Subitem3Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem3Sentence(Subitem3Sentence, addTreeElement);
 
-    // React版と同様に、dt.Subitem3配列からTableStruct, FigStruct, StyleStruct, Listを処理
+    // React�łƓ��l�ɁAdt.Subitem3�z�񂩂�TableStruct, FigStruct, StyleStruct, List������
     dt.Subitem3.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem3_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem3Title' in dt2) childProcessed.add('Subitem3Title');
+      if ('Subitem3Sentence' in dt2) childProcessed.add('Subitem3Sentence');
+      if ('Subitem4' in dt2) childProcessed.add('Subitem4');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
-      } else if ('FigStruct' in dt2) {
+      }
+      if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
-      } else if ('StyleStruct' in dt2) {
+      }
+      if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
-      } else if ('List' in dt2) {
+      }
+      if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem3[${index}].Subitem3[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem3[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem3Sentence ${paddingClass} indent-1` }, content) +
@@ -1125,7 +1435,7 @@ const renderSubitem3 = (
 };
 
 /**
- * Subitem2Type配列をHTMLに変換
+ * Subitem2Type�z���HTML�ɕϊ�
  */
 const renderSubitem2 = (
   subitem2List: Subitem2Type[],
@@ -1133,6 +1443,11 @@ const renderSubitem2 = (
 ): string => {
   return subitem2List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem2_${index}`];
+
+    // Subitem2要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Subitem2');
+
     const Subitem2Title = getType<Subitem2TitleType>(dt.Subitem2, 'Subitem2Title');
     const Subitem2Sentence = getType<Subitem2SentenceType>(dt.Subitem2, 'Subitem2Sentence')[0];
     const Subitem3 = getType<Subitem3Type>(dt.Subitem2, 'Subitem3');
@@ -1142,24 +1457,38 @@ const renderSubitem2 = (
     let content = '';
     if (Subitem2Title.length > 0) {
       const titleText = renderTextNode(Subitem2Title[0].Subitem2Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem2Sentence(Subitem2Sentence, addTreeElement);
 
-    // React版と同様に、dt.Subitem2配列からTableStruct, FigStruct, StyleStruct, Listを処理
-    // これらの要素は_div_Subitem2Sentenceの中に出力される
+    // React�łƓ��l�ɁAdt.Subitem2�z�񂩂�TableStruct, FigStruct, StyleStruct, List������
+    // �����̗v�f��_div_Subitem2Sentence�̒��ɏo�͂����
     dt.Subitem2.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem2_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem2Title' in dt2) childProcessed.add('Subitem2Title');
+      if ('Subitem2Sentence' in dt2) childProcessed.add('Subitem2Sentence');
+      if ('Subitem3' in dt2) childProcessed.add('Subitem3');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
-      } else if ('FigStruct' in dt2) {
+      }
+      if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
-      } else if ('StyleStruct' in dt2) {
+      }
+      if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
-      } else if ('List' in dt2) {
+      }
+      if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem2[${index}].Subitem2[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem2[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem2Sentence ${paddingClass} indent-1` }, content) +
@@ -1169,8 +1498,8 @@ const renderSubitem2 = (
 };
 
 /**
- * Subitem1Type配列をHTMLに変換
- * src/api/components/law/subitem.tsx の LawSubitem1 コンポーネントを再現
+ * Subitem1Type�z���HTML�ɕϊ�
+ * src/api/components/law/subitem.tsx �� LawSubitem1 �R���|�[�l���g���Č�
  */
 const renderSubitem1 = (
   subitem1List: Subitem1Type[],
@@ -1178,6 +1507,11 @@ const renderSubitem1 = (
 ): string => {
   return subitem1List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem1_${index}`];
+
+    // Subitem1要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Subitem1');
+
     const Subitem1Title = getType<Subitem1TitleType>(dt.Subitem1, 'Subitem1Title');
     const Subitem1Sentence = getType<Subitem1SentenceType>(dt.Subitem1, 'Subitem1Sentence')[0];
     const Subitem2 = getType<Subitem2Type>(dt.Subitem1, 'Subitem2');
@@ -1187,24 +1521,38 @@ const renderSubitem1 = (
     let content = '';
     if (Subitem1Title.length > 0) {
       const titleText = renderTextNode(Subitem1Title[0].Subitem1Title, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
     content += renderSubitem1Sentence(Subitem1Sentence, addTreeElement);
 
-    // React版と同様に、dt.Subitem1配列からTableStruct, FigStruct, StyleStruct, Listを処理
-    // これらの要素は_div_Subitem1Sentenceの中に出力される
+    // React�łƓ��l�ɁAdt.Subitem1�z�񂩂�TableStruct, FigStruct, StyleStruct, List������
+    // �����̗v�f��_div_Subitem1Sentence�̒��ɏo�͂����
     dt.Subitem1.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem1_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('Subitem1Title' in dt2) childProcessed.add('Subitem1Title');
+      if ('Subitem1Sentence' in dt2) childProcessed.add('Subitem1Sentence');
+      if ('Subitem2' in dt2) childProcessed.add('Subitem2');
       if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         content += renderTableStruct([dt2], addTreeElement2);
-      } else if ('FigStruct' in dt2) {
+      }
+      if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         content += renderFigStruct([dt2], addTreeElement2);
-      } else if ('StyleStruct' in dt2) {
+      }
+      if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         content += renderStyleStruct([dt2], addTreeElement2);
-      } else if ('List' in dt2) {
+      }
+      if ('List' in dt2) {
+        childProcessed.add('List');
         content += renderList([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subitem1[${index}].Subitem1[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subitem1[${index}]`);
 
     return (
       tag('div', { class: `_div_Subitem1Sentence ${paddingClass} indent-1` }, content) +
@@ -1214,15 +1562,15 @@ const renderSubitem1 = (
 };
 
 /**
- * ItemType配列をHTMLに変換
- * src/api/components/law/item.tsx の LawItem コンポーネントを再現
+ * ItemType�z���HTML�ɕϊ�
+ * src/api/components/law/item.tsx �� LawItem �R���|�[�l���g���Č�
  */
 const renderItem = (
   itemList: ItemType[],
   treeElement: string[],
   isPrecedingParagraph: boolean
 ): string => {
-  // padding クラスを決定
+  // padding �N���X������
   const padding = () => {
     if (
       (treeElement.some((dt) => /^TableColumn.*/.test(dt)) &&
@@ -1238,16 +1586,21 @@ const renderItem = (
 
   return itemList.map((dt, index) => {
     const addTreeElement = [...treeElement, `Item_${index}`];
+
+    // Item要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Item');
+
     const ItemTitle = getType<ItemTitleType>(dt.Item, 'ItemTitle');
     const ItemSentence = getType<ItemSentenceType>(dt.Item, 'ItemSentence')[0];
 
-    // Subitem1を取得 - getTypeで見つからない場合は、dt.Item配列を直接フィルタリング
+    // Subitem1���擾 - getType�Ō�����Ȃ��ꍇ�́Adt.Item�z��𒼐ڃt�B���^�����O
     let Subitem1 = getType<Subitem1Type>(dt.Item, 'Subitem1');
     if (Subitem1.length === 0) {
-      // dt.Item配列から直接Subitem1を持つ要素を抽出
+      // dt.Item�z�񂩂璼��Subitem1�����v�f�𒊏o
       const subitem1Elements = dt.Item.filter((item: any) => 'Subitem1' in item);
       if (subitem1Elements.length > 0) {
-        // Subitem1要素を配列として抽出
+        // Subitem1�v�f��z��Ƃ��Ē��o
         Subitem1 = subitem1Elements.flatMap((item: any) =>
           Array.isArray(item.Subitem1) ? item.Subitem1 : [item.Subitem1]
         ).map((s: any) => ({ Subitem1: s })) as any;
@@ -1256,57 +1609,83 @@ const renderItem = (
 
     let content = '';
 
-    // ItemTitle があればボールド表示
+    // ItemTitle ������΃{�[���h�\��
     if (ItemTitle.length > 0) {
       const titleText = renderTextNode(ItemTitle[0].ItemTitle, addTreeElement);
-      content += tag('span', { class: 'font-bold' }, titleText + '　');
+      content += tag('span', { class: 'font-bold' }, titleText + '�@');
     }
 
-    // ItemSentence の内容
+    // ItemSentence �̓��e
     content += renderItemSentence(ItemSentence, addTreeElement);
 
-    // ItemSentenceのdivを出力
+    // ItemSentence��div���o��
     const itemSentenceHtml = tag('div', { class: `_div_ItemSentence ${padding()} indent-1` }, content);
 
-    // Subitem1のレンダリング
+    // Subitem1�̃����_�����O
     const subitem1Html = renderSubitem1(Subitem1, addTreeElement);
 
-    // 子要素（List, TableStruct, FigStruct, StyleStruct）のレンダリング
-    // React側と同様に dt.Item 配列をループして処理
+    // �q�v�f�iList, TableStruct, FigStruct, StyleStruct�j�̃����_�����O
+    // React���Ɠ��l�� dt.Item �z������[�v���ď���
     let childrenHtml = '';
     dt.Item.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Item_${index}`, `Child_${index2}`];
+      const childProcessed = initProcessedFields();
+      if ('ItemTitle' in dt2) childProcessed.add('ItemTitle');
+      if ('ItemSentence' in dt2) childProcessed.add('ItemSentence');
+      if ('Subitem1' in dt2) childProcessed.add('Subitem1');
       if ('List' in dt2) {
+        childProcessed.add('List');
         childrenHtml += renderList([dt2], addTreeElement2);
-      } else if ('TableStruct' in dt2) {
+      }
+      if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
         childrenHtml += renderTableStruct([dt2], addTreeElement2);
-      } else if ('FigStruct' in dt2) {
+      }
+      if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
         childrenHtml += renderFigStruct([dt2], addTreeElement2);
-      } else if ('StyleStruct' in dt2) {
+      }
+      if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
         childrenHtml += renderStyleStruct([dt2], addTreeElement2);
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Item[${index}].Item[${index2}]`);
     });
 
-    // すべてのHTMLを結合
+    checkAllFieldsProcessed(dt, processed, `Item[${index}]`);
+
+    // ���ׂĂ�HTML������
     return itemSentenceHtml + subitem1Html + childrenHtml;
   }).join('');
 };
 
 /**
- * AmendProvisionSentenceType をHTMLに変換
- * src/api/components/law/amend-provision-sentence.tsx の LawAmendProvisionSentence コンポーネントを再現
+ * AmendProvisionSentenceType ��HTML�ɕϊ�
+ * src/api/components/law/amend-provision-sentence.tsx �� LawAmendProvisionSentence �R���|�[�l���g���Č�
  */
 const renderAmendProvisionSentence = (
   amendProvisionSentence: any,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('AmendProvisionSentence');
+
   const Sentence = getType(amendProvisionSentence.AmendProvisionSentence, 'Sentence');
+
+  // AmendProvisionSentence配列要素をチェック
+  amendProvisionSentence.AmendProvisionSentence.forEach((elem: any, idx: number) => {
+    const childProcessed = initProcessedFields();
+    if ('Sentence' in elem) childProcessed.add('Sentence');
+    checkAllFieldsProcessed(elem, childProcessed, `AmendProvisionSentence.AmendProvisionSentence[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(amendProvisionSentence, processed, 'AmendProvisionSentence');
   return renderSentence(Sentence as any, [...treeElement, 'AmendProvisionSentence'], false);
 };
 
 /**
- * NewProvisionType配列をHTMLに変換
- * src/api/components/law/new-provision.tsx の LawNewProvision コンポーネントを再現
+ * NewProvisionType�z���HTML�ɕϊ�
+ * src/api/components/law/new-provision.tsx �� LawNewProvision �R���|�[�l���g���Č�
  */
 const renderNewProvision = (
   newProvisionList: NewProvisionType[],
@@ -1316,91 +1695,130 @@ const renderNewProvision = (
   let paragraphIndex = 0;
 
   return newProvisionList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('NewProvision');
+
     const addTreeElement = (index2?: number) => [
       ...treeElement,
       `NewProvision_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
-    return dt.NewProvision.map((dt2, index2) => {
+    const result = dt.NewProvision.map((dt2, index2) => {
       const childTreeElement = addTreeElement(index2);
+      const childProcessed = initProcessedFields();
 
-      // FigStruct処理
+      // FigStruct����
       if ('FigStruct' in dt2) {
+        childProcessed.add('FigStruct');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderFigStruct([dt2], childTreeElement);
       }
-      // TableStruct処理
+      // TableStruct����
       else if ('TableStruct' in dt2) {
+        childProcessed.add('TableStruct');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderTableStruct([dt2], childTreeElement);
       }
-      // Paragraph処理
+      // Paragraph����
       else if ('Paragraph' in dt2) {
         isParagraph = true;
         paragraphIndex++;
+        childProcessed.add('Paragraph');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderParagraph([dt2], childTreeElement, paragraphIndex - 1);
       }
-      // Item処理
+      // Item����
       else if ('Item' in dt2) {
+        childProcessed.add('Item');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderItem([dt2], childTreeElement, isParagraph);
       }
-      // Article処理
+      // Article����
       else if ('Article' in dt2) {
+        childProcessed.add('Article');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderArticle([dt2], childTreeElement);
       }
-      // Section処理
+      // Section����
       else if ('Section' in dt2) {
+        childProcessed.add('Section');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderSection([dt2], childTreeElement);
       }
-      // Chapter処理
+      // Chapter����
       else if ('Chapter' in dt2) {
+        childProcessed.add('Chapter');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderChapter([dt2], childTreeElement);
       }
-      // Part処理
+      // Part����
       else if ('Part' in dt2) {
+        childProcessed.add('Part');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderPart([dt2], childTreeElement);
       }
-      // List処理
+      // List����
       else if ('List' in dt2) {
+        childProcessed.add('List');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderList([dt2], childTreeElement);
       }
-      // Sentence処理
+      // Sentence����
       else if ('Sentence' in dt2) {
         const isPrecedingSentence = index2 > 0 &&
           dt.NewProvision.slice(0, index2).some((item: any) => 'Sentence' in item);
+        childProcessed.add('Sentence');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderSentence([dt2], childTreeElement, isPrecedingSentence);
       }
-      // Remarks処理
+      // Remarks����
       else if ('Remarks' in dt2) {
+        childProcessed.add('Remarks');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderRemarks([dt2], childTreeElement);
       }
-      // AppdxTable処理
+      // AppdxTable����
       else if ('AppdxTable' in dt2) {
+        childProcessed.add('AppdxTable');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderAppdxTable([dt2], childTreeElement);
       }
-      // AppdxNote処理
+      // AppdxNote����
       else if ('AppdxNote' in dt2) {
+        childProcessed.add('AppdxNote');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderAppdxNote([dt2], childTreeElement);
       }
-      // StyleStruct処理
+      // StyleStruct����
       else if ('StyleStruct' in dt2) {
+        childProcessed.add('StyleStruct');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderStyleStruct([dt2], childTreeElement);
       }
-      // FormatStruct処理
+      // FormatStruct����
       else if ('FormatStruct' in dt2) {
+        childProcessed.add('FormatStruct');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderFormatStruct([dt2], childTreeElement);
       }
-      // NoteStruct処理
+      // NoteStruct����
       else if ('NoteStruct' in dt2) {
+        childProcessed.add('NoteStruct');
+        checkAllFieldsProcessed(dt2, childProcessed, `NewProvision[${index}].NewProvision[${index2}]`);
         return renderNoteStruct(dt2, childTreeElement);
       }
-      // その他のサポートされていない要素はスキップ
+      // ���̑��̃T�|�[�g����Ă��Ȃ��v�f�̓X�L�b�v
       return '';
     }).join('');
+
+    checkAllFieldsProcessed(dt, processed, `NewProvision[${index}]`);
+    return result;
   }).join('');
 };
 
 /**
- * AmendProvisionType配列をHTMLに変換
- * src/api/components/law/amend-provision.tsx の LawAmendProvision コンポーネントを再現
+ * AmendProvisionType�z���HTML�ɕϊ�
+ * src/api/components/law/amend-provision.tsx �� LawAmendProvision �R���|�[�l���g���Č�
  */
 const renderAmendProvision = (
   amendProvisionList: any[],
@@ -1408,12 +1826,17 @@ const renderAmendProvision = (
 ): string => {
   return amendProvisionList.map((dt, index) => {
     const addTreeElement = [...treeElement, `AmendProvision_${index}`];
+
+    // AmendProvision要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('AmendProvision');
+
     const AmendProvisionSentence = getType(dt.AmendProvision, 'AmendProvisionSentence');
     const NewProvision = getType<NewProvisionType>(dt.AmendProvision, 'NewProvision');
 
     let html = '';
 
-    // AmendProvisionSentence処理
+    // AmendProvisionSentence����
     if (AmendProvisionSentence.length > 0) {
       const parentElement = getParentElement(treeElement);
       const paddingClass = ['Paragraph', 'Article'].includes(parentElement) ? 'pl-4' : '';
@@ -1421,19 +1844,28 @@ const renderAmendProvision = (
       html += tag('div', { class: `_div_AmendProvisionSentence ${paddingClass} indent-1` }, sentenceHtml);
     }
 
-    // NewProvision処理
+    // NewProvision����
     if (NewProvision.length > 0) {
       const newProvisionContent = renderNewProvision(NewProvision, addTreeElement);
       html += tag('div', { class: 'pl-4' }, newProvisionContent);
     }
 
+    // AmendProvision配列の各要素をチェック
+    dt.AmendProvision.forEach((amendElem: any, elemIdx: number) => {
+      const amendProcessed = initProcessedFields();
+      if ('AmendProvisionSentence' in amendElem) amendProcessed.add('AmendProvisionSentence');
+      if ('NewProvision' in amendElem) amendProcessed.add('NewProvision');
+      checkAllFieldsProcessed(amendElem, amendProcessed, `AmendProvision[${index}].AmendProvision[${elemIdx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `AmendProvision[${index}]`);
     return html;
   }).join('');
 };
 
 /**
- * ParagraphType配列をHTMLに変換
- * src/api/components/law/paragraph.tsx の LawParagraph コンポーネントを再現
+ * ParagraphType�z���HTML�ɕϊ�
+ * src/api/components/law/paragraph.tsx �� LawParagraph �R���|�[�l���g���Č�
  */
 const renderParagraph = (
   paragraphList: ParagraphType[],
@@ -1446,20 +1878,24 @@ const renderParagraph = (
       `Paragraph_${index + parentParagraphIndex}`,
     ];
 
+    // Paragraph要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Paragraph');
+
     const ParagraphCaption = getType<ParagraphCaptionType>(dt.Paragraph, 'ParagraphCaption');
     const ParagraphNum = getType<ParagraphNumType>(dt.Paragraph, 'ParagraphNum')[0];
     const ParagraphSentence = getType<ParagraphSentenceType>(dt.Paragraph, 'ParagraphSentence')[0];
 
-    // 項番号ノード
+    // ���ԍ��m�[�h
     let paragraphNumNode = '';
     if (dt[':@'].OldNum !== undefined && dt[':@'].OldNum) {
-      paragraphNumNode = tag('span', { class: 'font-bold' }, getOldNumLabel(dt[':@'].Num)) + '　';
+      paragraphNumNode = tag('span', { class: 'font-bold' }, getOldNumLabel(dt[':@'].Num)) + '�@';
     } else if (ParagraphNum.ParagraphNum.length > 0) {
       const numText = renderTextNode(ParagraphNum.ParagraphNum, addTreeElement);
-      paragraphNumNode = tag('span', { class: 'font-bold' }, numText) + '　';
+      paragraphNumNode = tag('span', { class: 'font-bold' }, numText) + '�@';
     }
 
-    // 項キャプション（見出し）
+    // ���L���v�V�����i���o���j
     let captionHtml = '';
     if (ParagraphCaption.length > 0) {
       const captionText = renderTextNode(
@@ -1469,7 +1905,7 @@ const renderParagraph = (
       captionHtml = tag('div', { class: '_div_ParagraphCaption font-bold pl-4' }, captionText);
     }
 
-    // 項文のdiv
+    // ������div
     const sentenceClass = ParagraphNum.ParagraphNum.length > 0
       ? '_div_ParagraphSentence pl-4 indent-1'
       : '_div_ParagraphSentence indent1';
@@ -1477,69 +1913,92 @@ const renderParagraph = (
     const sentenceContent = paragraphNumNode + renderParagraphSentence(ParagraphSentence, addTreeElement);
     const sentenceHtml = tag('div', { class: sentenceClass }, sentenceContent);
 
-    // 子要素（Item, TableStruct, FigStruct, List等）のレンダリング
-    // React版と同じく、dt.Paragraph配列を順番に処理することで正しい順序を維持
+    // �q�v�f�iItem, TableStruct, FigStruct, List���j�̃����_�����O
+    // React�łƓ������Adt.Paragraph�z������Ԃɏ������邱�ƂŐ������������ێ�
     let childrenHtml = '';
     dt.Paragraph.forEach((dt2: any, index2: number) => {
-      // Paragraphの既知のフィールド
-      const paragraphKnownFields = [
-        'ParagraphCaption', 'ParagraphNum', 'ParagraphSentence', 'AmendProvision',
-        'Class', 'Item', 'TableStruct', 'FigStruct', 'StyleStruct', 'List', ':@'
-      ];
-      checkUnprocessedFields(dt2, paragraphKnownFields, `Paragraph[${index}].Paragraph[${index2}]`);
-
+      // Paragraph�̊��m�̃t�B�[���h
+      const processed = initProcessedFields();
+      if ('ParagraphCaption' in dt2) {
+        processed.add('ParagraphCaption');
+      }
+      if ('ParagraphNum' in dt2) {
+        processed.add('ParagraphNum');
+      }
+      if ('ParagraphSentence' in dt2) {
+        processed.add('ParagraphSentence');
+      }
       const addTreeElementChild = [
         ...treeElement,
         `Paragraph_${index + parentParagraphIndex}_Child_${index2}`
       ];
       if ('AmendProvision' in dt2) {
+        processed.add('AmendProvision');
         childrenHtml += renderAmendProvision([dt2], addTreeElementChild);
-      } else if ('Class' in dt2) {
-        // Class処理（未実装の場合はスキップ）
-      } else if ('TableStruct' in dt2) {
+      }
+      if ('Class' in dt2) {
+        processed.add('Class');
+        // Class�����i�������̏ꍇ�̓X�L�b�v�j
+      }
+      if ('TableStruct' in dt2) {
+        processed.add('TableStruct');
         childrenHtml += renderTableStruct([dt2], addTreeElementChild);
-      } else if ('FigStruct' in dt2) {
+      }
+      if ('FigStruct' in dt2) {
+        processed.add('FigStruct');
         childrenHtml += renderFigStruct([dt2], addTreeElementChild);
-      } else if ('StyleStruct' in dt2) {
+      }
+      if ('StyleStruct' in dt2) {
+        processed.add('StyleStruct');
         childrenHtml += renderStyleStruct([dt2], addTreeElementChild);
-      } else if ('Item' in dt2) {
+      }
+      if ('Item' in dt2) {
+        processed.add('Item');
         childrenHtml += renderItem([dt2], addTreeElementChild, index + parentParagraphIndex > 0);
-      } else if ('List' in dt2) {
+      }
+      if ('List' in dt2) {
+        processed.add('List');
         childrenHtml += renderList([dt2], addTreeElementChild);
       }
+      checkAllFieldsProcessed(dt2, processed, `Paragraph[${index}].Paragraph[${index2}]`);
     });
 
-    // 親要素に応じてラッピング
+    // �e�v�f�ɉ����ă��b�s���O
     const parentElement = getParentElement(treeElement);
 
+    checkAllFieldsProcessed(dt, processed, `Paragraph[${index}]`);
+
     if (parentElement === 'TableColumn') {
-      // TableColumn内のParagraphの場合、divでラップせず、直接出力
-      // 子要素がある場合やindex > 0の場合は<br />を追加
+      // TableColumn����Paragraph�̏ꍇ�Adiv�Ń��b�v�����A���ڏo��
+      // �q�v�f������ꍇ��index > 0�̏ꍇ��<br />��ǉ�
       const hasChildren = childrenHtml.length > 0;
       const brTag = (hasChildren || index > 0) ? '<br>' : '';
       return paragraphNumNode + renderParagraphSentence(ParagraphSentence, addTreeElement) + brTag + childrenHtml;
     } else if (parentElement === 'Article' && index + parentParagraphIndex === 0) {
-      // Article の第1項の場合、ArticleTitle に直接続ける（div不要）
+      // Article �̑�1���̏ꍇ�AArticleTitle �ɒ��ڑ�����idiv�s�v�j
       return renderParagraphSentence(ParagraphSentence, addTreeElement) + childrenHtml;
     } else if (['MainProvision', 'SupplProvision'].includes(parentElement)) {
-      // MainProvision, SupplProvision直下の場合、sectionで囲む
+      // MainProvision, SupplProvision�����̏ꍇ�Asection�ň͂�
       return tag('section', { class: 'active Paragraph' }, captionHtml + sentenceHtml + childrenHtml);
     } else {
-      // その他の場合
+      // ���̑��̏ꍇ
       return captionHtml + sentenceHtml + childrenHtml;
     }
   }).join('');
 };
 
 /**
- * DivisionTypeをHTMLに変換
- * src/api/components/law/division.tsx の LawDivision コンポーネントを再現
+ * DivisionType��HTML�ɕϊ�
+ * src/api/components/law/division.tsx �� LawDivision �R���|�[�l���g���Č�
  */
 const renderDivision = (
   divisionList: DivisionType[],
   treeElement: string[]
 ): string => {
   return divisionList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Division');
+
     const addTreeElement = [...treeElement, `Division_${index}`];
 
     const DivisionTitle = getType<DivisionTitleType>(dt.Division, 'DivisionTitle')[0];
@@ -1557,19 +2016,31 @@ const renderDivision = (
     // Article
     content += renderArticle(Article, addTreeElement);
 
+    // Division配列要素をチェック
+    dt.Division.forEach((elem, idx) => {
+      const childProcessed = initProcessedFields();
+      if ('DivisionTitle' in elem) childProcessed.add('DivisionTitle');
+      if ('Article' in elem) childProcessed.add('Article');
+      checkAllFieldsProcessed(elem, childProcessed, `Division[${index}].Division[${idx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `Division[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * SubsectionTypeをHTMLに変換
- * src/api/components/law/subsection.tsx の LawSubsection コンポーネントを再現
+ * SubsectionType��HTML�ɕϊ�
+ * src/api/components/law/subsection.tsx �� LawSubsection �R���|�[�l���g���Č�
  */
 const renderSubsection = (
   subsectionList: SubsectionType[],
   treeElement: string[]
 ): string => {
   return subsectionList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Subsection');
+
     const addTreeElement = (index2?: number) => [
       ...treeElement,
       `Subsection_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
@@ -1586,22 +2057,29 @@ const renderSubsection = (
       )
     );
 
-    // 子要素（Article、Division）
+    // �q�v�f�iArticle�ADivision�j
     dt.Subsection.forEach((dt2, index2) => {
+      const childProcessed = initProcessedFields();
+      if ('SubsectionTitle' in dt2) childProcessed.add('SubsectionTitle');
       if ('Article' in dt2) {
+        childProcessed.add('Article');
         content += renderArticle([dt2], addTreeElement(index2));
       } else if ('Division' in dt2) {
+        childProcessed.add('Division');
         content += renderDivision([dt2], addTreeElement(index2));
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Subsection[${index}].Subsection[${index2}]`);
     });
+
+    checkAllFieldsProcessed(dt, processed, `Subsection[${index}]`);
 
     return content;
   }).join('');
 };
 
 /**
- * SectionTypeをHTMLに変換
- * src/api/components/law/section.tsx の LawSection コンポーネントを再現
+ * SectionType��HTML�ɕϊ�
+ * src/api/components/law/section.tsx �� LawSection �R���|�[�l���g���Č�
  */
 const renderSection = (
   sectionList: SectionType[],
@@ -1612,6 +2090,10 @@ const renderSection = (
       ...treeElement,
       `Section_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
+
+    // Section要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Section');
 
     const SectionTitle = getType<SectionTitleType>(dt.Section, 'SectionTitle')[0];
 
@@ -1624,24 +2106,33 @@ const renderSection = (
       )
     );
 
-    // 子要素（Article、Subsection、Division）
+    // �q�v�f�iArticle�ASubsection�ADivision�j
     dt.Section.forEach((dt2, index2) => {
+      const childProcessed = initProcessedFields();
+      if ('SectionTitle' in dt2) childProcessed.add('SectionTitle');
       if ('Article' in dt2) {
+        childProcessed.add('Article');
         content += renderArticle([dt2], addTreeElement(index2));
-      } else if ('Subsection' in dt2) {
+      }
+      if ('Subsection' in dt2) {
+        childProcessed.add('Subsection');
         content += renderSubsection([dt2], addTreeElement(index2));
-      } else if ('Division' in dt2) {
+      }
+      if ('Division' in dt2) {
+        childProcessed.add('Division');
         content += renderDivision([dt2], addTreeElement(index2));
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Section[${index}].Section[${index2}]`);
     });
 
+    checkAllFieldsProcessed(dt, processed, `Section[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * ChapterTypeをHTMLに変換
- * src/api/components/law/chapter.tsx の LawChapter コンポーネントを再現
+ * ChapterType��HTML�ɕϊ�
+ * src/api/components/law/chapter.tsx �� LawChapter �R���|�[�l���g���Č�
  */
 const renderChapter = (
   chapterList: ChapterType[],
@@ -1652,6 +2143,10 @@ const renderChapter = (
       ...treeElement,
       `Chapter_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
+
+    // Chapter要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Chapter');
 
     const ChapterTitle = getType<ChapterTitleType>(chapter.Chapter, 'ChapterTitle')[0];
 
@@ -1664,22 +2159,29 @@ const renderChapter = (
       )
     );
 
-    // 子要素（Article、Section）
+    // �q�v�f�iArticle�ASection�j
     chapter.Chapter.forEach((dt2, index2) => {
+      const childProcessed = initProcessedFields();
+      if ('ChapterTitle' in dt2) childProcessed.add('ChapterTitle');
       if ('Article' in dt2) {
+        childProcessed.add('Article');
         content += renderArticle([dt2], addTreeElement(index2));
-      } else if ('Section' in dt2) {
+      }
+      if ('Section' in dt2) {
+        childProcessed.add('Section');
         content += renderSection([dt2], addTreeElement(index2));
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Chapter[${index}].Chapter[${index2}]`);
     });
 
+    checkAllFieldsProcessed(chapter, processed, `Chapter[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * PartTypeをHTMLに変換
- * src/api/components/law/part.tsx の LawPart コンポーネントを再現
+ * PartType��HTML�ɕϊ�
+ * src/api/components/law/part.tsx �� LawPart �R���|�[�l���g���Č�
  */
 const renderPart = (
   partList: PartType[],
@@ -1690,6 +2192,10 @@ const renderPart = (
       ...treeElement,
       `Part_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
+
+    // Part要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Part');
 
     const PartTitle = getType<PartTitleType>(dt.Part, 'PartTitle')[0];
 
@@ -1702,22 +2208,29 @@ const renderPart = (
       )
     );
 
-    // 子要素（Chapter、Article）
+    // �q�v�f�iChapter�AArticle�j
     dt.Part.forEach((dt2, index2) => {
+      const childProcessed = initProcessedFields();
+      if ('PartTitle' in dt2) childProcessed.add('PartTitle');
       if ('Chapter' in dt2) {
+        childProcessed.add('Chapter');
         content += renderChapter([dt2], addTreeElement(index2));
-      } else if ('Article' in dt2) {
+      }
+      if ('Article' in dt2) {
+        childProcessed.add('Article');
         content += renderArticle([dt2], addTreeElement(index2));
       }
+      checkAllFieldsProcessed(dt2, childProcessed, `Part[${index}].Part[${index2}]`);
     });
 
+    checkAllFieldsProcessed(dt, processed, `Part[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * ArticleType配列をHTMLに変換
- * src/api/components/law/article.tsx の LawArticle コンポーネントを再現
+ * ArticleType�z���HTML�ɕϊ�
+ * src/api/components/law/article.tsx �� LawArticle �R���|�[�l���g���Č�
  */
 const renderArticle = (
   articleList: ArticleType[],
@@ -1726,6 +2239,10 @@ const renderArticle = (
   return articleList.map((dt, index) => {
     const addTreeElement = [...treeElement, `Article_${index}`];
 
+    // Article要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('Article');
+
     const ArticleCaption = getType<ArticleCaptionType>(dt.Article, 'ArticleCaption');
     const ArticleTitle = getType<ArticleTitleType>(dt.Article, 'ArticleTitle')[0];
     const Paragraph = getType<ParagraphType>(dt.Article, 'Paragraph');
@@ -1733,7 +2250,7 @@ const renderArticle = (
 
     let content = '';
 
-    // ArticleCaption（条の見出し）- Article[0]にある場合
+    // ArticleCaption�i���̌��o���j- Article[0]�ɂ���ꍇ
     if ('ArticleCaption' in dt.Article[0]) {
       const captionText = renderTextNode(
         ArticleCaption[0].ArticleCaption,
@@ -1742,14 +2259,14 @@ const renderArticle = (
       content += tag('div', { class: '_div_ArticleCaption font-bold pl-4' }, captionText);
     }
 
-    // ArticleTitle（条タイトル）+ 第1項
+    // ArticleTitle�i���^�C�g���j+ ��1��
     let articleTitleContent = '';
 
-    // ArticleTitleのテキスト
+    // ArticleTitle�̃e�L�X�g
     const titleText = renderTextNode(ArticleTitle.ArticleTitle, addTreeElement);
     articleTitleContent += tag('span', { class: 'font-bold' }, titleText);
 
-    // ArticleCaption が Article[1] にある場合（稀なケース）
+    // ArticleCaption �� Article[1] �ɂ���ꍇ�i�H�ȃP�[�X�j
     if ('ArticleCaption' in dt.Article[1]) {
       const captionText = renderTextNode(
         ArticleCaption[0].ArticleCaption,
@@ -1758,15 +2275,15 @@ const renderArticle = (
       articleTitleContent += tag('span', { class: 'font-bold' }, captionText);
     }
 
-    // 全角スペース
-    articleTitleContent += '　';
+    // �S�p�X�y�[�X
+    articleTitleContent += '�@';
 
-    // 第1項（項番号なし）
+    // ��1���i���ԍ��Ȃ��j
     articleTitleContent += renderParagraph([Paragraph[0]], addTreeElement, 0);
 
     content += tag('div', { class: '_div_ArticleTitle pl-4 indent-1' }, articleTitleContent);
 
-    // 第2項以降
+    // ��2���ȍ~
     if (Paragraph.length > 1) {
       content += renderParagraph(
         Paragraph.filter((dt, i) => i > 0),
@@ -1775,19 +2292,30 @@ const renderArticle = (
       );
     }
 
-    // SupplNote（補足）
+    // SupplNote�i�⑫�j
     if (SupplNote.length > 0) {
       const noteText = renderTextNode(SupplNote[0].SupplNote, addTreeElement);
       content += tag('div', { class: '_div_SupplNote pl-8 indent-1' }, noteText);
     }
 
+    // Article配列の各要素をチェック
+    dt.Article.forEach((articleElem: any, elemIdx: number) => {
+      const articleProcessed = initProcessedFields();
+      if ('ArticleCaption' in articleElem) articleProcessed.add('ArticleCaption');
+      if ('ArticleTitle' in articleElem) articleProcessed.add('ArticleTitle');
+      if ('Paragraph' in articleElem) articleProcessed.add('Paragraph');
+      if ('SupplNote' in articleElem) articleProcessed.add('SupplNote');
+      checkAllFieldsProcessed(articleElem, articleProcessed, `Article[${index}].Article[${elemIdx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `Article[${index}]`);
     return tag('section', { class: 'active Article pb-4' }, content);
   }).join('');
 };
 
 /**
- * MainProvisionTypeをHTMLに変換
- * src/api/components/law/main-provision.tsx の LawMainProvision コンポーネントを再現
+ * MainProvisionType��HTML�ɕϊ�
+ * src/api/components/law/main-provision.tsx �� LawMainProvision �R���|�[�l���g���Č�
  */
 const renderMainProvision = (
   mainProvision: MainProvisionType,
@@ -1798,9 +2326,40 @@ const renderMainProvision = (
   return mainProvision.MainProvision.map((dt, index) => {
     const addTreeElement = [...treeElement, `MainProvision_${index}`];
 
-    // MainProvision内要素のフィールドチェック
-    const knownFields = ['Part', 'Chapter', 'Section', 'Article', 'Paragraph', ':@'];
-    checkUnprocessedFields(dt, knownFields, `MainProvision[${index}]`);
+    // MainProvision���v�f�̃t�B�[���h�`�F�b�N
+    const processed = initProcessedFields();
+
+    if ('Part' in dt) {
+
+      processed.add('Part');
+
+    }
+
+    if ('Chapter' in dt) {
+
+      processed.add('Chapter');
+
+    }
+
+    if ('Section' in dt) {
+
+      processed.add('Section');
+
+    }
+
+    if ('Article' in dt) {
+
+      processed.add('Article');
+
+    }
+
+    if ('Paragraph' in dt) {
+
+      processed.add('Paragraph');
+
+    }
+
+    checkAllFieldsProcessed(dt, processed, `MainProvision[${index}]`);
 
     if ('Chapter' in dt) {
       return renderChapter([dt], addTreeElement);
@@ -1820,8 +2379,8 @@ const renderMainProvision = (
 };
 
 /**
- * SupplProvisionTypeをHTMLに変換
- * src/api/components/law/suppl-provision.tsx の LawSupplProvision コンポーネントを再現
+ * SupplProvisionType��HTML�ɕϊ�
+ * src/api/components/law/suppl-provision.tsx �� LawSupplProvision �R���|�[�l���g���Č�
  */
 const renderSupplProvision = (
   supplProvision: SupplProvisionType,
@@ -1856,96 +2415,106 @@ const renderSupplProvision = (
 
   let content = '';
 
-  // SupplProvisionLabel（附則のタイトル）
+  // SupplProvisionLabel�i�����̃^�C�g���j
   let labelText = '';
   if (SupplProvisionLabel.SupplProvisionLabel) {
     labelText = renderTextNode(SupplProvisionLabel.SupplProvisionLabel, addTreeElement());
   }
 
-  // AmendLawNum属性（改正法令番号）
+  // AmendLawNum�����i�����@�ߔԍ��j
   if (supplProvision[':@']?.AmendLawNum) {
-    labelText += `　（${supplProvision[':@'].AmendLawNum}）`;
+    labelText += `�@�i${supplProvision[':@'].AmendLawNum}�j`;
   }
 
-  // Extract属性（抄）
+  // Extract�����i���j
   if (supplProvision[':@']?.Extract) {
-    labelText += '　抄';
+    labelText += '�@��';
   }
 
   content += tag('div', { class: '_div_SupplProvisionLabel SupplProvisionLabel pl-12 font-bold pb-4' }, labelText);
 
-  // Paragraph要素（項）
+  // Paragraph�v�f�i���j
   content += renderParagraph(Paragraph, addTreeElement(), 0);
 
-  // Chapter要素（章）
+  // Chapter�v�f�i�́j
   content += renderChapter(Chapter, addTreeElement(1));
 
-  // Article要素（条）
+  // Article�v�f�i���j
   content += renderArticle(Article, addTreeElement(1));
 
-  // SupplProvisionAppdxTable、SupplProvisionAppdxStyle、SupplProvisionAppdx等の処理
-  // React側と同じく、XML内での出現順序を保持する必要がある
-  supplProvision.SupplProvision.forEach((dt: any) => {
+  // SupplProvisionAppdxTable�ASupplProvisionAppdxStyle�ASupplProvisionAppdx���̏���
+  // React���Ɠ������AXML���ł̏o��������ێ�����K�v������
+  supplProvision.SupplProvision.forEach((dt: any, dtIdx: number) => {
+    const childProcessed = initProcessedFields();
+    if ('SupplProvisionLabel' in dt) childProcessed.add('SupplProvisionLabel');
+    if ('Paragraph' in dt) childProcessed.add('Paragraph');
+    if ('Chapter' in dt) childProcessed.add('Chapter');
+    if ('Article' in dt) childProcessed.add('Article');
     if ('SupplProvisionAppdxTable' in dt) {
+      childProcessed.add('SupplProvisionAppdxTable');
       content += renderSupplProvisionAppdxTable([dt], addTreeElement(2));
-    } else if ('SupplProvisionAppdxStyle' in dt) {
+    }
+    if ('SupplProvisionAppdxStyle' in dt) {
+      childProcessed.add('SupplProvisionAppdxStyle');
       content += renderSupplProvisionAppdxStyle([dt], addTreeElement(2));
-    } else if ('SupplProvisionAppdx' in dt) {
+    }
+    if ('SupplProvisionAppdx' in dt) {
+      childProcessed.add('SupplProvisionAppdx');
       content += renderSupplProvisionAppdx([dt], addTreeElement(2));
     }
+    checkAllFieldsProcessed(dt, childProcessed, `SupplProvision.SupplProvision[${dtIdx}]`);
   });
 
   return tag('section', { class: 'active SupplProvision pb-4', style: 'display:none' }, content);
 };
 
 /**
- * SupplProvisionAppdxTableType配列をHTMLに変換
- * src/api/components/law/suppl-provision-appdx-table.tsx の LawSupplProvisionAppdxTable コンポーネントを再現
+ * SupplProvisionAppdxTableType�z���HTML�ɕϊ�
+ * src/api/components/law/suppl-provision-appdx-table.tsx �� LawSupplProvisionAppdxTable �R���|�[�l���g���Č�
  */
 const renderSupplProvisionAppdxTable = (
   supplProvisionAppdxTableList: SupplProvisionAppdxTableType[],
   treeElement: string[]
 ): string => {
   return supplProvisionAppdxTableList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('SupplProvisionAppdxTable');
+
     const addTreeElement = [...treeElement, `SupplProvisionAppdxTable_${index}`];
-
-    // SupplProvisionAppdxTable要素のフィールドチェック
-    const knownFields = ['SupplProvisionAppdxTableTitle', 'RelatedArticleNum', 'TableStruct', ':@'];
-    checkUnprocessedFields(dt, knownFields, `SupplProvisionAppdxTable[${index}]`);
-
-    const SupplProvisionAppdxTableTitle = getType<SupplProvisionAppdxTableTitleType>(
-      dt.SupplProvisionAppdxTable,
-      'SupplProvisionAppdxTableTitle'
-    )[0];
-
-    const RelatedArticleNum = getType<RelatedArticleNumType>(
-      dt.SupplProvisionAppdxTable,
-      'RelatedArticleNum'
-    );
-
-    const TableStruct = getType<TableStructType>(
-      dt.SupplProvisionAppdxTable,
-      'TableStruct'
-    );
-
     let content = '';
 
-    // SupplProvisionAppdxTableTitle
-    content += tag('div', { class: '_div_SupplProvisionAppdxStyleTitle font-bold' },
-      renderTextNode(SupplProvisionAppdxTableTitle.SupplProvisionAppdxTableTitle, addTreeElement) +
-      renderRelatedArticleNum(RelatedArticleNum, addTreeElement)
-    );
+    // SupplProvisionAppdxTableTitle + RelatedArticleNum
+    dt.SupplProvisionAppdxTable.forEach((elem: any, index2: number) => {
+      const elemProcessed = initProcessedFields();
 
-    // TableStruct
-    content += renderTableStruct(TableStruct, addTreeElement);
+      if ('SupplProvisionAppdxTableTitle' in elem) {
+        elemProcessed.add('SupplProvisionAppdxTableTitle');
+        content += tag('div', { class: '_div_SupplProvisionAppdxStyleTitle font-bold' },
+          renderTextNode(elem.SupplProvisionAppdxTableTitle, addTreeElement)
+        );
+      }
+      if ('RelatedArticleNum' in elem) {
+        elemProcessed.add('RelatedArticleNum');
+        content += renderRelatedArticleNum([elem], addTreeElement);
+      }
+      if ('TableStruct' in elem) {
+        elemProcessed.add('TableStruct');
+        content += renderTableStruct([elem], addTreeElement);
+      }
+
+      // 各要素が持つすべてのフィールドをチェック
+      checkAllFieldsProcessed(elem, elemProcessed, `SupplProvisionAppdxTable[${index}].SupplProvisionAppdxTable[${index2}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `SupplProvisionAppdxTable[${index}]`);
 
     return tag('section', { class: 'active SupplProvisionAppdxTable' }, content);
   }).join('');
 };
 
 /**
- * SupplProvisionAppdxStyleType配列をHTMLに変換
- * src/api/components/law/suppl-provision-appdx-style.tsx の LawSupplProvisionAppdxStyle コンポーネントを再現
+ * SupplProvisionAppdxStyleType�z���HTML�ɕϊ�
+ * src/api/components/law/suppl-provision-appdx-style.tsx �� LawSupplProvisionAppdxStyle �R���|�[�l���g���Č�
  */
 const renderSupplProvisionAppdxStyle = (
   supplProvisionAppdxStyleList: SupplProvisionAppdxStyleType[],
@@ -1955,42 +2524,43 @@ const renderSupplProvisionAppdxStyle = (
     const addTreeElement = [...treeElement, `SupplProvisionAppdxStyle_${index}`];
 
     // SupplProvisionAppdxStyle要素のフィールドチェック
-    const knownFields = ['SupplProvisionAppdxStyleTitle', 'RelatedArticleNum', 'StyleStruct', ':@'];
-    checkUnprocessedFields(dt, knownFields, `SupplProvisionAppdxStyle[${index}]`);
-
-    const SupplProvisionAppdxStyleTitle = getType<SupplProvisionAppdxStyleTitleType>(
-      dt.SupplProvisionAppdxStyle,
-      'SupplProvisionAppdxStyleTitle'
-    )[0];
-
-    const RelatedArticleNum = getType<RelatedArticleNumType>(
-      dt.SupplProvisionAppdxStyle,
-      'RelatedArticleNum'
-    );
-
-    const StyleStruct = getType<StyleStructType>(
-      dt.SupplProvisionAppdxStyle,
-      'StyleStruct'
-    );
+    const processed = initProcessedFields();
+    processed.add('SupplProvisionAppdxStyle');
 
     let content = '';
 
-    // SupplProvisionAppdxStyleTitle
-    content += tag('div', { class: '_div_SupplProvisionAppdxStyleTitle font-bold' },
-      renderTextNode(SupplProvisionAppdxStyleTitle.SupplProvisionAppdxStyleTitle, addTreeElement) +
-      renderRelatedArticleNum(RelatedArticleNum, addTreeElement)
-    );
+    // dt.SupplProvisionAppdxStyle配列を走査して、各要素を処理しながらprocessed.addする
+    dt.SupplProvisionAppdxStyle.forEach((elem: any, index2: number) => {
+      const elemProcessed = initProcessedFields();
 
-    // StyleStruct
-    content += renderStyleStruct(StyleStruct, addTreeElement);
+      if ('SupplProvisionAppdxStyleTitle' in elem) {
+        elemProcessed.add('SupplProvisionAppdxStyleTitle');
+        content += tag('div', { class: '_div_SupplProvisionAppdxStyleTitle font-bold' },
+          renderTextNode(elem.SupplProvisionAppdxStyleTitle, addTreeElement)
+        );
+      }
+      if ('RelatedArticleNum' in elem) {
+        elemProcessed.add('RelatedArticleNum');
+        content += renderRelatedArticleNum([elem], addTreeElement);
+      }
+      if ('StyleStruct' in elem) {
+        elemProcessed.add('StyleStruct');
+        content += renderStyleStruct([elem], addTreeElement);
+      }
+
+      // 各要素が持つすべてのフィールドをチェック
+      checkAllFieldsProcessed(elem, elemProcessed, `SupplProvisionAppdxStyle[${index}].SupplProvisionAppdxStyle[${index2}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `SupplProvisionAppdxStyle[${index}]`);
 
     return tag('section', { class: 'active SupplProvisionAppdxStyle' }, content);
   }).join('');
 };
 
 /**
- * SupplProvisionAppdxType配列をHTMLに変換
- * src/api/components/law/suppl-provision-appdx.tsx の LawSupplProvisionAppdx コンポーネントを再現
+ * SupplProvisionAppdxType�z���HTML�ɕϊ�
+ * src/api/components/law/suppl-provision-appdx.tsx �� LawSupplProvisionAppdx �R���|�[�l���g���Č�
  */
 const renderSupplProvisionAppdx = (
   supplProvisionAppdxList: SupplProvisionAppdxType[],
@@ -1999,9 +2569,9 @@ const renderSupplProvisionAppdx = (
   return supplProvisionAppdxList.map((dt, index) => {
     const addTreeElement = [...treeElement, `SupplProvisionAppdx_${index}`];
 
-    // SupplProvisionAppdx隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-    const knownFields = ['ArithFormulaNum', 'RelatedArticleNum', 'ArithFormula', ':@'];
-    checkUnprocessedFields(dt.SupplProvisionAppdx, knownFields, `SupplProvisionAppdx[${index}]`);
+    // SupplProvisionAppdx要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('SupplProvisionAppdx');
 
     const ArithFormulaNum = getType<ArithFormulaNumType>(
       dt.SupplProvisionAppdx,
@@ -2020,7 +2590,7 @@ const renderSupplProvisionAppdx = (
 
     let content = '';
 
-    // ArithFormulaNum または RelatedArticleNum が存在する場合
+    // ArithFormulaNum �܂��� RelatedArticleNum �����݂���ꍇ
     if (ArithFormulaNum.length > 0 || RelatedArticleNum.length > 0) {
       let divContent = '';
 
@@ -2045,8 +2615,8 @@ const renderSupplProvisionAppdx = (
       content += tag('div', { class: '_div_ArithFormulaNum' }, divContent);
     }
 
-    // ArithFormula (getTextNode相当)
-    // React版では ArithFormula は <div class="pl-4"> でラップされる
+    // ArithFormula (getTextNode����)
+    // React�łł� ArithFormula �� <div class="pl-4"> �Ń��b�v�����
     if (ArithFormula.length > 0) {
       ArithFormula.forEach((arithFormula) => {
         const arithFormulaContent = renderLawTypeList(
@@ -2058,35 +2628,54 @@ const renderSupplProvisionAppdx = (
       });
     }
 
+    checkAllFieldsProcessed(dt, processed, `SupplProvisionAppdx[${index}]`);
     return tag('section', { class: 'active SupplProvisionAppdx' }, content);
   }).join('');
 };
 
 /**
- * ArticleRangeTypeをHTMLに変換
- * src/api/components/law/article-range.tsx の LawArticleRange コンポーネントを再現
+ * ArticleRangeType��HTML�ɕϊ�
+ * src/api/components/law/article-range.tsx �� LawArticleRange �R���|�[�l���g���Č�
  */
 const renderArticleRange = (
   articleRange: ArticleRangeType,
   treeElement: string[]
 ): string => {
-  return renderTextNode(articleRange.ArticleRange, [...treeElement, 'ArticleRange']);
+  const processed = initProcessedFields();
+  processed.add('ArticleRange');
+
+  const result = renderTextNode(articleRange.ArticleRange, [...treeElement, 'ArticleRange']);
+
+  checkAllFieldsProcessed(articleRange, processed, 'ArticleRange');
+  return result;
 };
 
 /**
- * TOCArticleType配列をHTMLに変換
- * src/api/components/law/toc-article.tsx の LawTOCArticle コンポーネントを再現
+ * TOCArticleType�z���HTML�ɕϊ�
+ * src/api/components/law/toc-article.tsx �� LawTOCArticle �R���|�[�l���g���Č�
  */
 const renderTOCArticle = (
   tocArticleList: TOCArticleType[],
   treeElement: string[]
 ): string => {
   return tocArticleList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TOCArticle');
+
     const addTreeElement = [...treeElement, `TOCArticle_${index}`];
 
     const ArticleTitle = getType<ArticleTitleType>(dt.TOCArticle, 'ArticleTitle')[0];
     const ArticleCaption = getType<ArticleCaptionType>(dt.TOCArticle, 'ArticleCaption')[0];
 
+    // TOCArticle配列要素をチェック
+    dt.TOCArticle.forEach((elem, idx) => {
+      const childProcessed = initProcessedFields();
+      if ('ArticleTitle' in elem) childProcessed.add('ArticleTitle');
+      if ('ArticleCaption' in elem) childProcessed.add('ArticleCaption');
+      checkAllFieldsProcessed(elem, childProcessed, `TOCArticle[${index}].TOCArticle[${idx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `TOCArticle[${index}]`);
     return tag('div', { class: '_div_TOCArticle pl-4' },
       renderTextNode(ArticleTitle.ArticleTitle, addTreeElement) +
       renderTextNode(ArticleCaption.ArticleCaption, addTreeElement)
@@ -2095,19 +2684,31 @@ const renderTOCArticle = (
 };
 
 /**
- * TOCDivisionType配列をHTMLに変換
- * src/api/components/law/toc-division.tsx の LawTOCDivision コンポーネントを再現
+ * TOCDivisionType�z���HTML�ɕϊ�
+ * src/api/components/law/toc-division.tsx �� LawTOCDivision �R���|�[�l���g���Č�
  */
 const renderTOCDivision = (
   tocDivisionList: TOCDivisionType[],
   treeElement: string[]
 ): string => {
   return tocDivisionList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TOCDivision');
+
     const addTreeElement = [...treeElement, `TOCDivision_${index}`];
 
     const DivisionTitle = getType<any>(dt.TOCDivision, 'DivisionTitle')[0];
     const ArticleRange = getType<ArticleRangeType>(dt.TOCDivision, 'ArticleRange');
 
+    // TOCDivision配列要素をチェック
+    dt.TOCDivision.forEach((elem, idx) => {
+      const childProcessed = initProcessedFields();
+      if ('DivisionTitle' in elem) childProcessed.add('DivisionTitle');
+      if ('ArticleRange' in elem) childProcessed.add('ArticleRange');
+      checkAllFieldsProcessed(elem, childProcessed, `TOCDivision[${index}].TOCDivision[${idx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `TOCDivision[${index}]`);
     return tag('div', { class: '_div_TOCDivision pl-16' },
       renderTextNode(DivisionTitle.DivisionTitle, addTreeElement) +
       (ArticleRange.length > 0 ? renderArticleRange(ArticleRange[0], addTreeElement) : '')
@@ -2116,13 +2717,16 @@ const renderTOCDivision = (
 };
 
 /**
- * TOCSubsectionType をHTMLに変換
- * src/api/components/law/toc-subsection.tsx の LawTOCSubsection コンポーネントを再現
+ * TOCSubsectionType ��HTML�ɕϊ�
+ * src/api/components/law/toc-subsection.tsx �� LawTOCSubsection �R���|�[�l���g���Č�
  */
 const renderTOCSubsection = (
   tocSubsection: TOCSubsectionType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('TOCSubsection');
+
   const addTreeElement = [...treeElement, 'TOCSubsection'];
 
   const SubsectionTitle = getType<any>(tocSubsection.TOCSubsection, 'SubsectionTitle')[0];
@@ -2140,12 +2744,22 @@ const renderTOCSubsection = (
   // TOCDivision
   content += renderTOCDivision(TOCDivision, addTreeElement);
 
+  // TOCSubsection配列要素をチェック
+  tocSubsection.TOCSubsection.forEach((elem, idx) => {
+    const childProcessed = initProcessedFields();
+    if ('SubsectionTitle' in elem) childProcessed.add('SubsectionTitle');
+    if ('ArticleRange' in elem) childProcessed.add('ArticleRange');
+    if ('TOCDivision' in elem) childProcessed.add('TOCDivision');
+    checkAllFieldsProcessed(elem, childProcessed, `TOCSubsection.TOCSubsection[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(tocSubsection, processed, 'TOCSubsection');
   return content;
 };
 
 /**
- * TOCSectionType配列をHTMLに変換
- * src/api/components/law/toc-section.tsx の LawTOCSection コンポーネントを再現
+ * TOCSectionType�z���HTML�ɕϊ�
+ * src/api/components/law/toc-section.tsx �� LawTOCSection �R���|�[�l���g���Č�
  */
 const renderTOCSection = (
   tocSectionList: TOCSectionType[],
@@ -2168,7 +2782,7 @@ const renderTOCSection = (
       (ArticleRange.length > 0 ? renderArticleRange(ArticleRange[0], addTreeElement()) : '')
     );
 
-    // 子要素（TOCSubsection、TOCDivision）
+    // �q�v�f�iTOCSubsection�ATOCDivision�j
     dt.TOCSection.forEach((dt2, index2) => {
       if ('TOCSubsection' in dt2) {
         content += renderTOCSubsection(dt2, addTreeElement(index2));
@@ -2182,14 +2796,17 @@ const renderTOCSection = (
 };
 
 /**
- * TOCChapterType配列をHTMLに変換
- * src/api/components/law/toc-chapter.tsx の LawTOCChapter コンポーネントを再現
+ * TOCChapterType�z���HTML�ɕϊ�
+ * src/api/components/law/toc-chapter.tsx �� LawTOCChapter �R���|�[�l���g���Č�
  */
 const renderTOCChapter = (
   tocChapterList: TOCChapterType[],
   treeElement: string[]
 ): string => {
   return tocChapterList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TOCChapter');
+
     const addTreeElement = [...treeElement, `TOCChapter_${index}`];
 
     const ChapterTitle = getType<ChapterTitleType>(dt.TOCChapter, 'ChapterTitle')[0];
@@ -2207,19 +2824,32 @@ const renderTOCChapter = (
     // TOCSection
     content += renderTOCSection(TOCSection, addTreeElement);
 
+    // TOCChapter配列要素をチェック
+    dt.TOCChapter.forEach((elem, idx) => {
+      const childProcessed = initProcessedFields();
+      if ('ChapterTitle' in elem) childProcessed.add('ChapterTitle');
+      if ('ArticleRange' in elem) childProcessed.add('ArticleRange');
+      if ('TOCSection' in elem) childProcessed.add('TOCSection');
+      checkAllFieldsProcessed(elem, childProcessed, `TOCChapter[${index}].TOCChapter[${idx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `TOCChapter[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * TOCPartType配列をHTMLに変換
- * src/api/components/law/toc-part.tsx の LawTOCPart コンポーネントを再現
+ * TOCPartType�z���HTML�ɕϊ�
+ * src/api/components/law/toc-part.tsx �� LawTOCPart �R���|�[�l���g���Č�
  */
 const renderTOCPart = (
   tocPartList: TOCPartType[],
   treeElement: string[]
 ): string => {
   return tocPartList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TOCPart');
+
     const addTreeElement = [...treeElement, `TOCPart_${index}`];
 
     const PartTitle = getType<PartTitleType>(dt.TOCPart, 'PartTitle')[0];
@@ -2237,18 +2867,31 @@ const renderTOCPart = (
     // TOCChapter
     content += renderTOCChapter(TOCChapter, addTreeElement);
 
+    // TOCPart配列要素をチェック
+    dt.TOCPart.forEach((elem, idx) => {
+      const childProcessed = initProcessedFields();
+      if ('PartTitle' in elem) childProcessed.add('PartTitle');
+      if ('ArticleRange' in elem) childProcessed.add('ArticleRange');
+      if ('TOCChapter' in elem) childProcessed.add('TOCChapter');
+      checkAllFieldsProcessed(elem, childProcessed, `TOCPart[${index}].TOCPart[${idx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `TOCPart[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * TOCSupplProvisionTypeをHTMLに変換
- * src/api/components/law/toc-suppl-provision.tsx の LawTOCSupplProvision コンポーネントを再現
+ * TOCSupplProvisionType��HTML�ɕϊ�
+ * src/api/components/law/toc-suppl-provision.tsx �� LawTOCSupplProvision �R���|�[�l���g���Č�
  */
 const renderTOCSupplProvision = (
   tocSupplProvision: TOCSupplProvisionType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('TOCSupplProvision');
+
   const addTreeElement = (index?: number) => [
     ...treeElement,
     `TOCSupplProvision${index ? `_${index}` : ''}`,
@@ -2271,7 +2914,7 @@ const renderTOCSupplProvision = (
     (ArticleRange.length > 0 ? renderArticleRange(ArticleRange[0], addTreeElement()) : '')
   );
 
-  // 子要素（TOCArticle、TOCChapter）
+  // �q�v�f�iTOCArticle�ATOCChapter�j
   tocSupplProvision.TOCSupplProvision.forEach((dt, index) => {
     if ('TOCArticle' in dt) {
       content += renderTOCArticle([dt], addTreeElement(index));
@@ -2284,16 +2927,20 @@ const renderTOCSupplProvision = (
 };
 
 /**
- * TOCAppdxTableLabelType配列をHTMLに変換
- * src/api/components/law/toc-appdx-table-label.tsx の LawTOCAppdxTableLabel コンポーネントを再現
+ * TOCAppdxTableLabelType�z���HTML�ɕϊ�
+ * src/api/components/law/toc-appdx-table-label.tsx �� LawTOCAppdxTableLabel �R���|�[�l���g���Č�
  */
 const renderTOCAppdxTableLabel = (
   tocAppdxTableLabelList: TOCAppdxTableLabelType[],
   treeElement: string[]
 ): string => {
   return tocAppdxTableLabelList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TOCAppdxTableLabel');
+
     const addTreeElement = [...treeElement, `TOCAppdxTableLabel_${index}`];
 
+    checkAllFieldsProcessed(dt, processed, `TOCAppdxTableLabel[${index}]`);
     return tag('div', { class: '_div_TOCAppdxTableLabel pl-4' },
       renderTextNode(dt.TOCAppdxTableLabel, addTreeElement)
     );
@@ -2301,13 +2948,16 @@ const renderTOCAppdxTableLabel = (
 };
 
 /**
- * TOCTypeをHTMLに変換
- * src/api/components/law/toc.tsx の LawTOC コンポーネントを再現
+ * TOCType��HTML�ɕϊ�
+ * src/api/components/law/toc.tsx �� LawTOC �R���|�[�l���g���Č�
  */
 const renderTOC = (
   toc: TOCType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('TOC');
+
   const addTreeElement = (index?: number) => [
     ...treeElement,
     `TOC${index ? `_${index}` : ''}`,
@@ -2320,19 +2970,19 @@ const renderTOC = (
 
   let content = '';
 
-  // TOCLabel（目次ラベル） - React側と同じく、存在しない場合でも空divを出力
+  // TOCLabel�i�ڎ����x���j - React���Ɠ������A���݂��Ȃ��ꍇ�ł���div���o��
   content += tag('div', { class: '_div_TOCLabel' },
     TOCLabel !== undefined ? renderTextNode(TOCLabel.TOCLabel, addTreeElement()) : ''
   );
 
-  // TOCPreambleLabel（前文ラベル）
+  // TOCPreambleLabel�i�O�����x���j
   if (TOCPreambleLabel !== undefined) {
     content += tag('div', { class: '_div_TOCPreambleLabel' },
       renderTextNode(TOCPreambleLabel.TOCPreambleLabel, addTreeElement())
     );
   }
 
-  // 目次の本体（TOCPart、TOCChapter、TOCSection、TOCArticle）
+  // �ڎ��̖{�́iTOCPart�ATOCChapter�ATOCSection�ATOCArticle�j
   toc.TOC.forEach((dt, index) => {
     if ('TOCPart' in dt) {
       content += renderTOCPart([dt], addTreeElement(index));
@@ -2345,49 +2995,73 @@ const renderTOC = (
     }
   });
 
-  // TOCSupplProvision（附則）
+  // TOCSupplProvision�i�����j
   if (TOCSupplProvision !== undefined) {
     content += renderTOCSupplProvision(TOCSupplProvision, addTreeElement());
   }
 
-  // TOCAppdxTableLabel（別表ラベル）
+  // TOCAppdxTableLabel�i�ʕ\���x���j
   content += renderTOCAppdxTableLabel(TOCAppdxTableLabel, addTreeElement());
 
   return content;
 };
 
 /**
- * PreambleType をHTMLに変換
- * src/api/components/law/preamble.tsx の LawPreamble コンポーネントを再現
+ * PreambleType ��HTML�ɕϊ�
+ * src/api/components/law/preamble.tsx �� LawPreamble �R���|�[�l���g���Č�
  */
 const renderPreamble = (
   preamble: PreambleType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('Preamble');
+
   const addTreeElement = [...treeElement, 'Preamble'];
   const Paragraph = getType<ParagraphType>(preamble.Preamble, 'Paragraph');
+
+  // Preamble配列の各要素をチェック
+  preamble.Preamble.forEach((preambleElem: any, elemIdx: number) => {
+    const preambleProcessed = initProcessedFields();
+    if ('Paragraph' in preambleElem) preambleProcessed.add('Paragraph');
+    checkAllFieldsProcessed(preambleElem, preambleProcessed, `Preamble.Preamble[${elemIdx}]`);
+  });
+
+  checkAllFieldsProcessed(preamble, processed, 'Preamble');
 
   return renderParagraph(Paragraph, addTreeElement, 0);
 };
 
 /**
- * ListSentenceType をHTMLに変換
- * src/api/components/law/list-sentence.tsx の LawListSentence コンポーネントを再現
+ * ListSentenceType ��HTML�ɕϊ�
+ * src/api/components/law/list-sentence.tsx �� LawListSentence �R���|�[�l���g���Č�
  */
 const renderListSentence = (
   listSentence: ListSentenceType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('ListSentence');
+
   const addTreeElement = [...treeElement, 'ListSentence'];
   const Sentence = getType<SentenceType>(listSentence.ListSentence, 'Sentence');
   const Column = getType<ColumnType>(listSentence.ListSentence, 'Column');
 
+  // ListSentence配列要素をチェック
+  listSentence.ListSentence.forEach((elem, idx) => {
+    const childProcessed = initProcessedFields();
+    if ('Sentence' in elem) childProcessed.add('Sentence');
+    if ('Column' in elem) childProcessed.add('Column');
+    checkAllFieldsProcessed(elem, childProcessed, `ListSentence.ListSentence[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(listSentence, processed, 'ListSentence');
   return renderSentence(Sentence, addTreeElement, false) + renderColumn(Column, addTreeElement);
 };
 
 /**
- * ListType をHTMLに変換
- * src/api/components/law/list.tsx の LawList コンポーネントを再現
+ * ListType ��HTML�ɕϊ�
+ * src/api/components/law/list.tsx �� LawList �R���|�[�l���g���Č�
  */
 const renderList = (
   listList: ListType[],
@@ -2395,6 +3069,11 @@ const renderList = (
 ): string => {
   return listList.map((dt, index) => {
     const addTreeElement = [...treeElement, `List_${index}`];
+
+    // List要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('List');
+
     const ListSentence = getType<ListSentenceType>(dt.List, 'ListSentence')[0];
     const Sublist1 = getType<Sublist1Type>(dt.List, 'Sublist1');
 
@@ -2412,12 +3091,21 @@ const renderList = (
 
     content += renderSublist1(Sublist1, addTreeElement);
 
+    // List配列の各要素をチェック
+    dt.List.forEach((listElem: any, elemIdx: number) => {
+      const listProcessed = initProcessedFields();
+      if ('ListSentence' in listElem) listProcessed.add('ListSentence');
+      if ('Sublist1' in listElem) listProcessed.add('Sublist1');
+      checkAllFieldsProcessed(listElem, listProcessed, `List[${index}].List[${elemIdx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `List[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * SublistSentence共通処理
+ * SublistSentence���ʏ���
  */
 const renderSublistSentence = (
   sublistSentence: (SentenceType | ColumnType)[],
@@ -2429,12 +3117,24 @@ const renderSublistSentence = (
 };
 
 /**
- * Sublist1SentenceType をHTMLに変換
+ * Sublist1SentenceType ��HTML�ɕϊ�
  */
 const renderSublist1Sentence = (
   sublist1Sentence: Sublist1SentenceType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('Sublist1Sentence');
+
+  // Sublist1Sentence配列要素をチェック
+  sublist1Sentence.Sublist1Sentence.forEach((elem, idx) => {
+    const childProcessed = initProcessedFields();
+    if ('Sentence' in elem) childProcessed.add('Sentence');
+    if ('Column' in elem) childProcessed.add('Column');
+    checkAllFieldsProcessed(elem, childProcessed, `Sublist1Sentence.Sublist1Sentence[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(sublist1Sentence, processed, 'Sublist1Sentence');
   return renderSublistSentence(
     sublist1Sentence.Sublist1Sentence,
     [...treeElement, 'Sublist1Sentence']
@@ -2442,12 +3142,24 @@ const renderSublist1Sentence = (
 };
 
 /**
- * Sublist2SentenceType をHTMLに変換
+ * Sublist2SentenceType ��HTML�ɕϊ�
  */
 const renderSublist2Sentence = (
   sublist2Sentence: Sublist2SentenceType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('Sublist2Sentence');
+
+  // Sublist2Sentence配列要素をチェック
+  sublist2Sentence.Sublist2Sentence.forEach((elem, idx) => {
+    const childProcessed = initProcessedFields();
+    if ('Sentence' in elem) childProcessed.add('Sentence');
+    if ('Column' in elem) childProcessed.add('Column');
+    checkAllFieldsProcessed(elem, childProcessed, `Sublist2Sentence.Sublist2Sentence[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(sublist2Sentence, processed, 'Sublist2Sentence');
   return renderSublistSentence(
     sublist2Sentence.Sublist2Sentence,
     [...treeElement, 'Sublist2Sentence']
@@ -2455,12 +3167,24 @@ const renderSublist2Sentence = (
 };
 
 /**
- * Sublist3SentenceType をHTMLに変換
+ * Sublist3SentenceType ��HTML�ɕϊ�
  */
 const renderSublist3Sentence = (
   sublist3Sentence: Sublist3SentenceType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('Sublist3Sentence');
+
+  // Sublist3Sentence配列要素をチェック
+  sublist3Sentence.Sublist3Sentence.forEach((elem, idx) => {
+    const childProcessed = initProcessedFields();
+    if ('Sentence' in elem) childProcessed.add('Sentence');
+    if ('Column' in elem) childProcessed.add('Column');
+    checkAllFieldsProcessed(elem, childProcessed, `Sublist3Sentence.Sublist3Sentence[${idx}]`);
+  });
+
+  checkAllFieldsProcessed(sublist3Sentence, processed, 'Sublist3Sentence');
   return renderSublistSentence(
     sublist3Sentence.Sublist3Sentence,
     [...treeElement, 'Sublist3Sentence']
@@ -2468,17 +3192,30 @@ const renderSublist3Sentence = (
 };
 
 /**
- * Sublist1Type をHTMLに変換
- * src/api/components/law/sublist.tsx の LawSublist1 コンポーネントを再現
+ * Sublist1Type ��HTML�ɕϊ�
+ * src/api/components/law/sublist.tsx �� LawSublist1 �R���|�[�l���g���Č�
  */
 const renderSublist1 = (
   sublist1List: Sublist1Type[],
   treeElement: string[]
 ): string => {
   return sublist1List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Sublist1');
+
     const addTreeElement = [...treeElement, `Sublist1_${index}`];
     const Sublist1Sentence = getType<Sublist1SentenceType>(dt.Sublist1, 'Sublist1Sentence')[0];
     const Sublist2 = getType<Sublist2Type>(dt.Sublist1, 'Sublist2');
+
+    // Sublist1配列の各要素をチェック
+    dt.Sublist1.forEach((sublistElem: any, elemIdx: number) => {
+      const sublistProcessed = initProcessedFields();
+      if ('Sublist1Sentence' in sublistElem) sublistProcessed.add('Sublist1Sentence');
+      if ('Sublist2' in sublistElem) sublistProcessed.add('Sublist2');
+      checkAllFieldsProcessed(sublistElem, sublistProcessed, `Sublist1[${index}].Sublist1[${elemIdx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `Sublist1[${index}]`);
 
     let content = tag('div', { class: '_div_Sublist1Sentence pl-8' },
       renderSublist1Sentence(Sublist1Sentence, addTreeElement)
@@ -2490,17 +3227,30 @@ const renderSublist1 = (
 };
 
 /**
- * Sublist2Type をHTMLに変換
- * src/api/components/law/sublist.tsx の LawSublist2 コンポーネントを再現
+ * Sublist2Type ��HTML�ɕϊ�
+ * src/api/components/law/sublist.tsx �� LawSublist2 �R���|�[�l���g���Č�
  */
 const renderSublist2 = (
   sublist2List: Sublist2Type[],
   treeElement: string[]
 ): string => {
   return sublist2List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Sublist2');
+
     const addTreeElement = [...treeElement, `Sublist2_${index}`];
     const Sublist2Sentence = getType<Sublist2SentenceType>(dt.Sublist2, 'Sublist2Sentence')[0];
     const Sublist3 = getType<Sublist3Type>(dt.Sublist2, 'Sublist3');
+
+    // Sublist2配列の各要素をチェック
+    dt.Sublist2.forEach((sublistElem: any, elemIdx: number) => {
+      const sublistProcessed = initProcessedFields();
+      if ('Sublist2Sentence' in sublistElem) sublistProcessed.add('Sublist2Sentence');
+      if ('Sublist3' in sublistElem) sublistProcessed.add('Sublist3');
+      checkAllFieldsProcessed(sublistElem, sublistProcessed, `Sublist2[${index}].Sublist2[${elemIdx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `Sublist2[${index}]`);
 
     let content = tag('div', { class: '_div_Sublist2Sentence pl-12' },
       renderSublist2Sentence(Sublist2Sentence, addTreeElement)
@@ -2512,16 +3262,28 @@ const renderSublist2 = (
 };
 
 /**
- * Sublist3Type をHTMLに変換
- * src/api/components/law/sublist.tsx の LawSublist3 コンポーネントを再現
+ * Sublist3Type ��HTML�ɕϊ�
+ * src/api/components/law/sublist.tsx �� LawSublist3 �R���|�[�l���g���Č�
  */
 const renderSublist3 = (
   sublist3List: Sublist3Type[],
   treeElement: string[]
 ): string => {
   return sublist3List.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Sublist3');
+
     const addTreeElement = [...treeElement, `Sublist3_${index}`];
     const Sublist3Sentence = getType<Sublist3SentenceType>(dt.Sublist3, 'Sublist3Sentence')[0];
+
+    // Sublist3配列の各要素をチェック
+    dt.Sublist3.forEach((sublistElem: any, elemIdx: number) => {
+      const sublistProcessed = initProcessedFields();
+      if ('Sublist3Sentence' in sublistElem) sublistProcessed.add('Sublist3Sentence');
+      checkAllFieldsProcessed(sublistElem, sublistProcessed, `Sublist3[${index}].Sublist3[${elemIdx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `Sublist3[${index}]`);
 
     return tag('div', { class: 'pl-16' },
       renderSublist3Sentence(Sublist3Sentence, [...treeElement, 'Sublist3'])
@@ -2530,28 +3292,31 @@ const renderSublist3 = (
 };
 
 /**
- * EnactStatementType をHTMLに変換
- * src/api/components/law/enact-statement.tsx の LawEnactStatement コンポーネントを再現
+ * EnactStatementType ��HTML�ɕϊ�
+ * src/api/components/law/enact-statement.tsx �� LawEnactStatement �R���|�[�l���g���Č�
  */
 const renderEnactStatement = (
   enactStatementList: EnactStatementType[],
   treeElement: string[]
 ): string => {
   return enactStatementList.map((dt, index) => {
-    // EnactStatement要素のフィールドチェック
-    const knownFields = ['_', 'Line', 'Ruby', 'Sup', 'Sub', 'QuoteStruct', 'ArithFormula', 'Style', ':@'];
-    checkUnprocessedFields(dt.EnactStatement, knownFields, `EnactStatement[${index}]`);
+    // EnactStatement要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('EnactStatement');
 
     const addTreeElement = [...treeElement, `EnactStatement_${index}`];
-    return tag('div', { class: '_div_EnactStatement' },
+    const result = tag('div', { class: '_div_EnactStatement' },
       renderTextNode(dt.EnactStatement, addTreeElement)
     );
+
+    checkAllFieldsProcessed(dt, processed, `EnactStatement[${index}]`);
+    return result;
   }).join('');
 };
 
 /**
- * LawBodyTypeをHTMLに変換
- * src/api/components/law/law-body.tsx の LawBodyComponent コンポーネントを再現
+ * LawBodyType��HTML�ɕϊ�
+ * src/api/components/law/law-body.tsx �� LawBodyComponent �R���|�[�l���g���Č�
  */
 const renderLawBody = (
   lawBody: LawBodyType,
@@ -2567,41 +3332,110 @@ const renderLawBody = (
 
   let html = '';
 
-  // EnactStatement（制定文）
+  // EnactStatement�i���蕶�j
   if (EnactStatement.length > 0) {
     html += tag('section', { id: 'EnactStatement', class: 'active EnactStatement' },
       renderEnactStatement(EnactStatement, addTreeElement)
     );
   }
 
-  // TOC（目次）
+  // TOC�i�ڎ��j
   if (TOC.length > 0) {
     html += tag('section', { class: 'active TOC pb-4' },
       renderTOC(TOC[0], addTreeElement)
     );
   }
 
-  // Preamble（前文）
+  // Preamble�i�O���j
   if (Preamble !== undefined) {
     html += tag('section', { class: 'active Preamble' },
       renderPreamble(Preamble, addTreeElement)
     );
   }
 
-  // MainProvision（本則）
+  // MainProvision�i�{���j
   html += tag('section', { id: 'MainProvision', class: 'active MainProvision' },
     tag('div', {}, renderMainProvision(MainProvision, addTreeElement))
   );
 
-  // SupplProvision, Appdx, AppdxTable, AppdxNote, AppdxFig など
+  // SupplProvision, Appdx, AppdxTable, AppdxNote, AppdxFig �Ȃ�
   lawBody.LawBody.forEach((dt, index) => {
-    // LawBodyの既知のフィールド
-    const knownFields = [
-      'LawTitle', 'EnactStatement', 'TOC', 'Preamble', 'MainProvision',
-      'SupplProvision', 'AppdxTable', 'AppdxNote', 'AppdxStyle', 'Appdx',
-      'AppdxFig', 'AppdxFormat', ':@'
-    ];
-    checkUnprocessedFields(dt, knownFields, `LawBody[${index}]`);
+    // LawBody�̊��m�̃t�B�[���h
+    const processed = initProcessedFields();
+
+    if ('LawTitle' in dt) {
+
+      processed.add('LawTitle');
+
+    }
+
+    if ('EnactStatement' in dt) {
+
+      processed.add('EnactStatement');
+
+    }
+
+    if ('TOC' in dt) {
+
+      processed.add('TOC');
+
+    }
+
+    if ('Preamble' in dt) {
+
+      processed.add('Preamble');
+
+    }
+
+    if ('MainProvision' in dt) {
+
+      processed.add('MainProvision');
+
+    }
+
+    if ('SupplProvision' in dt) {
+
+      processed.add('SupplProvision');
+
+    }
+
+    if ('AppdxTable' in dt) {
+
+      processed.add('AppdxTable');
+
+    }
+
+    if ('AppdxNote' in dt) {
+
+      processed.add('AppdxNote');
+
+    }
+
+    if ('AppdxStyle' in dt) {
+
+      processed.add('AppdxStyle');
+
+    }
+
+    if ('Appdx' in dt) {
+
+      processed.add('Appdx');
+
+    }
+
+    if ('AppdxFig' in dt) {
+
+      processed.add('AppdxFig');
+
+    }
+
+    if ('AppdxFormat' in dt) {
+
+      processed.add('AppdxFormat');
+
+    }
+
+    checkAllFieldsProcessed(dt, processed, `LawBody[${index}]`);
 
     const addTreeElementWithIndex = [...treeElement, `LawBody_${index}`];
     if ('SupplProvision' in dt && dt.SupplProvision.length > 0) {
@@ -2625,23 +3459,31 @@ const renderLawBody = (
 };
 
 /**
- * RelatedArticleNumType をHTMLに変換
- * src/api/components/law/related-article-num.tsx の LawRelatedArticleNum コンポーネントを再現
+ * RelatedArticleNumType ��HTML�ɕϊ�
+ * src/api/components/law/related-article-num.tsx �� LawRelatedArticleNum �R���|�[�l���g���Č�
  */
 const renderRelatedArticleNum = (
   relatedArticleNumList: RelatedArticleNumType[],
   treeElement: string[]
 ): string => {
   if (relatedArticleNumList.length === 0) return '';
-  return renderTextNode(relatedArticleNumList[0].RelatedArticleNum, [
+
+  const dt = relatedArticleNumList[0];
+  const processed = initProcessedFields();
+  processed.add('RelatedArticleNum');
+
+  const result = renderTextNode(dt.RelatedArticleNum, [
     ...treeElement,
     'RelatedArticleNum',
   ]);
+
+  checkAllFieldsProcessed(dt, processed, 'RelatedArticleNum[0]');
+  return result;
 };
 
 /**
- * AppdxFigType をHTMLに変換
- * src/api/components/law/appdx-fig.tsx の LawAppdxFig コンポーネントを再現
+ * AppdxFigType ��HTML�ɕϊ�
+ * src/api/components/law/appdx-fig.tsx �� LawAppdxFig �R���|�[�l���g���Č�
  */
 const renderAppdxFig = (
   appdxFig: AppdxFigType,
@@ -2654,7 +3496,7 @@ const renderAppdxFig = (
 
   let html = '';
 
-  // AppdxFigTitle と RelatedArticleNum
+  // AppdxFigTitle �� RelatedArticleNum
   if (AppdxFigTitle.length > 0 || RelatedArticleNum.length > 0) {
     let titleContent = '';
     if (AppdxFigTitle.length > 0) {
@@ -2664,7 +3506,7 @@ const renderAppdxFig = (
     html += tag('div', { class: '_div_AppdxFigTitle' }, titleContent);
   }
 
-  // FigStruct と TableStruct
+  // FigStruct �� TableStruct
   appdxFig.AppdxFig.forEach((dt, index) => {
     const addTreeElementWithIndex = [...treeElement, `AppdxFig_${index}`];
     if ('FigStruct' in dt) {
@@ -2678,8 +3520,8 @@ const renderAppdxFig = (
 };
 
 /**
- * StyleStructType をHTMLに変換
- * src/api/components/law/style-struct.tsx の LawStyleStruct コンポーネントを再現
+ * StyleStructType ��HTML�ɕϊ�
+ * src/api/components/law/style-struct.tsx �� LawStyleStruct �R���|�[�l���g���Č�
  */
 const renderStyleStruct = (
   styleStructList: any[],
@@ -2691,28 +3533,26 @@ const renderStyleStruct = (
       `StyleStruct_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
-    // StyleStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-    const knownFields = ['StyleStructTitle', 'RelatedArticleNum', 'Style', 'Remarks', ':@'];
-    checkUnprocessedFieldsInArray(styleStructList, knownFields, 'StyleStruct');
-
-    const StyleStructTitle = getType<any>(dt.StyleStruct, 'StyleStructTitle');
-    const Remarks = getType<RemarksType>(dt.StyleStruct, 'Remarks');
-    const Style = getType<any>(dt.StyleStruct, 'Style')[0];
+    // StyleStruct要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('StyleStruct');
 
     let content = '';
 
-    // StyleStructTitle
-    if (StyleStructTitle.length > 0) {
-      content += tag('div', { class: '_div_StyleStructTitle' },
-        renderTextNode(StyleStructTitle[0].StyleStructTitle, addTreeElement())
-      );
-    }
-
-    // Style と Remarks（LawAny経由で処理）
+    // StyleStruct配列を走査して、各要素を処理しながらprocessed.addとレンダリングを実行
     dt.StyleStruct.forEach((dt2: any, index2: number) => {
+      const childProcessed = initProcessedFields();
+
+      if ('StyleStructTitle' in dt2) {
+        childProcessed.add('StyleStructTitle');
+        content += tag('div', { class: '_div_StyleStructTitle' },
+          renderTextNode(dt2.StyleStructTitle, addTreeElement())
+        );
+      }
       if ('Style' in dt2) {
+        childProcessed.add('Style');
         // Style内の要素を処理（Sentence, Fig, List, TableStruct, FigStruct, Item等）
-        Style.Style.forEach((styleItem: any) => {
+        dt2.Style.forEach((styleItem: any) => {
           if ('Sentence' in styleItem) {
             content += renderSentence([styleItem], addTreeElement(index2), false);
           } else if ('Fig' in styleItem) {
@@ -2729,23 +3569,31 @@ const renderStyleStruct = (
             content += renderItem([styleItem], addTreeElement(index2), false);
           }
         });
-      } else if ('Remarks' in dt2) {
-        content += renderRemarks(Remarks, addTreeElement(index2));
       }
+      if ('Remarks' in dt2) {
+        childProcessed.add('Remarks');
+        content += renderRemarks([dt2], addTreeElement(index2));
+      }
+
+      checkAllFieldsProcessed(dt2, childProcessed, `StyleStruct[${index}].StyleStruct[${index2}]`);
     });
 
+    checkAllFieldsProcessed(dt, processed, `StyleStruct[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * AppdxStyleType をHTMLに変換
- * src/api/components/law/appdx-style.tsx の LawAppdxStyle コンポーネントを再現
+ * AppdxStyleType ��HTML�ɕϊ�
+ * src/api/components/law/appdx-style.tsx �� LawAppdxStyle �R���|�[�l���g���Č�
  */
 const renderAppdxStyle = (
   appdxStyle: AppdxStyleType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('AppdxStyle');
+
   const addTreeElement = [...treeElement, 'AppdxStyle'];
 
   const AppdxStyleTitle = getType<AppdxStyleTitleType>(appdxStyle.AppdxStyle, 'AppdxStyleTitle');
@@ -2753,7 +3601,7 @@ const renderAppdxStyle = (
 
   let html = '';
 
-  // AppdxStyleTitle と RelatedArticleNum
+  // AppdxStyleTitle �� RelatedArticleNum
   if (AppdxStyleTitle.length > 0 || RelatedArticleNum.length > 0) {
     let titleContent = '';
     if (AppdxStyleTitle.length > 0) {
@@ -2763,7 +3611,7 @@ const renderAppdxStyle = (
     html += tag('div', { class: '_div_AppdxStyleTitle font-bold' }, titleContent);
   }
 
-  // StyleStruct と Remarks
+  // StyleStruct �� Remarks
   appdxStyle.AppdxStyle.forEach((dt, index) => {
     const addTreeElementWithIndex = [...treeElement, `AppdxStyle_${index}`];
     if ('StyleStruct' in dt) {
@@ -2777,13 +3625,16 @@ const renderAppdxStyle = (
 };
 
 /**
- * AppdxFormatType をHTMLに変換
- * src/api/components/law/appdx-format.tsx の LawAppdxFormat コンポーネントを再現
+ * AppdxFormatType ��HTML�ɕϊ�
+ * src/api/components/law/appdx-format.tsx �� LawAppdxFormat �R���|�[�l���g���Č�
  */
 const renderAppdxFormat = (
   appdxFormat: AppdxFormatType,
   treeElement: string[]
 ): string => {
+  const processed = initProcessedFields();
+  processed.add('AppdxFormat');
+
   const addTreeElement = (index?: number) => [
     ...treeElement,
     `AppdxFormat${index !== undefined ? `_${index}` : ''}`,
@@ -2800,7 +3651,7 @@ const renderAppdxFormat = (
 
   let html = '';
 
-  // AppdxFormatTitle と RelatedArticleNum
+  // AppdxFormatTitle �� RelatedArticleNum
   if (AppdxFormatTitle.length > 0 || RelatedArticleNum.length > 0) {
     let titleContent = '';
     if (AppdxFormatTitle.length > 0) {
@@ -2810,7 +3661,7 @@ const renderAppdxFormat = (
     html += tag('div', { class: '_div_AppdxFormatTitle' }, titleContent);
   }
 
-  // FormatStruct と Remarks
+  // FormatStruct �� Remarks
   appdxFormat.AppdxFormat.forEach((dt, index) => {
     if ('FormatStruct' in dt) {
       html += renderFormatStruct([dt], addTreeElement(index));
@@ -2823,52 +3674,59 @@ const renderAppdxFormat = (
 };
 
 /**
- * FigType をHTMLに変換
- * src/api/components/law/fig.tsx の LawFig コンポーネントを再現
+ * FigType ��HTML�ɕϊ�
+ * src/api/components/law/fig.tsx �� LawFig �R���|�[�l���g���Č�
  */
 const renderFig = (
   fig: any,
   treeElement: string[]
 ): string => {
-  // figが配列の場合は最初の要素を使用
+  // fig���z��̏ꍇ�͍ŏ��̗v�f���g�p
   const figObj = Array.isArray(fig) ? fig[0] : fig;
-  // figObjが文字列（空文字列）の場合は、src属性を持たないFig要素
+  // figObj��������i�󕶎���j�̏ꍇ�́Asrc�����������Ȃ�Fig�v�f
+
+  // figObjが文字列やnullの場合はチェック不要
+  if (typeof figObj === 'object' && figObj !== null) {
+    const processed = initProcessedFields();
+    if ('Fig' in figObj) processed.add('Fig');
+    checkAllFieldsProcessed(figObj, processed, 'Fig');
+  }
   const src = (typeof figObj === 'string' || !figObj) ? '' : (figObj[':@']?.src || '');
 
   if (/\.pdf$/i.test(src)) {
-    // PDF: attached_filesからlaw_revision_idを取得してリンクを生成
+    // PDF: attached_files����law_revision_id���擾���ă����N�𐶐�
     const lawRevisionId = globalAttachedFilesMap?.get(src);
     if (lawRevisionId && src) {
-      // APIのURL: https://laws.e-gov.go.jp/api/2/attachment/{law_revision_id}?src={src}
+      // API��URL: https://laws.e-gov.go.jp/api/2/attachment/{law_revision_id}?src={src}
       const encodedSrc = encodeURIComponent(src);
       const attachmentUrl = `https://laws.e-gov.go.jp/api/2/attachment/${lawRevisionId}?src=${encodedSrc}`;
-      // Mozilla PDF.js 公式ビューアへのリンク
+      // Mozilla PDF.js �����r���[�A�ւ̃����N
       const viewerUrl = `./pdfjs/web/viewer.html?file=${encodeURIComponent(attachmentUrl)}`;
       return tag('a', {
         href: viewerUrl,
         target: '_blank',
         rel: 'noopener noreferrer',
         class: 'text-blue-600 hover:text-blue-800 underline',
-        'aria-label': 'PDFファイルを開く',
-        title: 'PDFファイルを開く'
-      }, 'PDFを開く');
+        'aria-label': 'PDF�t�@�C�����J��',
+        title: 'PDF�t�@�C�����J��'
+      }, 'PDF���J��');
     } else {
-      // law_revision_idが見つからない場合は空のspan
+      // law_revision_id��������Ȃ��ꍇ�͋��span
       return tag('span', {
         class: 'text-gray-400',
-        'aria-label': 'PDFファイル',
-        title: 'PDFファイル'
+        'aria-label': 'PDF�t�@�C��',
+        title: 'PDF�t�@�C��'
       }, '');
     }
   } else if (src === '') {
-    // ブランク: Styleの子要素かどうかで分岐
+    // �u�����N: Style�̎q�v�f���ǂ����ŕ���
     if (treeElement.some(dt => /^Style(Struct)?_.*/.test(dt))) {
-      return tag('div', { class: '_div_Fig_noPdf pl-8' }, '（略）');
+      return tag('div', { class: '_div_Fig_noPdf pl-8' }, '�i���j');
     } else {
-      return tag('span', { class: '_span_Fig_noImg inline-block pl-4' }, '（略）');
+      return tag('span', { class: '_span_Fig_noImg inline-block pl-4' }, '�i���j');
     }
   } else {
-    // 画像: attached_filesからlaw_revision_idを取得してリンクを生成
+    // �摜: attached_files����law_revision_id���擾���ă����N�𐶐�
     const lawRevisionId = globalAttachedFilesMap?.get(src);
     if (lawRevisionId && src) {
       const encodedSrc = encodeURIComponent(src);
@@ -2878,18 +3736,18 @@ const renderFig = (
         target: '_blank',
         rel: 'noopener noreferrer',
         class: 'inline-block',
-        'aria-label': '画像を開く',
-        title: '画像を開く'
+        'aria-label': '�摜���J��',
+        title: '�摜���J��'
       }, tag('img', {
         src: attachmentUrl,
-        alt: '添付画像',
+        alt: '�Y�t�摜',
         class: 'max-w-full h-auto'
       }, ''));
     } else {
-      // law_revision_idが見つからない場合はプレースホルダー
+      // law_revision_id��������Ȃ��ꍇ�̓v���[�X�z���_�[
       const innerContent = tag('span', {
         class: 'text-xs text-light-Text-PlaceHolder font-bold'
-      }, '画像を読み込み中...');
+      }, '�摜��ǂݍ��ݒ�...');
       const innerWrapper = tag('div', {
         class: 'flex flex-col justify-center items-center'
       }, innerContent);
@@ -2901,8 +3759,8 @@ const renderFig = (
 };
 
 /**
- * FormatStructType配列をHTMLに変換
- * src/api/components/law/format-struct.tsx の LawFormatStruct コンポーネントを再現
+ * FormatStructType�z���HTML�ɕϊ�
+ * src/api/components/law/format-struct.tsx �� LawFormatStruct �R���|�[�l���g���Č�
  */
 const renderFormatStruct = (
   formatStructList: FormatStructType[],
@@ -2914,150 +3772,174 @@ const renderFormatStruct = (
       `FormatStruct_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
-    // FormatStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-    const knownFields = ['FormatStructTitle', 'RelatedArticleNum', 'Format', 'Remarks', ':@'];
-    checkUnprocessedFieldsInArray(formatStructList, knownFields, 'FormatStruct');
-
-    const FormatStructTitle = getType<FormatStructTitleType>(
-      dt.FormatStruct,
-      'FormatStructTitle'
-    );
-    const Format = getType<FormatType>(dt.FormatStruct, 'Format')[0];
-    const Remarks = getType<RemarksType>(dt.FormatStruct, 'Remarks');
+    // FormatStruct要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('FormatStruct');
 
     let html = '';
 
-    // FormatStructTitle
-    if (FormatStructTitle.length > 0) {
-      html += tag('div', {},
-        renderTextNode(FormatStructTitle[0].FormatStructTitle, addTreeElement())
-      );
-    }
+    // FormatStruct配列を走査して、各要素を処理しながらprocessed.addとレンダリングを実行
+    dt.FormatStruct.forEach((dt2: any, index2: number) => {
+      const childProcessed = initProcessedFields();
 
-    // Format と Remarks
-    dt.FormatStruct.forEach((dt2, index2) => {
+      if ('FormatStructTitle' in dt2) {
+        childProcessed.add('FormatStructTitle');
+        html += tag('div', {},
+          renderTextNode(dt2.FormatStructTitle, addTreeElement())
+        );
+      }
       if ('Format' in dt2) {
+        childProcessed.add('Format');
         // Format内の要素を処理（Fig等）
-        Format.Format.forEach((formatItem) => {
+        dt2.Format.forEach((formatItem: any) => {
           if ('Fig' in formatItem) {
             html += renderFig(formatItem, addTreeElement(index2));
           }
         });
-      } else if ('Remarks' in dt2) {
-        html += renderRemarks(Remarks, addTreeElement(index2));
       }
+      if ('Remarks' in dt2) {
+        childProcessed.add('Remarks');
+        html += renderRemarks([dt2], addTreeElement(index2));
+      }
+
+      checkAllFieldsProcessed(dt2, childProcessed, `FormatStruct[${index}].FormatStruct[${index2}]`);
     });
 
+    checkAllFieldsProcessed(dt, processed, `FormatStruct[${index}]`);
     return html;
   }).join('');
 };
 
 /**
- * AppdxType をHTMLに変換
- * src/api/components/law/appdx.tsx の LawAppdx コンポーネントを再現
+ * AppdxType ��HTML�ɕϊ�
+ * src/api/components/law/appdx.tsx �� LawAppdx �R���|�[�l���g���Č�
  */
 const renderAppdx = (
   appdxList: AppdxType[],
   treeElement: string[]
 ): string => {
   return appdxList.map((dt, index) => {
-    const addTreeElement = [...treeElement, `Appdx_${index}`];
-    const ArithFormulaNum = getType<ArithFormulaNumType>(dt.Appdx, 'ArithFormulaNum');
-    const RelatedArticleNum = getType<RelatedArticleNumType>(dt.Appdx, 'RelatedArticleNum');
-    const ArithFormula = getType<ArithFormulaType>(dt.Appdx, 'ArithFormula');
-    const Remarks = getType<RemarksType>(dt.Appdx, 'Remarks');
+    const processed = initProcessedFields();
+    processed.add('Appdx');
 
+    const addTreeElement = [...treeElement, `Appdx_${index}`];
     let html = '';
 
-    // ArithFormulaNum または RelatedArticleNum が存在する場合
-    if (ArithFormulaNum.length > 0 || RelatedArticleNum.length > 0) {
-      let divContent = '';
+    // Appdx配列要素を走査して、各要素を処理しながらprocessed.addとレンダリングを実行
+    let divContent = '';
+    dt.Appdx.forEach((elem: any, idx: number) => {
+      const childProcessed = initProcessedFields();
 
-      // ArithFormulaNum
-      if (ArithFormulaNum.length > 0) {
+      if ('ArithFormulaNum' in elem) {
+        childProcessed.add('ArithFormulaNum');
         const arithFormulaNumText = renderTextNode(
-          ArithFormulaNum[0].ArithFormulaNum,
+          elem.ArithFormulaNum,
           [...addTreeElement, 'ArithFormulaNum']
         );
         divContent += tag('span', { class: '_span_ArithFormulaNum' }, arithFormulaNumText);
       }
-
-      // RelatedArticleNum
-      if (RelatedArticleNum.length > 0) {
+      if ('RelatedArticleNum' in elem) {
+        childProcessed.add('RelatedArticleNum');
         const relatedArticleNumText = renderTextNode(
-          RelatedArticleNum[0].RelatedArticleNum,
+          elem.RelatedArticleNum,
           [...addTreeElement, 'RelatedArticleNum']
         );
         divContent += relatedArticleNumText;
       }
-
-      html += tag('div', { class: '_div_ArithFormulaNum' }, divContent);
-    }
-
-    // ArithFormula (getTextNode相当)
-    // React版では ArithFormula は <div class="pl-4"> でラップされる
-    if (ArithFormula.length > 0) {
-      ArithFormula.forEach((arithFormula) => {
+      if ('ArithFormula' in elem) {
+        childProcessed.add('ArithFormula');
+        // divContentがあれば先に出力
+        if (divContent) {
+          html += tag('div', { class: '_div_ArithFormulaNum' }, divContent);
+          divContent = '';
+        }
         const arithFormulaContent = renderLawTypeList(
-          arithFormula.ArithFormula,
+          elem.ArithFormula,
           addTreeElement,
           'ArithFormula'
         );
         html += tag('div', { class: 'pl-4' }, arithFormulaContent);
-      });
+      }
+      if ('Remarks' in elem) {
+        childProcessed.add('Remarks');
+        // divContentがあれば先に出力
+        if (divContent) {
+          html += tag('div', { class: '_div_ArithFormulaNum' }, divContent);
+          divContent = '';
+        }
+        html += renderRemarks([elem], addTreeElement);
+      }
+
+      checkAllFieldsProcessed(elem, childProcessed, `Appdx[${index}].Appdx[${idx}]`);
+    });
+
+    // 残ったdivContentを出力
+    if (divContent) {
+      html += tag('div', { class: '_div_ArithFormulaNum' }, divContent);
     }
 
-    // Remarks
-    html += renderRemarks(Remarks, addTreeElement);
-
+    checkAllFieldsProcessed(dt, processed, `Appdx[${index}]`);
     return tag('section', { class: 'active Appdx' }, html);
   }).join('');
 };
 
 /**
- * RemarksType をHTMLに変換
- * src/api/components/law/remarks.tsx の LawRemarks コンポーネントを再現
+ * RemarksType ��HTML�ɕϊ�
+ * src/api/components/law/remarks.tsx �� LawRemarks �R���|�[�l���g���Č�
  */
 const renderRemarks = (
   remarksList: RemarksType[],
   treeElement: string[]
 ): string => {
   return remarksList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('Remarks');
+
     const addTreeElement = [...treeElement, `Remarks_${index}`];
-    const RemarksLabelArray = getType<RemarksLabelType>(dt.Remarks, 'RemarksLabel');
-    const Sentence = getType<SentenceType>(dt.Remarks, 'Sentence');
-    const Item = getType<ItemType>(dt.Remarks, 'Item');
-
     let content = '';
-    // RemarksLabelは空でもdivを出力
-    const remarksLabelText = RemarksLabelArray.length > 0
-      ? renderTextNode(RemarksLabelArray[0].RemarksLabel, addTreeElement)
-      : '';
-    content += tag('div', { class: '_div_RemarksLabel' }, remarksLabelText);
 
-    // Sentenceをdivでラップ（React仕様: Remarks内のSentenceは末尾にスペースを追加）
-    Sentence.forEach((sentence) => {
-      content += tag('div', {}, renderTextNode(sentence.Sentence, addTreeElement) + ' ');
+    // Remarks配列要素を走査して、各要素を処理しながらprocessed.addとレンダリングを実行
+    dt.Remarks.forEach((elem: any, idx: number) => {
+      const childProcessed = initProcessedFields();
+
+      if ('RemarksLabel' in elem) {
+        childProcessed.add('RemarksLabel');
+        const remarksLabelText = renderTextNode(elem.RemarksLabel, addTreeElement);
+        content += tag('div', { class: '_div_RemarksLabel' }, remarksLabelText);
+      }
+      if ('Sentence' in elem) {
+        childProcessed.add('Sentence');
+        content += tag('div', {}, renderTextNode(elem.Sentence, addTreeElement) + ' ');
+      }
+      if ('Item' in elem) {
+        childProcessed.add('Item');
+        content += renderItem([elem], addTreeElement, false);
+      }
+
+      checkAllFieldsProcessed(elem, childProcessed, `Remarks[${index}].Remarks[${idx}]`);
     });
 
-    content += renderItem(Item, addTreeElement, false);
-
+    checkAllFieldsProcessed(dt, processed, `Remarks[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * TableHeaderColumnType をHTMLに変換
- * src/api/components/law/table-header-column.tsx の LawTableHeaderColumn コンポーネントを再現
+ * TableHeaderColumnType ��HTML�ɕϊ�
+ * src/api/components/law/table-header-column.tsx �� LawTableHeaderColumn �R���|�[�l���g���Č�
  */
 const renderTableHeaderColumn = (
   tableHeaderColumnList: TableHeaderColumnType[],
   treeElement: string[]
 ): string => {
   return tableHeaderColumnList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TableHeaderColumn');
+
     const addTreeElement = [...treeElement, `TableHeaderColumn_${index}`];
     const style = 'border-top:black solid 1px;border-bottom:black solid 1px;border-left:black solid 1px;border-right:black solid 1px';
 
+    checkAllFieldsProcessed(dt, processed, `TableHeaderColumn[${index}]`);
     return tag('td', { class: 'TableHeaderColumn', style },
       renderTextNode(dt.TableHeaderColumn, [...treeElement, 'TableHeaderColumn'])
     );
@@ -3065,15 +3947,21 @@ const renderTableHeaderColumn = (
 };
 
 /**
- * TableHeaderRowType をHTMLに変換
- * src/api/components/law/table-header-row.tsx の LawTableHeaderRow コンポーネントを再現
+ * TableHeaderRowType ��HTML�ɕϊ�
+ * src/api/components/law/table-header-row.tsx �� LawTableHeaderRow �R���|�[�l���g���Č�
  */
 const renderTableHeaderRow = (
   tableHeaderRowList: TableHeaderRowType[],
   treeElement: string[]
 ): string => {
   return tableHeaderRowList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TableHeaderRow');
+    processed.add('TableHeaderColumn');
+
     const addTreeElement = [...treeElement, `TableHeaderRow_${index}`];
+
+    checkAllFieldsProcessed(dt, processed, `TableHeaderRow[${index}]`);
     return tag('tr', { class: 'TableHeaderRow' },
       renderTableHeaderColumn(dt.TableHeaderColumn, [...treeElement, 'TableHeaderRow'])
     );
@@ -3081,12 +3969,12 @@ const renderTableHeaderRow = (
 };
 
 /**
- * TableColumnAttributeType からborderスタイルを生成
+ * TableColumnAttributeType ����border�X�^�C���𐶐�
  */
 const getBorderStyle = (border: TableColumnAttributeType | undefined): string => {
   const styles: string[] = [];
 
-  // ボーダースタイルは常に出力（borderがundefinedの場合はデフォルト値'solid'を使用）
+  // �{�[�_�[�X�^�C���͏�ɏo�́iborder��undefined�̏ꍇ�̓f�t�H���g�l'solid'���g�p�j
   styles.push(`border-top:black ${border?.BorderTop ?? 'solid'} 1px`);
   styles.push(`border-bottom:black ${border?.BorderBottom ?? 'solid'} 1px`);
   styles.push(`border-left:black ${border?.BorderLeft ?? 'solid'} 1px`);
@@ -3103,35 +3991,18 @@ const getBorderStyle = (border: TableColumnAttributeType | undefined): string =>
 };
 
 /**
- * TableColumnType をHTMLに変換
- * src/api/components/law/table-column.tsx の LawTableColumn コンポーネントを再現
+ * TableColumnType ��HTML�ɕϊ�
+ * src/api/components/law/table-column.tsx �� LawTableColumn �R���|�[�l���g���Č�
  */
 const renderTableColumn = (
   tableColumnList: TableColumnType[],
   treeElement: string[]
 ): string => {
   return tableColumnList.map((dt, index) => {
+    const processed = initProcessedFields();
+    processed.add('TableColumn');
+
     const addTreeElement = [...treeElement, `TableColumn_${index}`];
-    const Part = getType<PartType>(dt.TableColumn, 'Part');
-    const Chapter = getType<ChapterType>(dt.TableColumn, 'Chapter');
-    const Section = getType<SectionType>(dt.TableColumn, 'Section');
-    const Article = getType<ArticleType>(dt.TableColumn, 'Article');
-    const Paragraph = getType<ParagraphType>(dt.TableColumn, 'Paragraph');
-    const Item = getType<ItemType>(dt.TableColumn, 'Item');
-    const Subitem1 = getType<Subitem1Type>(dt.TableColumn, 'Subitem1');
-    const Subitem2 = getType<Subitem2Type>(dt.TableColumn, 'Subitem2');
-    const Subitem3 = getType<Subitem3Type>(dt.TableColumn, 'Subitem3');
-    const Subitem4 = getType<Subitem4Type>(dt.TableColumn, 'Subitem4');
-    const Subitem5 = getType<Subitem5Type>(dt.TableColumn, 'Subitem5');
-    const Subitem6 = getType<Subitem6Type>(dt.TableColumn, 'Subitem6');
-    const Subitem7 = getType<Subitem7Type>(dt.TableColumn, 'Subitem7');
-    const Subitem8 = getType<Subitem8Type>(dt.TableColumn, 'Subitem8');
-    const Subitem9 = getType<Subitem9Type>(dt.TableColumn, 'Subitem9');
-    const Subitem10 = getType<Subitem10Type>(dt.TableColumn, 'Subitem10');
-    const FigStruct = getType<FigStructType>(dt.TableColumn, 'FigStruct');
-    const Remarks = getType<RemarksType>(dt.TableColumn, 'Remarks');
-    const Sentence = getType<SentenceType>(dt.TableColumn, 'Sentence');
-    const Column = getType<ColumnType>(dt.TableColumn, 'Column');
 
     const attrs: Record<string, string | number> = {
       class: 'p-2',
@@ -3142,64 +4013,137 @@ const renderTableColumn = (
     if (dt[':@']?.rowspan) attrs.rowspan = dt[':@'].rowspan;
 
     let content = '';
-    content += renderPart(Part, addTreeElement);
-    content += renderChapter(Chapter, addTreeElement);
-    content += renderSection(Section, addTreeElement);
-    content += renderArticle(Article, addTreeElement);
-    content += renderParagraph(Paragraph, addTreeElement, 0);
-    content += renderItem(Item, addTreeElement, false);
-    content += renderSubitem1(Subitem1, addTreeElement);
-    content += renderSubitem2(Subitem2, addTreeElement);
-    content += renderSubitem3(Subitem3, addTreeElement);
-    content += renderSubitem4(Subitem4, addTreeElement);
-    content += renderSubitem5(Subitem5, addTreeElement);
-    content += renderSubitem6(Subitem6, addTreeElement);
-    content += renderSubitem7(Subitem7, addTreeElement);
-    content += renderSubitem8(Subitem8, addTreeElement);
-    content += renderSubitem9(Subitem9, addTreeElement);
-    content += renderSubitem10(Subitem10, addTreeElement);
-    content += renderFigStruct(FigStruct, addTreeElement);
-    content += renderRemarks(Remarks, addTreeElement);
-    content += renderSentence(Sentence, addTreeElement, false);
-    content += renderColumn(Column, addTreeElement);
 
+    // TableColumn配列要素を走査して、各要素を処理しながらprocessed.addとレンダリングを実行
+    dt.TableColumn.forEach((elem: any, idx: number) => {
+      const childProcessed = initProcessedFields();
+
+      if ('Part' in elem) {
+        childProcessed.add('Part');
+        content += renderPart([elem], addTreeElement);
+      }
+      if ('Chapter' in elem) {
+        childProcessed.add('Chapter');
+        content += renderChapter([elem], addTreeElement);
+      }
+      if ('Section' in elem) {
+        childProcessed.add('Section');
+        content += renderSection([elem], addTreeElement);
+      }
+      if ('Article' in elem) {
+        childProcessed.add('Article');
+        content += renderArticle([elem], addTreeElement);
+      }
+      if ('Paragraph' in elem) {
+        childProcessed.add('Paragraph');
+        content += renderParagraph([elem], addTreeElement, 0);
+      }
+      if ('Item' in elem) {
+        childProcessed.add('Item');
+        content += renderItem([elem], addTreeElement, false);
+      }
+      if ('Subitem1' in elem) {
+        childProcessed.add('Subitem1');
+        content += renderSubitem1([elem], addTreeElement);
+      }
+      if ('Subitem2' in elem) {
+        childProcessed.add('Subitem2');
+        content += renderSubitem2([elem], addTreeElement);
+      }
+      if ('Subitem3' in elem) {
+        childProcessed.add('Subitem3');
+        content += renderSubitem3([elem], addTreeElement);
+      }
+      if ('Subitem4' in elem) {
+        childProcessed.add('Subitem4');
+        content += renderSubitem4([elem], addTreeElement);
+      }
+      if ('Subitem5' in elem) {
+        childProcessed.add('Subitem5');
+        content += renderSubitem5([elem], addTreeElement);
+      }
+      if ('Subitem6' in elem) {
+        childProcessed.add('Subitem6');
+        content += renderSubitem6([elem], addTreeElement);
+      }
+      if ('Subitem7' in elem) {
+        childProcessed.add('Subitem7');
+        content += renderSubitem7([elem], addTreeElement);
+      }
+      if ('Subitem8' in elem) {
+        childProcessed.add('Subitem8');
+        content += renderSubitem8([elem], addTreeElement);
+      }
+      if ('Subitem9' in elem) {
+        childProcessed.add('Subitem9');
+        content += renderSubitem9([elem], addTreeElement);
+      }
+      if ('Subitem10' in elem) {
+        childProcessed.add('Subitem10');
+        content += renderSubitem10([elem], addTreeElement);
+      }
+      if ('FigStruct' in elem) {
+        childProcessed.add('FigStruct');
+        content += renderFigStruct([elem], addTreeElement);
+      }
+      if ('Remarks' in elem) {
+        childProcessed.add('Remarks');
+        content += renderRemarks([elem], addTreeElement);
+      }
+      if ('Sentence' in elem) {
+        childProcessed.add('Sentence');
+        content += renderSentence([elem], addTreeElement, false);
+      }
+      if ('Column' in elem) {
+        childProcessed.add('Column');
+        content += renderColumn([elem], addTreeElement);
+      }
+
+      checkAllFieldsProcessed(elem, childProcessed, `TableColumn[${index}].TableColumn[${idx}]`);
+    });
+
+    checkAllFieldsProcessed(dt, processed, `TableColumn[${index}]`);
     return tag('td', attrs, tag('div', {}, content));
   }).join('');
 };
 
 /**
- * TableRowType をHTMLに変換
- * src/api/components/law/table-row.tsx の LawTableRow コンポーネントを再現
+ * TableRowType ��HTML�ɕϊ�
+ * src/api/components/law/table-row.tsx �� LawTableRow �R���|�[�l���g���Č�
  */
 const renderTableRow = (
   tableRowList: TableRowType[],
   treeElement: string[]
 ): string => {
   return tableRowList.map((dt, index) => {
-    // TableRow隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-    const knownFields = ['TableColumn', ':@'];
-    checkUnprocessedFields(dt.TableRow, knownFields, `TableRow[${index}]`);
+    // TableRow要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('TableRow');
 
     const addTreeElement = [...treeElement, `TableRow_${index}`];
-    return tag('tr', { class: 'TableRow' },
+    const result = tag('tr', { class: 'TableRow' },
       renderTableColumn(dt.TableRow, [...treeElement, 'TableRow'])
     );
+
+    checkAllFieldsProcessed(dt, processed, `TableRow[${index}]`);
+    return result;
   }).join('');
 };
 
 /**
- * TableType をHTMLに変換
- * src/api/components/law/table.tsx の LawTable コンポーネントを再現
+ * TableType ��HTML�ɕϊ�
+ * src/api/components/law/table.tsx �� LawTable �R���|�[�l���g���Č�
  */
 const renderTable = (
   table: TableType,
   treeElement: string[]
 ): string => {
   const addTreeElement = [...treeElement, 'Table'];
-  
-  // Table隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-  const knownFields = ['TableHeaderRow', 'TableRow', 'TableColumn', ':@'];
-  checkUnprocessedFields(table.Table, knownFields, 'Table');
+
+  // Table要素のフィールドを追跡
+  const processed = initProcessedFields();
+  processed.add('Table');
+
   const TableHeaderRow = getType<TableHeaderRowType>(table.Table, 'TableHeaderRow');
   const TableRow = getType<TableRowType>(table.Table, 'TableRow');
 
@@ -3207,12 +4151,13 @@ const renderTable = (
     renderTableHeaderRow(TableHeaderRow, addTreeElement) +
     renderTableRow(TableRow, addTreeElement);
 
+  checkAllFieldsProcessed(table, processed, 'Table');
   return tag('table', { class: 'Table' }, tag('tbody', {}, tbody));
 };
 
 /**
- * TableStructType をHTMLに変換
- * src/api/components/law/table-struct.tsx の LawTableStruct コンポーネントを再現
+ * TableStructType ��HTML�ɕϊ�
+ * src/api/components/law/table-struct.tsx �� LawTableStruct �R���|�[�l���g���Č�
  */
 const renderTableStruct = (
   tableStructList: TableStructType[],
@@ -3220,10 +4165,10 @@ const renderTableStruct = (
 ): string => {
   return tableStructList.map((dt, index) => {
     const addTreeElement = [...treeElement, `TableStruct_${index}`];
-    
-    // TableStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-    const knownFields = ['TableStructTitle', 'RelatedArticleNum', 'Table', 'Remarks', ':@'];
-    checkUnprocessedFields(dt.TableStruct, knownFields, `TableStruct[${index}]`);
+
+    // TableStruct要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('TableStruct');
 
     const TableStructTitle = getType<any>(dt.TableStruct, 'TableStructTitle');
 
@@ -3235,7 +4180,7 @@ const renderTableStruct = (
         renderTextNode(TableStructTitle[0].TableStructTitle, addTreeElement));
     }
 
-    // Table と Remarks を処理
+    // Table �� Remarks ������
     dt.TableStruct.forEach((dt2, index2) => {
       const childTreeElement = [...addTreeElement, `_Child_${index2}`];
       if ('Table' in dt2) {
@@ -3245,94 +4190,109 @@ const renderTableStruct = (
       }
     });
 
+    checkAllFieldsProcessed(dt, processed, `TableStruct[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * AppdxTableType をHTMLに変換
- * src/api/components/law/appdx-table.tsx の LawAppdxTable コンポーネントを再現
+ * AppdxTableType ��HTML�ɕϊ�
+ * src/api/components/law/appdx-table.tsx �� LawAppdxTable �R���|�[�l���g���Č�
  */
 const renderAppdxTable = (
   appdxTableList: AppdxTableType[],
   treeElement: string[]
 ): string => {
   return appdxTableList.map((dt, index) => {
-    const addTreeElement = [...treeElement, `AppdxTable_${index}`];
-    const AppdxTableTitle = getType<AppdxTableTitleType>(dt.AppdxTable, 'AppdxTableTitle');
-    const RelatedArticleNum = getType<RelatedArticleNumType>(dt.AppdxTable, 'RelatedArticleNum');
-    const Remarks = getType<RemarksType>(dt.AppdxTable, 'Remarks');
+    const processed = initProcessedFields();
+    processed.add('AppdxTable');
 
+    const addTreeElement = [...treeElement, `AppdxTable_${index}`];
     let content = '';
 
-    // AppdxTableTitle + RelatedArticleNum
-    if (AppdxTableTitle.length > 0 || RelatedArticleNum.length > 0) {
-      let titleContent = '';
-      if (AppdxTableTitle.length > 0) {
-        titleContent += renderTextNode(AppdxTableTitle[0].AppdxTableTitle, addTreeElement);
-      }
-      titleContent += renderRelatedArticleNum(RelatedArticleNum, addTreeElement);
-      content += tag('div', { class: '_div_AppdxTableTitle font-bold' }, titleContent);
-    }
+    // dt.AppdxTable配列を走査して、各要素を処理しながらprocessed.addする
+    dt.AppdxTable.forEach((elem: any, index2: number) => {
+      const childTreeElement = [...addTreeElement, `_Child_${index2}`];
+      const elemProcessed = initProcessedFields();
 
-    // Item と TableStruct
-    dt.AppdxTable.forEach((dt2, index2) => {
-      const childTreeElement = [
-        ...addTreeElement,
-        index2 !== undefined ? `_Child_${index2}` : ''
-      ];
-
-      if ('Item' in dt2) {
-        content += renderItem([dt2], childTreeElement, false);
-      } else if ('TableStruct' in dt2) {
-        // TableStruct内の要素（Table、Remarks）をレンダリング
-        content += renderTableStruct([dt2], childTreeElement);
+      if ('AppdxTableTitle' in elem) {
+        elemProcessed.add('AppdxTableTitle');
+        content += tag('div', { class: '_div_AppdxTableTitle font-bold' },
+          renderTextNode(elem.AppdxTableTitle, addTreeElement)
+        );
       }
+      if ('RelatedArticleNum' in elem) {
+        elemProcessed.add('RelatedArticleNum');
+        content += renderRelatedArticleNum([elem], addTreeElement);
+      }
+      if ('Item' in elem) {
+        elemProcessed.add('Item');
+        content += renderItem([elem], childTreeElement, false);
+      }
+      if ('TableStruct' in elem) {
+        elemProcessed.add('TableStruct');
+        content += renderTableStruct([elem], childTreeElement);
+      }
+      if ('Remarks' in elem) {
+        elemProcessed.add('Remarks');
+        content += renderRemarks([elem], addTreeElement);
+      }
+
+      // 各要素が持つすべてのフィールドをチェック
+      checkAllFieldsProcessed(elem, elemProcessed, `AppdxTable[${index}].AppdxTable[${index2}]`);
     });
 
-    // Remarks
-    content += renderRemarks(Remarks, addTreeElement);
+    checkAllFieldsProcessed(dt, processed, `AppdxTable[${index}]`);
 
     return tag('section', { class: 'active AppdxTable' }, content);
   }).join('');
 };
 
 /**
- * NoteStructType をHTMLに変換
- * src/api/components/law/note-struct.tsx の LawNoteStruct コンポーネントを再現
+ * NoteStructType ��HTML�ɕϊ�
+ * src/api/components/law/note-struct.tsx �� LawNoteStruct �R���|�[�l���g���Č�
  */
 const renderNoteStruct = (
   noteStruct: NoteStructType,
   treeElement: string[]
 ): string => {
   const addTreeElement = [...treeElement, 'NoteStruct'];
-  const NoteStructTitle = getType<any>(noteStruct.NoteStruct, 'NoteStructTitle');
+
+  // NoteStruct要素のフィールドを追跡
+  const processed = initProcessedFields();
+  processed.add('NoteStruct');
 
   let content = '';
 
-  if (NoteStructTitle.length > 0) {
-    content += tag('div', {}, renderTextNode(NoteStructTitle[0].NoteStructTitle, addTreeElement));
-  }
-
-  // Note と Remarks を処理
-  noteStruct.NoteStruct.forEach((dt, index) => {
+  // noteStruct.NoteStruct配列を走査して、各要素を処理しながらprocessed.addする
+  noteStruct.NoteStruct.forEach((elem: any, index: number) => {
     const childTreeElement = [...addTreeElement, `_${index}`];
-    if ('Remarks' in dt) {
-      content += renderRemarks([dt], childTreeElement);
-    } else if ('Note' in dt) {
+
+    if ('NoteStructTitle' in elem) {
+      processed.add('NoteStructTitle');
+      content += tag('div', {}, renderTextNode(elem.NoteStructTitle, addTreeElement));
+    }
+    if ('Remarks' in elem) {
+      processed.add('Remarks');
+      content += renderRemarks([elem], childTreeElement);
+    }
+    if ('Note' in elem) {
+      processed.add('Note');
       // React仕様: LawNoteStructはNote要素をLawAnyに渡すが、
-      // LawAnyには"Note"ケースが実装されていないため、空のFragmentを返す
+      // LawAnyには"Note"ケースが実装されていないため、空Fragmentを返す
       // したがって、Note要素は何も出力しない
       content += '';
     }
   });
 
+  checkAllFieldsProcessed(noteStruct, processed, 'NoteStruct');
+
   return content;
 };
 
 /**
- * FigStructType をHTMLに変換
- * src/api/components/law/fig-struct.tsx の LawFigStruct コンポーネントを再現
+ * FigStructType ��HTML�ɕϊ�
+ * src/api/components/law/fig-struct.tsx �� LawFigStruct �R���|�[�l���g���Č�
  */
 const renderFigStruct = (
   figStructList: FigStructType[],
@@ -3340,87 +4300,101 @@ const renderFigStruct = (
 ): string => {
   return figStructList.map((dt, index) => {
     const addTreeElement = [...treeElement, `FigStruct_${index}`];
-    const FigStructTitle = getType<any>(dt.FigStruct, 'FigStructTitle');
-    const Remarks = getType<RemarksType>(dt.FigStruct, 'Remarks');
 
-    
-    // FigStruct隕∫ｴ縺ｮ繝輔ぅ繝ｼ繝ｫ繝峨メ繧ｧ繝・け
-    const knownFields = ['FigStructTitle', 'RelatedArticleNum', 'Fig', 'TableStruct', 'Remarks', ':@'];
-    checkUnprocessedFields(dt.FigStruct, knownFields, `FigStruct[${index}]`);
+    // FigStruct要素のフィールドを追跡
+    const processed = initProcessedFields();
+    processed.add('FigStruct');
 
     let content = '';
 
-    if (FigStructTitle.length > 0) {
-      content += renderTextNode(FigStructTitle[0].FigStructTitle, addTreeElement);
-    }
-
-    // Fig と Remarks を処理
-    dt.FigStruct.forEach((dt2, index2) => {
+    // dt.FigStruct配列を走査して、各要素を処理しながらprocessed.addする
+    dt.FigStruct.forEach((elem: any, index2: number) => {
       const childTreeElement = [...addTreeElement, `_Child_${index2}`];
-      if ('Remarks' in dt2) {
-        content += renderRemarks(Remarks, childTreeElement);
-      } else if ('Fig' in dt2) {
-        // Fig要素を処理（PDF/画像/ブランクの判定はrenderFig関数が行う）
-        content += renderFig(dt2, childTreeElement);
+      const elemProcessed = initProcessedFields();
+
+      if ('FigStructTitle' in elem) {
+        elemProcessed.add('FigStructTitle');
+        content += renderTextNode(elem.FigStructTitle, addTreeElement);
       }
+      if ('Remarks' in elem) {
+        elemProcessed.add('Remarks');
+        content += renderRemarks([elem], childTreeElement);
+      }
+      if ('Fig' in elem) {
+        elemProcessed.add('Fig');
+        // Fig要素の処理（PDF/画像/ブランクの判定はrenderFig関数が行う）
+        content += renderFig(elem, childTreeElement);
+      }
+
+      // 各要素が持つすべてのフィールドをチェック
+      checkAllFieldsProcessed(elem, elemProcessed, `FigStruct[${index}].FigStruct[${index2}]`);
     });
 
+    checkAllFieldsProcessed(dt, processed, `FigStruct[${index}]`);
     return content;
   }).join('');
 };
 
 /**
- * AppdxNoteType をHTMLに変換
- * src/api/components/law/appdx-note.tsx の LawAppdxNote コンポーネントを再現
+ * AppdxNoteType ��HTML�ɕϊ�
+ * src/api/components/law/appdx-note.tsx �� LawAppdxNote �R���|�[�l���g���Č�
  */
 const renderAppdxNote = (
   appdxNoteList: AppdxNoteType[],
   treeElement: string[]
 ): string => {
   return appdxNoteList.map((dt, index) => {
-    const addTreeElement = [...treeElement, `AppdxNote_${index}`];
-    const AppdxNoteTitle = getType<AppdxNoteTitleType>(dt.AppdxNote, 'AppdxNoteTitle');
-    const RelatedArticleNum = getType<RelatedArticleNumType>(dt.AppdxNote, 'RelatedArticleNum');
-    const Remarks = getType<RemarksType>(dt.AppdxNote, 'Remarks');
+    const processed = initProcessedFields();
+    processed.add('AppdxNote');
 
+    const addTreeElement = [...treeElement, `AppdxNote_${index}`];
     let content = '';
 
-    // AppdxNoteTitle + RelatedArticleNum
-    if (AppdxNoteTitle.length > 0 || RelatedArticleNum.length > 0) {
-      let titleContent = '';
-      if (AppdxNoteTitle.length > 0) {
-        titleContent += renderTextNode(AppdxNoteTitle[0].AppdxNoteTitle, addTreeElement);
-      }
-      titleContent += renderRelatedArticleNum(RelatedArticleNum, addTreeElement);
-      content += tag('div', { class: '_div_AppdxNoteTitle' }, titleContent);
-    }
+    // dt.AppdxNote配列を走査して、各要素を処理しながらprocessed.addする
+    dt.AppdxNote.forEach((elem: any, index2: number) => {
+      const childTreeElement = [...addTreeElement, `_Child_${index2}`];
+      const elemProcessed = initProcessedFields();
 
-    // NoteStruct, FigStruct, TableStruct を処理
-    dt.AppdxNote.forEach((dt2, index2) => {
-      const childTreeElement = [
-        ...addTreeElement,
-        `_Child_${index2}`
-      ];
-
-      if ('NoteStruct' in dt2) {
-        content += renderNoteStruct(dt2, childTreeElement);
-      } else if ('FigStruct' in dt2) {
-        content += renderFigStruct([dt2], childTreeElement);
-      } else if ('TableStruct' in dt2) {
-        content += renderTableStruct([dt2], childTreeElement);
+      if ('AppdxNoteTitle' in elem) {
+        elemProcessed.add('AppdxNoteTitle');
+        content += tag('div', { class: '_div_AppdxNoteTitle' },
+          renderTextNode(elem.AppdxNoteTitle, addTreeElement)
+        );
       }
+      if ('RelatedArticleNum' in elem) {
+        elemProcessed.add('RelatedArticleNum');
+        content += renderRelatedArticleNum([elem], addTreeElement);
+      }
+      if ('NoteStruct' in elem) {
+        elemProcessed.add('NoteStruct');
+        content += renderNoteStruct(elem, childTreeElement);
+      }
+      if ('FigStruct' in elem) {
+        elemProcessed.add('FigStruct');
+        content += renderFigStruct([elem], childTreeElement);
+      }
+      if ('TableStruct' in elem) {
+        elemProcessed.add('TableStruct');
+        content += renderTableStruct([elem], childTreeElement);
+      }
+      if ('Remarks' in elem) {
+        elemProcessed.add('Remarks');
+        content += renderRemarks([elem], addTreeElement);
+      }
+
+      // 各要素が持つすべてのフィールドをチェック
+      checkAllFieldsProcessed(elem, elemProcessed, `AppdxNote[${index}].AppdxNote[${index2}]`);
     });
 
-    // Remarks
-    content += renderRemarks(Remarks, addTreeElement);
+    checkAllFieldsProcessed(dt, processed, `AppdxNote[${index}]`);
 
     return tag('section', { class: 'active AppdxNote' }, content);
   }).join('');
 };
 
 /**
- * Law全体をHTMLに変換
- * src/api/components/law/law.tsx の LawComponent コンポーネントを再現
+ * Law�S�̂�HTML�ɕϊ�
+ * src/api/components/law/law.tsx �� LawComponent �R���|�[�l���g���Č�
  */
 const renderLaw = (
   lawNum: LawNumType,
@@ -3429,14 +4403,14 @@ const renderLaw = (
   treeElement: string[],
   attachedFilesMap?: Map<string, string>
 ): string => {
-  // グローバル変数に設定（renderFig等で使用）
+  // �O���[�o���ϐ��ɐݒ�irenderFig���Ŏg�p�j
   globalAttachedFilesMap = attachedFilesMap;
 
   const addTreeElement = [...treeElement, 'Law'];
 
   let html = '';
 
-  // LawNum と LawTitle
+  // LawNum �� LawTitle
   html += tag('div', { class: 'pb-4' },
     tag('div', { class: 'font-bold' }, renderTextNode(lawNum.LawNum, addTreeElement)) +
     tag('div', { class: 'text-xl font-bold' }, renderTextNode(lawTitle.LawTitle, addTreeElement))

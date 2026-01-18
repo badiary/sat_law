@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10" PromulgateMonth="07" PromulgateDay="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle Kana="ゆうりょうでんえんじゅうたくのけんせつのそくしんにかんするほうりつしこうれい" Abbrev="" AbbrevKana="">優良田園住宅の建設の促進に関する法律施行令</LawTitle>
+    <EnactStatement>内閣は、優良田園住宅の建設の促進に関する法律（平成十年法律第四十一号）第二条の規定に基づき、この政令を制定する。</EnactStatement>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleCaption>（法第二条第一号の政令で定める規模）</ArticleCaption>
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>優良田園住宅の建設の促進に関する法律（以下「法」という。）第二条第一号の政令で定める規模は、三百平方メートルとする。</Sentence>
+          </ParagraphSentence>
+        </Paragraph>
+        <UnknownArticleChild>これは存在しないタグです</UnknownArticleChild>
+      </Article>
+    </MainProvision>
+  </LawBody>
+</Law>

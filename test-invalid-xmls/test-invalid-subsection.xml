@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法令</LawTitle>
+    <MainProvision>
+      <Chapter Num="1">
+        <ChapterTitle>第一章　総則</ChapterTitle>
+        <Section Num="1">
+          <SectionTitle>第一節　通則</SectionTitle>
+          <Subsection Num="1">
+            <SubsectionTitle>第一目　基本</SubsectionTitle>
+            <Article Num="1">
+              <ArticleTitle>第一条</ArticleTitle>
+              <Paragraph Num="1">
+                <ParagraphNum/>
+                <ParagraphSentence>
+                  <Sentence>基本の内容。</Sentence>
+                </ParagraphSentence>
+              </Paragraph>
+            </Article>
+            <BadSubsectionTag>目内の不正タグ</BadSubsectionTag>
+          </Subsection>
+        </Section>
+      </Chapter>
+    </MainProvision>
+  </LawBody>
+</Law>

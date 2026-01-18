@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法令</LawTitle>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>複数の不正タグをテスト。</Sentence>
+          </ParagraphSentence>
+          <InvalidTag1>不正タグ1</InvalidTag1>
+          <InvalidTag2>不正タグ2</InvalidTag2>
+          <InvalidTag3>不正タグ3</InvalidTag3>
+        </Paragraph>
+      </Article>
+    </MainProvision>
+  </LawBody>
+</Law>

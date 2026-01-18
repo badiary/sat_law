@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法令</LawTitle>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>深くネストした構造のテスト。</Sentence>
+          </ParagraphSentence>
+          <Item Num="1">
+            <ItemTitle>一</ItemTitle>
+            <ItemSentence>
+              <Sentence>項目の内容。</Sentence>
+            </ItemSentence>
+            <Subitem1 Num="1">
+              <Subitem1Title>イ</Subitem1Title>
+              <Subitem1Sentence>
+                <Sentence>号の内容。</Sentence>
+              </Subitem1Sentence>
+              <Subitem2 Num="1">
+                <Subitem2Title>(1)</Subitem2Title>
+                <Subitem2Sentence>
+                  <Sentence>目の内容。</Sentence>
+                </Subitem2Sentence>
+                <Subitem3 Num="1">
+                  <Subitem3Title>(i)</Subitem3Title>
+                  <Subitem3Sentence>
+                    <Sentence>枝番の内容。</Sentence>
+                  </Subitem3Sentence>
+                  <DeepInvalidTag>深い階層の不正タグ</DeepInvalidTag>
+                </Subitem3>
+              </Subitem2>
+            </Subitem1>
+          </Item>
+        </Paragraph>
+      </Article>
+    </MainProvision>
+  </LawBody>
+</Law>

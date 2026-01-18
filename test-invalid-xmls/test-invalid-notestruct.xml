@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法令</LawTitle>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>備考のとおりとする。</Sentence>
+          </ParagraphSentence>
+        </Paragraph>
+      </Article>
+    </MainProvision>
+    <AppdxTable Num="1">
+      <AppdxTableTitle>別表第一</AppdxTableTitle>
+      <Item Num="1">
+        <ItemTitle>一</ItemTitle>
+        <ItemSentence>
+          <Sentence>表の内容。</Sentence>
+        </ItemSentence>
+      </Item>
+      <TableStruct>
+        <Table>
+          <TableRow>
+            <TableColumn BorderBottom="solid" BorderLeft="solid" BorderRight="solid" BorderTop="solid">
+              <Sentence>項目</Sentence>
+            </TableColumn>
+          </TableRow>
+        </Table>
+      </TableStruct>
+      <Remarks>
+        <RemarksLabel>備考</RemarksLabel>
+        <Sentence>備考の内容。</Sentence>
+        <InvalidRemarksTag>Remarks内の不正タグ</InvalidRemarksTag>
+      </Remarks>
+    </AppdxTable>
+  </LawBody>
+</Law>

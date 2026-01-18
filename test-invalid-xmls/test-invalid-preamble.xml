@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Showa" Lang="ja" LawType="Constitution" Num="0" Year="21">
+  <LawNum>日本国憲法</LawNum>
+  <LawBody>
+    <LawTitle>日本国憲法</LawTitle>
+    <Preamble>
+      <Paragraph Num="1">
+        <ParagraphNum/>
+        <ParagraphSentence>
+          <Sentence>日本国民は、正当に選挙された国会における代表者を通じて行動し、</Sentence>
+        </ParagraphSentence>
+      </Paragraph>
+      <InvalidPreambleTag>Preamble内の不正タグ</InvalidPreambleTag>
+    </Preamble>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>テスト条文。</Sentence>
+          </ParagraphSentence>
+        </Paragraph>
+      </Article>
+    </MainProvision>
+  </LawBody>
+</Law>

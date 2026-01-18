@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="CabinetOrder" Num="254" Year="10">
+  <LawNum>平成十年政令第二百五十四号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法令</LawTitle>
+    <MainProvision>
+      <Article Num="1">
+        <ArticleTitle>第一条</ArticleTitle>
+        <Paragraph Num="1">
+          <ParagraphNum/>
+          <ParagraphSentence>
+            <Sentence>次のとおり改正する。</Sentence>
+          </ParagraphSentence>
+          <AmendProvision>
+            <AmendProvisionSentence>
+              <Sentence>次の章を加える。</Sentence>
+            </AmendProvisionSentence>
+            <NewProvision>
+              <Chapter Num="2">
+                <ChapterTitle>第二章　新設</ChapterTitle>
+                <Article Num="2">
+                  <ArticleTitle>第二条</ArticleTitle>
+                  <Paragraph Num="1">
+                    <ParagraphNum/>
+                    <ParagraphSentence>
+                      <Sentence>新設条文の内容。</Sentence>
+                    </ParagraphSentence>
+                  </Paragraph>
+                </Article>
+                <InvalidNewProvisionTag>新設規定内の不正タグ</InvalidNewProvisionTag>
+              </Chapter>
+            </NewProvision>
+          </AmendProvision>
+        </Paragraph>
+      </Article>
+    </MainProvision>
+  </LawBody>
+</Law>

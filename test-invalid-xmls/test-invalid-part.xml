@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Law Era="Heisei" Lang="ja" LawType="Act" Num="1" Year="10">
+  <LawNum>平成十年法律第一号</LawNum>
+  <LawBody>
+    <LawTitle>テスト法</LawTitle>
+    <MainProvision>
+      <Part Num="1">
+        <PartTitle>第一編</PartTitle>
+        <FakePartChild>Part内の不正タグ</FakePartChild>
+        <Chapter Num="1">
+          <ChapterTitle>第一章</ChapterTitle>
+          <Article Num="1">
+            <ArticleTitle>第一条</ArticleTitle>
+            <Paragraph Num="1">
+              <ParagraphNum/>
+              <ParagraphSentence>
+                <Sentence>テスト条文。</Sentence>
+              </ParagraphSentence>
+            </Paragraph>
+          </Article>
+        </Chapter>
+      </Part>
+    </MainProvision>
+  </LawBody>
+</Law>
