@@ -1,12 +1,14 @@
 import { ModifiedLawdataResponse, getLawComponentData, getLawData } from "@api/lib/api/get-law-data";
+import { getRevision } from "@api/lib/api/get-revision";
 import logger from "@api/lib/utils/logger";
 import { Result } from "@api/types/result";
 import { renderLaw } from "@api/typescript-renderer";
 
-// Window インターフェースを拡張してshowLawViewer関数を追加
+// Window インターフェースを拡張してshowLawViewer関数とinitializeRevisionSelector関数を追加
 declare global {
     interface Window {
         showLawViewer?: (data: { lawTitle: string; content: string }) => void;
+        initializeRevisionSelector?: (revisions: any[], lawId: string, selectedRevisionId: string) => void;
     }
 }
 
@@ -26,14 +28,24 @@ const chikujoDict: { [lawid: string]: string } = {
  * 法令データをロードして表示
  * @param searchParams 検索条件
  */
-const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
+const loadLaw = async (searchParams: { lawId: string; lawRevisionId?: string; asof?: string }) => {
     logger.info({
         message: "[law]",
     });
 
     try {
+        // 改正履歴一覧を取得（lawRevisionIdの場合はlawIdを抽出する必要がある）
+        const baseLawId = searchParams.lawRevisionId
+            ? searchParams.lawRevisionId.split('_')[0]
+            : searchParams.lawId;
+
+        const revisionsResult = await getRevision({ lawId: baseLawId });
+
         // 法令本文取得API(/lawdata)を利用した本文情報の取得
-        const lawData = await getLawData(searchParams);
+        const lawData = await getLawData({
+            lawId: searchParams.lawRevisionId || searchParams.lawId,
+            asof: searchParams.asof
+        });
 
         if (!lawData.isSuccess) {
             const contentElement = document.getElementById("content");
@@ -86,6 +98,18 @@ const loadLaw = async (searchParams: { lawId: string; asof?: string }) => {
             window.showLawViewer(data);
         } else {
             console.error("showLawViewer function not found");
+        }
+
+        // 改正履歴セレクターを初期化
+        if (revisionsResult.isSuccess && window.initializeRevisionSelector) {
+            const currentRevisionId = searchParams.lawRevisionId ||
+                                    lawData.value.revisionInfo?.lawRevisionId ||
+                                    searchParams.lawId;
+            window.initializeRevisionSelector(
+                revisionsResult.value.revisions,
+                baseLawId,
+                currentRevisionId
+            );
         }
     } catch (error) {
         console.error("法令データの取得に失敗しました:", error);

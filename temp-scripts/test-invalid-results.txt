@@ -1,0 +1,477 @@
+
+🧪 不正XMLファイルのテスト開始
+テスト対象: 44ファイル
+
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-amendprovision.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-appdx.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-appdxnote.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-appdxtable.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-arithformula.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-array-first.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-array-last.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-array-middle.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-article.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-chapter.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-column.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-complex-table.xml
+============================================================
+⚠️  予期しないエラー:
+Exit code: 1
+Message: Command failed: npx tsx test-render.ts "test-invalid-xmls/test-invalid-complex-table.xml" "test-output-invalid.html"
+❌ エラーが発生しました: TypeError: Cannot read properties of undefined (reading 'map')
+    at renderTextNode (c:\github\sat_law\src\api\typescript-renderer.ts:222:14)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:603:25)
+    at Array.map (<anonymous>)
+    at renderSentence (c:\github\sat_law\src\api\typescript-renderer.ts:598:23)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4146:20)
+    at Array.forEach (<anonymous>)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4069:20)
+    at Array.map (<anonymous>)
+    at renderTableColumn (c:\github\sat_law\src\api\typescript-renderer.ts:4052:26)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4176:7)
+
+Stdout (first 500 chars): XMLファイル: test-invalid-xmls/test-invalid-complex-table.xml
+出力先: test-output-invalid.html
+XMLファイルサイズ: 1159 bytes
+XMLパース完了
+Law形式のXMLを検出
+法令データ: {
+  "Law": [
+    {
+      "LawNum": [
+        {
+          "_": "平成十年政令第二百五十四号"
+        }
+      ]
+    },
+    {
+      "LawBody": [
+        {
+          "LawTitle": [
+            {
+              "_": "テスト法令"
+            }
+          ]
+        },
+        {
+          "MainProvision": [
+            {
+              "Article": [
+                {
+                  "Art
+Stderr (first 500 chars): ❌ エラーが発生しました: TypeError: Cannot read properties of undefined (reading 'map')
+    at renderTextNode (c:\github\sat_law\src\api\typescript-renderer.ts:222:14)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:603:25)
+    at Array.map (<anonymous>)
+    at renderSentence (c:\github\sat_law\src\api\typescript-renderer.ts:598:23)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4146:20)
+    at Array.forEach (<anonymous>)
+    at <anonymous> (c:\github\sat_law\src\
+
+⚠️ Error output does not contain expected patterns. Checking for checkAllFieldsProcessed: false
+Checking for [未処理タグ検出]: false
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-deep-nested.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-division.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-enactstatement.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-figstruct.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-formatstruct-complex.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-formatstruct.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-item.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-itemsentence.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-lawbody.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-list.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-mainprovision.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-mixed-valid-invalid.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-multiple-tags.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-newprovision.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-notestruct.xml
+============================================================
+⚠️  予期しないエラー:
+Exit code: 1
+Message: Command failed: npx tsx test-render.ts "test-invalid-xmls/test-invalid-notestruct.xml" "test-output-invalid.html"
+❌ エラーが発生しました: TypeError: Cannot read properties of undefined (reading 'map')
+    at renderTextNode (c:\github\sat_law\src\api\typescript-renderer.ts:222:14)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:603:25)
+    at Array.map (<anonymous>)
+    at renderSentence (c:\github\sat_law\src\api\typescript-renderer.ts:598:23)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4146:20)
+    at Array.forEach (<anonymous>)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4069:20)
+    at Array.map (<anonymous>)
+    at renderTableColumn (c:\github\sat_law\src\api\typescript-renderer.ts:4052:26)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4176:7)
+
+Stdout (first 500 chars): XMLファイル: test-invalid-xmls/test-invalid-notestruct.xml
+出力先: test-output-invalid.html
+XMLファイルサイズ: 1223 bytes
+XMLパース完了
+Law形式のXMLを検出
+法令データ: {
+  "Law": [
+    {
+      "LawNum": [
+        {
+          "_": "平成十年政令第二百五十四号"
+        }
+      ]
+    },
+    {
+      "LawBody": [
+        {
+          "LawTitle": [
+            {
+              "_": "テスト法令"
+            }
+          ]
+        },
+        {
+          "MainProvision": [
+            {
+              "Article": [
+                {
+                  "Articl
+Stderr (first 500 chars): ❌ エラーが発生しました: TypeError: Cannot read properties of undefined (reading 'map')
+    at renderTextNode (c:\github\sat_law\src\api\typescript-renderer.ts:222:14)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:603:25)
+    at Array.map (<anonymous>)
+    at renderSentence (c:\github\sat_law\src\api\typescript-renderer.ts:598:23)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4146:20)
+    at Array.forEach (<anonymous>)
+    at <anonymous> (c:\github\sat_law\src\
+
+⚠️ Error output does not contain expected patterns. Checking for checkAllFieldsProcessed: false
+Checking for [未処理タグ検出]: false
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-paragraph.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-part.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-preamble.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-quotestruct.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-section.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-sentence-inline.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-sentence.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-stylestruct.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-subitem1.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-subitem2.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-subitem3.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-subsection.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-supplprovision-complex.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-supplprovision.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-tablecolumn.xml
+============================================================
+⚠️  予期しないエラー:
+Exit code: 1
+Message: Command failed: npx tsx test-render.ts "test-invalid-xmls/test-invalid-tablecolumn.xml" "test-output-invalid.html"
+❌ エラーが発生しました: TypeError: Cannot read properties of undefined (reading 'map')
+    at renderTextNode (c:\github\sat_law\src\api\typescript-renderer.ts:222:14)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:603:25)
+    at Array.map (<anonymous>)
+    at renderSentence (c:\github\sat_law\src\api\typescript-renderer.ts:598:23)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4146:20)
+    at Array.forEach (<anonymous>)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4069:20)
+    at Array.map (<anonymous>)
+    at renderTableColumn (c:\github\sat_law\src\api\typescript-renderer.ts:4052:26)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4176:7)
+
+Stdout (first 500 chars): XMLファイル: test-invalid-xmls/test-invalid-tablecolumn.xml
+出力先: test-output-invalid.html
+XMLファイルサイズ: 839 bytes
+XMLパース完了
+Law形式のXMLを検出
+法令データ: {
+  "Law": [
+    {
+      "LawNum": [
+        {
+          "_": "平成十年政令第二百五十四号"
+        }
+      ]
+    },
+    {
+      "LawBody": [
+        {
+          "LawTitle": [
+            {
+              "_": "テスト法令"
+            }
+          ]
+        },
+        {
+          "MainProvision": [
+            {
+              "Article": [
+                {
+                  "Articl
+Stderr (first 500 chars): ❌ エラーが発生しました: TypeError: Cannot read properties of undefined (reading 'map')
+    at renderTextNode (c:\github\sat_law\src\api\typescript-renderer.ts:222:14)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:603:25)
+    at Array.map (<anonymous>)
+    at renderSentence (c:\github\sat_law\src\api\typescript-renderer.ts:598:23)
+    at <anonymous> (c:\github\sat_law\src\api\typescript-renderer.ts:4146:20)
+    at Array.forEach (<anonymous>)
+    at <anonymous> (c:\github\sat_law\src\
+
+⚠️ Error output does not contain expected patterns. Checking for checkAllFieldsProcessed: false
+Checking for [未処理タグ検出]: false
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-tablerow.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📝 テスト中: test-invalid-xmls/test-invalid-tablestruct.xml
+============================================================
+✅ テスト成功: 未処理タグが正しく検出されました
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+   at checkAllFieldsProcessed (c:\github\sat_law\src\api\typescript-renderer.ts:213:13)
+
+============================================================
+📊 テスト結果サマリー
+============================================================
+総テスト数: 44
+✅ 成功（エラーが正しく検出された）: 41
+❌ 失敗（エラーが検出されなかった）: 3
+
+⚠️  3個のテストが失敗しました。checkUnprocessedFieldsの実装を確認してください。

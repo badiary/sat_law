@@ -1,0 +1,68 @@
+# フェーズ4で追加が必要な関数リスト
+
+## グループ1: MainProvisionとEnactStatement
+renderMainProvision
+renderEnactStatement
+
+## グループ2: SupplProvision系
+renderSupplProvisionAppdxStyle
+renderSupplProvisionAppdx
+
+## グループ3: Appdx系
+renderAppdxFig
+renderAppdxFormat
+renderAppdxStyle
+renderAppdx
+
+## グループ4: Table系
+renderTableStruct
+renderTable
+renderTableRow
+renderTableColumn
+renderTableHeaderColumn (既に追加済み)
+
+## グループ5: Fig/Style/Format系
+renderFigStruct
+renderStyleStruct
+renderFormatStruct
+
+## グループ6: List/Sublist系
+renderListSentence
+renderSublist1
+renderSublist2
+renderSublist3
+renderSublist1Sentence
+renderSublist2Sentence
+renderSublist3Sentence
+
+## グループ7: TOC系（全て必要）
+renderTOCArticle
+renderTOCDivision
+renderTOCSubsection
+renderTOCSection
+renderTOCChapter
+renderTOCPart
+renderTOCSupplProvision
+renderTOCAppdxTableLabel
+
+## グループ8: Sentence系
+renderParagraphSentence
+renderItemSentence
+renderAmendProvisionSentence
+renderSentence (既に追加済みか確認)
+
+## グループ9: その他
+renderAmendProvision
+renderNewProvision
+renderArticleRange
+renderRelatedArticleNum
+renderRemarks
+renderQuoteStruct
+renderArithFormula
+renderRuby
+renderSup
+renderSub
+renderStyle
+renderLine
+renderClass
+renderLawTypeList

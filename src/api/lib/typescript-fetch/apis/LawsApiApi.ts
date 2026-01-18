@@ -134,7 +134,7 @@ export interface GetLawlistRequest {
 }
 
 export interface GetRevisionsRequest {
-    lawId?: string;
+    lawId: string;
     lawNum?: string;
     lawTitle?: string;
     lawTitleKana?: string;
@@ -542,11 +542,11 @@ export class LawsApiApi extends runtime.BaseAPI {
      * 法令履歴一覧取得API
      */
     async getRevisionsRaw(requestParameters: GetRevisionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LawRevisionsResponse>> {
-        const queryParameters: any = {};
-
-        if (requestParameters.lawId !== undefined) {
-            queryParameters['law_id'] = requestParameters.lawId;
+        if (requestParameters.lawId === null || requestParameters.lawId === undefined) {
+            throw new runtime.RequiredError('lawId','Required parameter requestParameters.lawId was null or undefined when calling getRevisions.');
         }
+
+        const queryParameters: any = {};
 
         if (requestParameters.lawNum !== undefined) {
             queryParameters['law_num'] = requestParameters.lawNum;
@@ -643,7 +643,7 @@ export class LawsApiApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/law_revisions`,
+            path: `/law_revisions/{law_id}`.replace(`{${"law_id"}}`, encodeURIComponent(String(requestParameters.lawId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -653,10 +653,10 @@ export class LawsApiApi extends runtime.BaseAPI {
     }
 
     /**
-     * 法令の改正履歴の一覧を取得します。 指定した条件に該当する1つの法令について、改正履歴の一覧をレスポンスの `revisions` に格納します。  パラメータの多くは、 <a href=\"#model-law_revisions_response\">law_revisions_response</a> に定義されているレスポンス中、 `revisions` の各要素の同名のプロパティに対応します。パラメータを指定することで、これらのプロパティの値を対象にフィルタを行い、 `revisions` に格納する改正履歴を選択するように動作します。 
+     * 法令の改正履歴の一覧を取得します。 指定した条件に該当する1つの法令について、改正履歴の一覧をレスポンスの `revisions` に格納します。  パラメータの多くは、 <a href=\"#model-law_revisions_response\">law_revisions_response</a> に定義されているレスポンス中、 `revisions` の各要素の同名のプロパティに対応します。パラメータを指定することで、これらのプロパティの値を対象にフィルタを行い、 `revisions` に格納する改正履歴を選択するように動作します。
      * 法令履歴一覧取得API
      */
-    async getRevisions(requestParameters: GetRevisionsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LawRevisionsResponse> {
+    async getRevisions(requestParameters: GetRevisionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LawRevisionsResponse> {
         const response = await this.getRevisionsRaw(requestParameters, initOverrides);
         return await response.value();
     }

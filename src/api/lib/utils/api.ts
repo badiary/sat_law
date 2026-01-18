@@ -14,7 +14,7 @@ export const getApiClient = (options?: ApiClientProps) => {
   // APIの設定 (OpenAPI Generatorで生成したクライアントコードを利用)
   // Configuration オブジェクトを生成して、APIの基本パスとヘッダーを設定
   const conf = new Configuration({
-    basePath: "https://elaws.e-gov.go.jp/api/1",
+    basePath: "https://laws.e-gov.go.jp/api/2",
     headers: {
       ...options?.headers,
     },
