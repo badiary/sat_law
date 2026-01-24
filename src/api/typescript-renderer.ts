@@ -724,8 +724,14 @@ const renderSubitem10 = (
 ): string => {
   return subitem10List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem10_${index}`];
+
+    // フィールド取得
     const Subitem10Title = getType<Subitem10TitleType>(dt.Subitem10, 'Subitem10Title');
     const Subitem10Sentence = getType<Subitem10SentenceType>(dt.Subitem10, 'Subitem10Sentence')[0];
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem10, 'Subitem10Title');
+    deleteFieldFromArray(dt.Subitem10, 'Subitem10Sentence');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-48' : 'pl-44';
 
@@ -740,13 +746,22 @@ const renderSubitem10 = (
       const addTreeElement2 = [...treeElement, `Subitem10_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem10.forEach((sub10, sub10Idx) => {
+      checkUnprocessedFields(sub10, 'Subitem10', [...addTreeElement, `Element_${sub10Idx}`]);
     });
 
     return tag('div', { class: `_div_Subitem10Sentence ${paddingClass} indent-1` }, content);
@@ -762,9 +777,16 @@ const renderSubitem9 = (
 ): string => {
   return subitem9List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem9_${index}`];
+
+    // フィールド取得
     const Subitem9Title = getType<Subitem9TitleType>(dt.Subitem9, 'Subitem9Title');
     const Subitem9Sentence = getType<Subitem9SentenceType>(dt.Subitem9, 'Subitem9Sentence')[0];
     const Subitem10 = getType<Subitem10Type>(dt.Subitem9, 'Subitem10');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem9, 'Subitem9Title');
+    deleteFieldFromArray(dt.Subitem9, 'Subitem9Sentence');
+    deleteFieldFromArray(dt.Subitem9, 'Subitem10');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-44' : 'pl-40';
 
@@ -779,13 +801,22 @@ const renderSubitem9 = (
       const addTreeElement2 = [...treeElement, `Subitem9_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem9.forEach((sub9, sub9Idx) => {
+      checkUnprocessedFields(sub9, 'Subitem9', [...addTreeElement, `Element_${sub9Idx}`]);
     });
 
     return (
@@ -804,9 +835,16 @@ const renderSubitem8 = (
 ): string => {
   return subitem8List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem8_${index}`];
+
+    // フィールド取得
     const Subitem8Title = getType<Subitem8TitleType>(dt.Subitem8, 'Subitem8Title');
     const Subitem8Sentence = getType<Subitem8SentenceType>(dt.Subitem8, 'Subitem8Sentence')[0];
     const Subitem9 = getType<Subitem9Type>(dt.Subitem8, 'Subitem9');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem8, 'Subitem8Title');
+    deleteFieldFromArray(dt.Subitem8, 'Subitem8Sentence');
+    deleteFieldFromArray(dt.Subitem8, 'Subitem9');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-40' : 'pl-36';
 
@@ -821,13 +859,22 @@ const renderSubitem8 = (
       const addTreeElement2 = [...treeElement, `Subitem8_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem8.forEach((sub8, sub8Idx) => {
+      checkUnprocessedFields(sub8, 'Subitem8', [...addTreeElement, `Element_${sub8Idx}`]);
     });
 
     return (
@@ -846,9 +893,16 @@ const renderSubitem7 = (
 ): string => {
   return subitem7List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem7_${index}`];
+
+    // フィールド取得
     const Subitem7Title = getType<Subitem7TitleType>(dt.Subitem7, 'Subitem7Title');
     const Subitem7Sentence = getType<Subitem7SentenceType>(dt.Subitem7, 'Subitem7Sentence')[0];
     const Subitem8 = getType<Subitem8Type>(dt.Subitem7, 'Subitem8');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem7, 'Subitem7Title');
+    deleteFieldFromArray(dt.Subitem7, 'Subitem7Sentence');
+    deleteFieldFromArray(dt.Subitem7, 'Subitem8');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-36' : 'pl-32';
 
@@ -863,13 +917,22 @@ const renderSubitem7 = (
       const addTreeElement2 = [...treeElement, `Subitem7_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem7.forEach((sub7, sub7Idx) => {
+      checkUnprocessedFields(sub7, 'Subitem7', [...addTreeElement, `Element_${sub7Idx}`]);
     });
 
     return (
@@ -888,9 +951,16 @@ const renderSubitem6 = (
 ): string => {
   return subitem6List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem6_${index}`];
+
+    // フィールド取得
     const Subitem6Title = getType<Subitem6TitleType>(dt.Subitem6, 'Subitem6Title');
     const Subitem6Sentence = getType<Subitem6SentenceType>(dt.Subitem6, 'Subitem6Sentence')[0];
     const Subitem7 = getType<Subitem7Type>(dt.Subitem6, 'Subitem7');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem6, 'Subitem6Title');
+    deleteFieldFromArray(dt.Subitem6, 'Subitem6Sentence');
+    deleteFieldFromArray(dt.Subitem6, 'Subitem7');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-32' : 'pl-28';
 
@@ -905,13 +975,22 @@ const renderSubitem6 = (
       const addTreeElement2 = [...treeElement, `Subitem6_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem6.forEach((sub6, sub6Idx) => {
+      checkUnprocessedFields(sub6, 'Subitem6', [...addTreeElement, `Element_${sub6Idx}`]);
     });
 
     return (
@@ -930,9 +1009,16 @@ const renderSubitem5 = (
 ): string => {
   return subitem5List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem5_${index}`];
+
+    // フィールド取得
     const Subitem5Title = getType<Subitem5TitleType>(dt.Subitem5, 'Subitem5Title');
     const Subitem5Sentence = getType<Subitem5SentenceType>(dt.Subitem5, 'Subitem5Sentence')[0];
     const Subitem6 = getType<Subitem6Type>(dt.Subitem5, 'Subitem6');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem5, 'Subitem5Title');
+    deleteFieldFromArray(dt.Subitem5, 'Subitem5Sentence');
+    deleteFieldFromArray(dt.Subitem5, 'Subitem6');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-28' : 'pl-24';
 
@@ -947,13 +1033,22 @@ const renderSubitem5 = (
       const addTreeElement2 = [...treeElement, `Subitem5_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem5.forEach((sub5, sub5Idx) => {
+      checkUnprocessedFields(sub5, 'Subitem5', [...addTreeElement, `Element_${sub5Idx}`]);
     });
 
     return (
@@ -972,9 +1067,16 @@ const renderSubitem4 = (
 ): string => {
   return subitem4List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem4_${index}`];
+
+    // フィールド取得
     const Subitem4Title = getType<Subitem4TitleType>(dt.Subitem4, 'Subitem4Title');
     const Subitem4Sentence = getType<Subitem4SentenceType>(dt.Subitem4, 'Subitem4Sentence')[0];
     const Subitem5 = getType<Subitem5Type>(dt.Subitem4, 'Subitem5');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem4, 'Subitem4Title');
+    deleteFieldFromArray(dt.Subitem4, 'Subitem4Sentence');
+    deleteFieldFromArray(dt.Subitem4, 'Subitem5');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-24' : 'pl-20';
 
@@ -990,13 +1092,22 @@ const renderSubitem4 = (
       const addTreeElement2 = [...treeElement, `Subitem4_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem4.forEach((sub4, sub4Idx) => {
+      checkUnprocessedFields(sub4, 'Subitem4', [...addTreeElement, `Element_${sub4Idx}`]);
     });
 
     return (
@@ -1015,9 +1126,16 @@ const renderSubitem3 = (
 ): string => {
   return subitem3List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem3_${index}`];
+
+    // フィールド取得
     const Subitem3Title = getType<Subitem3TitleType>(dt.Subitem3, 'Subitem3Title');
     const Subitem3Sentence = getType<Subitem3SentenceType>(dt.Subitem3, 'Subitem3Sentence')[0];
     const Subitem4 = getType<Subitem4Type>(dt.Subitem3, 'Subitem4');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem3, 'Subitem3Title');
+    deleteFieldFromArray(dt.Subitem3, 'Subitem3Sentence');
+    deleteFieldFromArray(dt.Subitem3, 'Subitem4');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-20' : 'pl-16';
 
@@ -1033,13 +1151,22 @@ const renderSubitem3 = (
       const addTreeElement2 = [...treeElement, `Subitem3_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem3.forEach((sub3, sub3Idx) => {
+      checkUnprocessedFields(sub3, 'Subitem3', [...addTreeElement, `Element_${sub3Idx}`]);
     });
 
     return (
@@ -1058,9 +1185,16 @@ const renderSubitem2 = (
 ): string => {
   return subitem2List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem2_${index}`];
+
+    // フィールド取得
     const Subitem2Title = getType<Subitem2TitleType>(dt.Subitem2, 'Subitem2Title');
     const Subitem2Sentence = getType<Subitem2SentenceType>(dt.Subitem2, 'Subitem2Sentence')[0];
     const Subitem3 = getType<Subitem3Type>(dt.Subitem2, 'Subitem3');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem2, 'Subitem2Title');
+    deleteFieldFromArray(dt.Subitem2, 'Subitem2Sentence');
+    deleteFieldFromArray(dt.Subitem2, 'Subitem3');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-16' : 'pl-12';
 
@@ -1077,13 +1211,22 @@ const renderSubitem2 = (
       const addTreeElement2 = [...treeElement, `Subitem2_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem2.forEach((sub2, sub2Idx) => {
+      checkUnprocessedFields(sub2, 'Subitem2', [...addTreeElement, `Element_${sub2Idx}`]);
     });
 
     return (
@@ -1103,9 +1246,16 @@ const renderSubitem1 = (
 ): string => {
   return subitem1List.map((dt, index) => {
     const addTreeElement = [...treeElement, `Subitem1_${index}`];
+
+    // フィールド取得
     const Subitem1Title = getType<Subitem1TitleType>(dt.Subitem1, 'Subitem1Title');
     const Subitem1Sentence = getType<Subitem1SentenceType>(dt.Subitem1, 'Subitem1Sentence')[0];
     const Subitem2 = getType<Subitem2Type>(dt.Subitem1, 'Subitem2');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Subitem1, 'Subitem1Title');
+    deleteFieldFromArray(dt.Subitem1, 'Subitem1Sentence');
+    deleteFieldFromArray(dt.Subitem1, 'Subitem2');
 
     const paddingClass = isParentParagraphPreceding(treeElement) ? 'pl-12' : 'pl-8';
 
@@ -1122,13 +1272,22 @@ const renderSubitem1 = (
       const addTreeElement2 = [...treeElement, `Subitem1_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         content += renderStyleStruct([dt2], addTreeElement2);
+        deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
         content += renderList([dt2], addTreeElement2);
+        deleteField(dt2, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subitem1.forEach((sub1, sub1Idx) => {
+      checkUnprocessedFields(sub1, 'Subitem1', [...addTreeElement, `Element_${sub1Idx}`]);
     });
 
     return (

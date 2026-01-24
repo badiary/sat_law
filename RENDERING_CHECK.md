@@ -136,6 +136,24 @@ npm run test:render:batch
 - ✅ renderSubsection（款）
 - ✅ renderDivision（目）
 
+### Phase 3実装（2025年1月25日）
+
+| テスト規模 | テスト数 | 未処理フィールド | エラー数 | 検出率 |
+|----------|---------|----------------|---------|-------|
+| 100ファイル | 100 | 0件 | 60件 | 0.00% |
+
+**追加実装済みrender関数:**
+- ✅ renderSubitem1（細目1）
+- ✅ renderSubitem2（細目2）
+- ✅ renderSubitem3（細目3）
+- ✅ renderSubitem4（細目4）
+- ✅ renderSubitem5（細目5）
+- ✅ renderSubitem6（細目6）
+- ✅ renderSubitem7（細目7）
+- ✅ renderSubitem8（細目8）
+- ✅ renderSubitem9（細目9）
+- ✅ renderSubitem10（細目10）
+
 ## レポート形式
 
 `unprocessed-fields-report.json` には以下の情報が含まれます:
