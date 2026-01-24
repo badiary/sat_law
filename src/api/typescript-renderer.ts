@@ -1163,8 +1163,11 @@ const renderItem = (
 
   return itemList.map((dt, index) => {
     const addTreeElement = [...treeElement, `Item_${index}`];
+
+    // フィールド取得
     const ItemTitle = getType<ItemTitleType>(dt.Item, 'ItemTitle');
-    const ItemSentence = getType<ItemSentenceType>(dt.Item, 'ItemSentence')[0];
+    const ItemSentenceArray = getType<ItemSentenceType>(dt.Item, 'ItemSentence');
+    const ItemSentence = ItemSentenceArray.length > 0 ? ItemSentenceArray[0] : { ItemSentence: [] } as any;
 
     // Subitem1を取得 - getTypeで見つからない場合は、dt.Item配列を直接フィルタリング
     let Subitem1 = getType<Subitem1Type>(dt.Item, 'Subitem1');
@@ -1178,6 +1181,11 @@ const renderItem = (
         ).map((s: any) => ({ Subitem1: s })) as any;
       }
     }
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Item, 'ItemTitle');
+    deleteFieldFromArray(dt.Item, 'ItemSentence');
+    deleteFieldFromArray(dt.Item, 'Subitem1');
 
     let content = '';
 
@@ -1203,13 +1211,22 @@ const renderItem = (
       const addTreeElement2 = [...treeElement, `Item_${index}`, `Child_${index2}`];
       if ('List' in dt2) {
         childrenHtml += renderList([dt2], addTreeElement2);
+        deleteFieldFromArray(dt.Item, 'List');
       } else if ('TableStruct' in dt2) {
         childrenHtml += renderTableStruct([dt2], addTreeElement2);
+        deleteFieldFromArray(dt.Item, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         childrenHtml += renderFigStruct([dt2], addTreeElement2);
+        deleteFieldFromArray(dt.Item, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         childrenHtml += renderStyleStruct([dt2], addTreeElement2);
+        deleteFieldFromArray(dt.Item, 'StyleStruct');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Item.forEach((item, itemIdx) => {
+      checkUnprocessedFields(item, 'Item', [...addTreeElement, `Element_${itemIdx}`]);
     });
 
     // すべてのHTMLを結合
@@ -1371,15 +1388,30 @@ const renderParagraph = (
       `Paragraph_${index + parentParagraphIndex}`,
     ];
 
+    // dt.Paragraphの存在確認
+    if (!dt.Paragraph || !Array.isArray(dt.Paragraph)) {
+      console.warn(`[警告] Paragraphフィールドが見つかりません:`, dt);
+      return '';
+    }
+
+    // フィールド取得
     const ParagraphCaption = getType<ParagraphCaptionType>(dt.Paragraph, 'ParagraphCaption');
-    const ParagraphNum = getType<ParagraphNumType>(dt.Paragraph, 'ParagraphNum')[0];
-    const ParagraphSentence = getType<ParagraphSentenceType>(dt.Paragraph, 'ParagraphSentence')[0];
+    const ParagraphNumArray = getType<ParagraphNumType>(dt.Paragraph, 'ParagraphNum');
+    const ParagraphSentenceArray = getType<ParagraphSentenceType>(dt.Paragraph, 'ParagraphSentence');
+
+    const ParagraphNum = ParagraphNumArray.length > 0 ? ParagraphNumArray[0] : { ParagraphNum: [] } as any;
+    const ParagraphSentence = ParagraphSentenceArray.length > 0 ? ParagraphSentenceArray[0] : { ParagraphSentence: [] } as any;
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Paragraph, 'ParagraphCaption');
+    deleteFieldFromArray(dt.Paragraph, 'ParagraphNum');
+    deleteFieldFromArray(dt.Paragraph, 'ParagraphSentence');
 
     // 項番号ノード
     let paragraphNumNode = '';
-    if (dt[':@'].OldNum !== undefined && dt[':@'].OldNum) {
+    if (dt[':@']?.OldNum !== undefined && dt[':@'].OldNum) {
       paragraphNumNode = tag('span', { class: 'font-bold' }, getOldNumLabel(dt[':@'].Num)) + '　';
-    } else if (ParagraphNum.ParagraphNum.length > 0) {
+    } else if (ParagraphNum.ParagraphNum && ParagraphNum.ParagraphNum.length > 0) {
       const numText = renderTextNode(ParagraphNum.ParagraphNum, addTreeElement);
       paragraphNumNode = tag('span', { class: 'font-bold' }, numText) + '　';
     }
@@ -1395,7 +1427,7 @@ const renderParagraph = (
     }
 
     // 項文のdiv
-    const sentenceClass = ParagraphNum.ParagraphNum.length > 0
+    const sentenceClass = ParagraphNum.ParagraphNum && ParagraphNum.ParagraphNum.length > 0
       ? '_div_ParagraphSentence pl-4 indent-1'
       : '_div_ParagraphSentence indent1';
 
@@ -1412,19 +1444,31 @@ const renderParagraph = (
       ];
       if ('AmendProvision' in dt2) {
         childrenHtml += renderAmendProvision([dt2], addTreeElementChild);
+        deleteFieldFromArray(dt.Paragraph, 'AmendProvision');
       } else if ('Class' in dt2) {
         // Class処理（未実装の場合はスキップ）
+        deleteFieldFromArray(dt.Paragraph, 'Class');
       } else if ('TableStruct' in dt2) {
         childrenHtml += renderTableStruct([dt2], addTreeElementChild);
+        deleteFieldFromArray(dt.Paragraph, 'TableStruct');
       } else if ('FigStruct' in dt2) {
         childrenHtml += renderFigStruct([dt2], addTreeElementChild);
+        deleteFieldFromArray(dt.Paragraph, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
         childrenHtml += renderStyleStruct([dt2], addTreeElementChild);
+        deleteFieldFromArray(dt.Paragraph, 'StyleStruct');
       } else if ('Item' in dt2) {
         childrenHtml += renderItem([dt2], addTreeElementChild, index + parentParagraphIndex > 0);
+        deleteFieldFromArray(dt.Paragraph, 'Item');
       } else if ('List' in dt2) {
         childrenHtml += renderList([dt2], addTreeElementChild);
+        deleteFieldFromArray(dt.Paragraph, 'List');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Paragraph.forEach((para, paraIdx) => {
+      checkUnprocessedFields(para, 'Paragraph', [...addTreeElement, `Element_${paraIdx}`]);
     });
 
     // 親要素に応じてラッピング
@@ -1644,6 +1688,12 @@ const renderArticle = (
   return articleList.map((dt, index) => {
     const addTreeElement = [...treeElement, `Article_${index}`];
 
+    // dt.Articleの存在確認
+    if (!dt.Article || !Array.isArray(dt.Article)) {
+      console.warn(`[警告] Articleフィールドが見つかりません:`, dt);
+      return '';
+    }
+
     // フィールド取得
     const ArticleCaption = getType<ArticleCaptionType>(dt.Article, 'ArticleCaption');
     const ArticleTitleArray = getType<ArticleTitleType>(dt.Article, 'ArticleTitle');
@@ -1731,21 +1781,30 @@ const renderMainProvision = (
 
   return mainProvision.MainProvision.map((dt, index) => {
     const addTreeElement = [...treeElement, `MainProvision_${index}`];
+    let html = '';
 
     if ('Chapter' in dt) {
-      return renderChapter([dt], addTreeElement);
+      html = renderChapter([dt], addTreeElement);
+      delete dt.Chapter;
     } else if ('Paragraph' in dt) {
       paragraphIndex++;
-      return renderParagraph([dt], addTreeElement, paragraphIndex - 1);
+      html = renderParagraph([dt], addTreeElement, paragraphIndex - 1);
+      delete dt.Paragraph;
     } else if ('Article' in dt) {
-      return renderArticle([dt], addTreeElement);
+      html = renderArticle([dt], addTreeElement);
+      delete dt.Article;
     } else if ('Part' in dt) {
-      return renderPart([dt], addTreeElement);
+      html = renderPart([dt], addTreeElement);
+      delete dt.Part;
     } else if ('Section' in dt) {
-      return renderSection([dt], addTreeElement);
-    } else {
-      return '';
+      html = renderSection([dt], addTreeElement);
+      delete dt.Section;
     }
+
+    // 未処理フィールドチェック
+    checkUnprocessedFields(dt, 'MainProvision', addTreeElement);
+
+    return html;
   }).join('');
 };
 
@@ -1763,6 +1822,7 @@ const renderSupplProvision = (
     `SupplProvision_${index}${childNum ? `_Child${childNum > 1 ? `_${childNum}` : ''}` : ''}`,
   ];
 
+  // フィールド取得
   const SupplProvisionLabel: SupplProvisionLabelType =
     getTypeByFind<SupplProvisionLabelType>(
       supplProvision.SupplProvision,
@@ -1783,6 +1843,12 @@ const renderSupplProvision = (
     supplProvision.SupplProvision,
     'Chapter'
   );
+
+  // 処理済みフィールドを削除
+  deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionLabel');
+  deleteFieldFromArray(supplProvision.SupplProvision, 'Paragraph');
+  deleteFieldFromArray(supplProvision.SupplProvision, 'Article');
+  deleteFieldFromArray(supplProvision.SupplProvision, 'Chapter');
 
   let content = '';
 
@@ -1818,11 +1884,19 @@ const renderSupplProvision = (
   supplProvision.SupplProvision.forEach((dt: any) => {
     if ('SupplProvisionAppdxTable' in dt) {
       content += renderSupplProvisionAppdxTable([dt], addTreeElement(2));
+      deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdxTable');
     } else if ('SupplProvisionAppdxStyle' in dt) {
       content += renderSupplProvisionAppdxStyle([dt], addTreeElement(2));
+      deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdxStyle');
     } else if ('SupplProvisionAppdx' in dt) {
       content += renderSupplProvisionAppdx([dt], addTreeElement(2));
+      deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdx');
     }
+  });
+
+  // 未処理フィールドチェック
+  supplProvision.SupplProvision.forEach((sp, spIdx) => {
+    checkUnprocessedFields(sp, 'SupplProvision', [...addTreeElement(), `Element_${spIdx}`]);
   });
 
   return tag('section', { class: 'active SupplProvision pb-4', style: 'display:none' }, content);
