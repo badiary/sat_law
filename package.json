@@ -6,7 +6,10 @@
     "build": "webpack --mode=production",
     "build:dev": "webpack --mode=development",
     "watch": "webpack -w --mode=development",
-    "test:render": "tsx test-render.ts"
+    "test:render": "tsx test-render.ts",
+    "test:render:batch": "tsx test-batch-render.ts",
+    "test:render:batch:sample": "tsx test-batch-render.ts 100",
+    "test:field-tracker": "tsx test-field-tracker.ts"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",

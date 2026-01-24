@@ -1,0 +1,209 @@
+{
+  "totalFiles": 10516,
+  "testedFiles": 100,
+  "filesWithUnprocessedFields": 0,
+  "filesWithErrors": 40,
+  "unprocessedFieldsByContext": {},
+  "details": [
+    {
+      "xmlPath": "all_xml\\105DF0000000337_18721109_000000000000000\\105DF0000000337_18721109_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\106DF0000000065_18730220_000000000000000\\106DF0000000065_18730220_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\108DF0000000054_20030501_414CO0000000277\\108DF0000000054_20030501_414CO0000000277.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\108DF0000000103_18750608_000000000000000\\108DF0000000103_18750608_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\108DT0000000152_18750827_000000000000000\\108DT0000000152_18750827_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\110DT0000000097_20030501_414CO0000000277\\110DT0000000097_20030501_414CO0000000277.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\114DF0000000063_20030501_414CO0000000278\\114DF0000000063_20030501_414CO0000000278.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\116DT0000000027_18830620_000000000000000\\116DT0000000027_18830620_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\119IO0000000000_18860420_000000000000000\\119IO0000000000_18860420_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\119IO0000000051_18860713_000000000000000\\119IO0000000051_18860713_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\120IO0000000001_18871222_000000000000000\\120IO0000000001_18871222_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\120IO0000000002_18870324_000000000000000\\120IO0000000002_18870324_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\122IO0000000103_18890803_000000000000000\\122IO0000000103_18890803_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'map')"
+    },
+    {
+      "xmlPath": "all_xml\\125M10000001004_18920527_000000000000000\\125M10000001004_18920527_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\127IO0000000023_18940306_000000000000000\\127IO0000000023_18940306_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'map')"
+    },
+    {
+      "xmlPath": "all_xml\\131IO0000000090_18980511_000000000000000\\131IO0000000090_18980511_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\132AC0000000101_19010404_134AC0000000018\\132AC0000000101_19010404_134AC0000000018.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\132AC1000000040_18990308_000000000000000\\132AC1000000040_18990308_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\132IO0000000001_18991012_000000000000000\\132IO0000000001_18991012_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\132M10001000019_19480422_323M40000800010\\132M10001000019_19480422_323M40000800010.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\132M10001000020_18990526_000000000000000\\132M10001000020_18990526_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\132M10001000024_20250602_507M60000800062\\132M10001000024_20250602_507M60000800062.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'map')"
+    },
+    {
+      "xmlPath": "all_xml\\133IO0000000001_19001122_000000000000000\\133IO0000000001_19001122_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\133IO0000000002_19001122_000000000000000\\133IO0000000002_19001122_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\133IO0000000329_19970829_409CO0000000272\\133IO0000000329_19970829_409CO0000000272.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\133IO0000000409_19001207_000000000000000\\133IO0000000409_19001207_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\133M10000010025_19000716_000000000000000\\133M10000010025_19000716_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\134IO0000000001_19010408_000000000000000\\134IO0000000001_19010408_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\135AC0000000011_20010106_411AC0000000160\\135AC0000000011_20010106_411AC0000000160.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\135AC1000000050_19021222_000000000000000\\135AC1000000050_19021222_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\137AC0000000017_20060501_417AC0000000087\\137AC0000000017_20060501_417AC0000000087.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\138M10000008002_19050320_000000000000000\\138M10000008002_19050320_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\138M10000020001_19050320_000000000000000\\138M10000020001_19050320_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\138M10000040051_19200624_209M10000040021\\138M10000040051_19200624_209M10000040021.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\139IO0000000137_20010106_412CO0000000307\\139IO0000000137_20010106_412CO0000000307.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\141IO0000000217_19080924_000000000000000\\141IO0000000217_19080924_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\141IO0000000287_20010106_412CO0000000307\\141IO0000000287_20010106_412CO0000000307.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\141M10000008014_20000401_412M50004000010\\141M10000008014_20000401_412M50004000010.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\142AC0000000008_19090322_000000000000000\\142AC0000000008_19090322_000000000000000.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    },
+    {
+      "xmlPath": "all_xml\\142AC0000000009_20010106_411AC0000000160\\142AC0000000009_20010106_411AC0000000160.xml",
+      "warnings": [],
+      "error": "Cannot read properties of undefined (reading 'filter')"
+    }
+  ]
+}
