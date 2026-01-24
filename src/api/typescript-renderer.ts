@@ -7,7 +7,7 @@
  */
 
 import { getType, getTypeByFind, getParentElement } from './lib/law/law';
-import { deleteFieldFromArray, checkUnprocessedFields } from './utils/field-tracker';
+import { deleteField, deleteFieldFromArray, checkUnprocessedFields } from './utils/field-tracker';
 
 // 添付ファイルマップをグローバル変数として保持
 let globalAttachedFilesMap: Map<string, string> | undefined;
@@ -1504,8 +1504,13 @@ const renderDivision = (
   return divisionList.map((dt, index) => {
     const addTreeElement = [...treeElement, `Division_${index}`];
 
+    // フィールド取得
     const DivisionTitle = getType<DivisionTitleType>(dt.Division, 'DivisionTitle')[0];
     const Article = getType<ArticleType>(dt.Division, 'Article');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Division, 'DivisionTitle');
+    deleteFieldFromArray(dt.Division, 'Article');
 
     let content = '';
 
@@ -1518,6 +1523,11 @@ const renderDivision = (
 
     // Article
     content += renderArticle(Article, addTreeElement);
+
+    // 未処理フィールドチェック
+    dt.Division.forEach((div, divIdx) => {
+      checkUnprocessedFields(div, 'Division', [...addTreeElement, `Element_${divIdx}`]);
+    });
 
     return content;
   }).join('');
@@ -1537,7 +1547,11 @@ const renderSubsection = (
       `Subsection_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
+    // フィールド取得
     const SubsectionTitle = getType<SubsectionTitleType>(dt.Subsection, 'SubsectionTitle')[0];
+
+    // SubsectionTitleを削除
+    deleteFieldFromArray(dt.Subsection, 'SubsectionTitle');
 
     let content = '';
 
@@ -1552,9 +1566,16 @@ const renderSubsection = (
     dt.Subsection.forEach((dt2, index2) => {
       if ('Article' in dt2) {
         content += renderArticle([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Article');
       } else if ('Division' in dt2) {
         content += renderDivision([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Division');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Subsection.forEach((subsec, subsecIdx) => {
+      checkUnprocessedFields(subsec, 'Subsection', [...addTreeElement(), `Element_${subsecIdx}`]);
     });
 
     return content;
@@ -1575,7 +1596,11 @@ const renderSection = (
       `Section_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
+    // フィールド取得
     const SectionTitle = getType<SectionTitleType>(dt.Section, 'SectionTitle')[0];
+
+    // SectionTitleを削除
+    deleteFieldFromArray(dt.Section, 'SectionTitle');
 
     let content = '';
 
@@ -1590,11 +1615,19 @@ const renderSection = (
     dt.Section.forEach((dt2, index2) => {
       if ('Article' in dt2) {
         content += renderArticle([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Article');
       } else if ('Subsection' in dt2) {
         content += renderSubsection([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Subsection');
       } else if ('Division' in dt2) {
         content += renderDivision([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Division');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Section.forEach((sec, secIdx) => {
+      checkUnprocessedFields(sec, 'Section', [...addTreeElement(), `Element_${secIdx}`]);
     });
 
     return content;
@@ -1615,7 +1648,11 @@ const renderChapter = (
       `Chapter_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
+    // フィールド取得
     const ChapterTitle = getType<ChapterTitleType>(chapter.Chapter, 'ChapterTitle')[0];
+
+    // ChapterTitleを削除
+    deleteFieldFromArray(chapter.Chapter, 'ChapterTitle');
 
     let content = '';
 
@@ -1630,9 +1667,16 @@ const renderChapter = (
     chapter.Chapter.forEach((dt2, index2) => {
       if ('Article' in dt2) {
         content += renderArticle([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Article');
       } else if ('Section' in dt2) {
         content += renderSection([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Section');
       }
+    });
+
+    // 未処理フィールドチェック
+    chapter.Chapter.forEach((chap, chapIdx) => {
+      checkUnprocessedFields(chap, 'Chapter', [...addTreeElement(), `Element_${chapIdx}`]);
     });
 
     return content;
@@ -1653,7 +1697,11 @@ const renderPart = (
       `Part_${index}${index2 !== undefined ? `_Child_${index2}` : ''}`,
     ];
 
+    // フィールド取得
     const PartTitle = getType<PartTitleType>(dt.Part, 'PartTitle')[0];
+
+    // PartTitleを削除
+    deleteFieldFromArray(dt.Part, 'PartTitle');
 
     let content = '';
 
@@ -1668,9 +1716,16 @@ const renderPart = (
     dt.Part.forEach((dt2, index2) => {
       if ('Chapter' in dt2) {
         content += renderChapter([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Chapter');
       } else if ('Article' in dt2) {
         content += renderArticle([dt2], addTreeElement(index2));
+        deleteField(dt2, 'Article');
       }
+    });
+
+    // 未処理フィールドチェック
+    dt.Part.forEach((part, partIdx) => {
+      checkUnprocessedFields(part, 'Part', [...addTreeElement(), `Element_${partIdx}`]);
     });
 
     return content;
