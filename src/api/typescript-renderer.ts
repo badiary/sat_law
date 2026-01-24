@@ -7,6 +7,7 @@
  */
 
 import { getType, getTypeByFind, getParentElement } from './lib/law/law';
+import { deleteFieldFromArray, checkUnprocessedFields } from './utils/field-tracker';
 
 // 添付ファイルマップをグローバル変数として保持
 let globalAttachedFilesMap: Map<string, string> | undefined;
@@ -1643,15 +1644,22 @@ const renderArticle = (
   return articleList.map((dt, index) => {
     const addTreeElement = [...treeElement, `Article_${index}`];
 
+    // フィールド取得
     const ArticleCaption = getType<ArticleCaptionType>(dt.Article, 'ArticleCaption');
-    const ArticleTitle = getType<ArticleTitleType>(dt.Article, 'ArticleTitle')[0];
+    const ArticleTitleArray = getType<ArticleTitleType>(dt.Article, 'ArticleTitle');
     const Paragraph = getType<ParagraphType>(dt.Article, 'Paragraph');
     const SupplNote = getType<SupplNoteType>(dt.Article, 'SupplNote');
+
+    // 処理済みフィールドを削除
+    deleteFieldFromArray(dt.Article, 'ArticleCaption');
+    deleteFieldFromArray(dt.Article, 'ArticleTitle');
+    deleteFieldFromArray(dt.Article, 'Paragraph');
+    deleteFieldFromArray(dt.Article, 'SupplNote');
 
     let content = '';
 
     // ArticleCaption（条の見出し）- Article[0]にある場合
-    if ('ArticleCaption' in dt.Article[0]) {
+    if (ArticleCaption.length > 0 && 'ArticleCaption' in ArticleCaption[0]) {
       const captionText = renderTextNode(
         ArticleCaption[0].ArticleCaption,
         addTreeElement
@@ -1663,11 +1671,13 @@ const renderArticle = (
     let articleTitleContent = '';
 
     // ArticleTitleのテキスト
-    const titleText = renderTextNode(ArticleTitle.ArticleTitle, addTreeElement);
-    articleTitleContent += tag('span', { class: 'font-bold' }, titleText);
+    if (ArticleTitleArray.length > 0 && ArticleTitleArray[0].ArticleTitle) {
+      const titleText = renderTextNode(ArticleTitleArray[0].ArticleTitle, addTreeElement);
+      articleTitleContent += tag('span', { class: 'font-bold' }, titleText);
+    }
 
     // ArticleCaption が Article[1] にある場合（稀なケース）
-    if ('ArticleCaption' in dt.Article[1]) {
+    if (ArticleCaption.length > 0 && ArticleCaption[0] && 'ArticleCaption' in ArticleCaption[0]) {
       const captionText = renderTextNode(
         ArticleCaption[0].ArticleCaption,
         addTreeElement
@@ -1679,7 +1689,9 @@ const renderArticle = (
     articleTitleContent += '　';
 
     // 第1項（項番号なし）
-    articleTitleContent += renderParagraph([Paragraph[0]], addTreeElement, 0);
+    if (Paragraph.length > 0) {
+      articleTitleContent += renderParagraph([Paragraph[0]], addTreeElement, 0);
+    }
 
     content += tag('div', { class: '_div_ArticleTitle pl-4 indent-1' }, articleTitleContent);
 
@@ -1697,6 +1709,11 @@ const renderArticle = (
       const noteText = renderTextNode(SupplNote[0].SupplNote, addTreeElement);
       content += tag('div', { class: '_div_SupplNote pl-8 indent-1' }, noteText);
     }
+
+    // 未処理フィールドチェック
+    dt.Article.forEach((article, articleIdx) => {
+      checkUnprocessedFields(article, 'Article', [...addTreeElement, `Element_${articleIdx}`]);
+    });
 
     return tag('section', { class: 'active Article pb-4' }, content);
   }).join('');

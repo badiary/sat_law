@@ -34,44 +34,49 @@ try {
   const convertLaw = xp.parse(xml);
   console.log('XMLパース完了');
 
-  // law_data_responseの構造を確認
-  const lawDataResponse = convertLaw[0]?.law_data_response;
-  if (!lawDataResponse) {
-    throw new Error('law_data_response が見つかりません');
-  }
-  console.log(`law_data_response 要素数: ${lawDataResponse.length}`);
+  // XMLの構造を判定（law_data_response形式 vs Law直接形式）
+  let lawFullText: any;
+  let attachedFilesMap = new Map<string, string>();
 
-  // lawFullTextを取得
-  const lawFullText = lawDataResponse[3].law_full_text[0];
-  console.log('lawFullText 取得完了');
+  if (convertLaw[0]?.law_data_response) {
+    // law_data_response形式（APIレスポンス）
+    const lawDataResponse = convertLaw[0].law_data_response;
+    console.log(`law_data_response 要素数: ${lawDataResponse.length}`);
 
-  // attached_files_infoを取得
-  const attachedFilesInfo = lawDataResponse[0];
-  console.log('attached_files_info:', JSON.stringify(attachedFilesInfo, null, 2).substring(0, 500));
+    lawFullText = lawDataResponse[3].law_full_text[0];
+    console.log('lawFullText 取得完了');
 
-  // attached_filesからマップを作成
-  const attachedFilesMap = new Map<string, string>();
-  if (attachedFilesInfo?.attached_files_info) {
-    const attachedFilesArray = attachedFilesInfo.attached_files_info.find(
-      (item: any) => item.attached_files
-    )?.attached_files;
+    // attached_files_infoを取得
+    const attachedFilesInfo = lawDataResponse[0];
+    if (attachedFilesInfo?.attached_files_info) {
+      const attachedFilesArray = attachedFilesInfo.attached_files_info.find(
+        (item: any) => item.attached_files
+      )?.attached_files;
 
-    if (attachedFilesArray) {
-      console.log(`attached_files 配列の要素数: ${attachedFilesArray.length}`);
+      if (attachedFilesArray) {
+        console.log(`attached_files 配列の要素数: ${attachedFilesArray.length}`);
 
-      attachedFilesArray.forEach((fileItem: any) => {
-        if (fileItem.attached_file) {
-          const attachedFile = fileItem.attached_file;
-          const lawRevisionId = attachedFile.find((item: any) => item.law_revision_id)?.law_revision_id[0]?._;
-          const src = attachedFile.find((item: any) => item.src)?.src[0]?._;
+        attachedFilesArray.forEach((fileItem: any) => {
+          if (fileItem.attached_file) {
+            const attachedFile = fileItem.attached_file;
+            const lawRevisionId = attachedFile.find((item: any) => item.law_revision_id)?.law_revision_id[0]?._;
+            const src = attachedFile.find((item: any) => item.src)?.src[0]?._;
 
-          if (lawRevisionId && src) {
-            attachedFilesMap.set(src, lawRevisionId);
+            if (lawRevisionId && src) {
+              attachedFilesMap.set(src, lawRevisionId);
+            }
           }
-        }
-      });
+        });
+      }
     }
+  } else if (convertLaw[0]?.Law) {
+    // Law直接形式（ローカルXMLファイル）
+    console.log('Law直接形式を検出');
+    lawFullText = convertLaw[0];
+  } else {
+    throw new Error('不明なXML形式です');
   }
+
   console.log(`attachedFilesMap サイズ: ${attachedFilesMap.size}`);
 
   // law componentデータを取得
