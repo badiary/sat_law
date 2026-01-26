@@ -1,0 +1,11 @@
+{
+  "xmlPath": "all_xml\\106DF0000000065_18730220_000000000000000\\106DF0000000065_18730220_000000000000000.xml",
+  "status": "fail_text_mismatch",
+  "unprocessedFieldsCount": 0,
+  "textMatch": false,
+  "xmlLength": 380,
+  "htmlLength": 483,
+  "diffPosition": 238,
+  "lastTested": "2026-01-26T02:27:05.944Z",
+  "errorMessage": "テキスト不一致 (XML:380文字 vs HTML:483文字)"
+}

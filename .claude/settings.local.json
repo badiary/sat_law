@@ -27,7 +27,12 @@
       "Bash(Select-String -Pattern \"進捗|結果|ファイル数\")",
       "Bash(Measure-Object)",
       "Bash(Select-Object -ExpandProperty Count)",
-      "Bash(time npm run test:render:batch:*)"
+      "Bash(time npm run test:render:batch:*)",
+      "Bash(for:*)",
+      "Bash(do npm run test:incremental)",
+      "Bash(done)",
+      "Bash(break)",
+      "Bash(while ps aux)"
     ],
     "deny": [],
     "ask": []

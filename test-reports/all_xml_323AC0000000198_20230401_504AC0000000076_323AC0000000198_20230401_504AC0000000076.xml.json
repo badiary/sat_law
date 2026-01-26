@@ -1,0 +1,11 @@
+{
+  "xmlPath": "all_xml\\323AC0000000198_20230401_504AC0000000076\\323AC0000000198_20230401_504AC0000000076.xml",
+  "status": "fail_text_mismatch",
+  "unprocessedFieldsCount": 0,
+  "textMatch": false,
+  "xmlLength": 9445,
+  "htmlLength": 9735,
+  "diffPosition": 3496,
+  "lastTested": "2026-01-26T09:13:09.691Z",
+  "errorMessage": "テキスト不一致 (XML:9445文字 vs HTML:9735文字)"
+}

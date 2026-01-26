@@ -1,0 +1,11 @@
+{
+  "xmlPath": "all_xml\\128IO0000000167_19370924_312IO0000000529\\128IO0000000167_19370924_312IO0000000529.xml",
+  "status": "fail_text_mismatch",
+  "unprocessedFieldsCount": 0,
+  "textMatch": false,
+  "xmlLength": 109,
+  "htmlLength": 128,
+  "diffPosition": 90,
+  "lastTested": "2026-01-26T08:48:10.594Z",
+  "errorMessage": "テキスト不一致 (XML:109文字 vs HTML:128文字)"
+}

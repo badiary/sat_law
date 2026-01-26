@@ -8,6 +8,7 @@ import { readdirSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
 import { getLawComponentData } from './src/api/lib/api/get-law-data';
 import { renderLaw } from './src/api/typescript-renderer';
+import { compareTextContent, TextCompareResult } from './src/api/utils/text-content-compare';
 import { join } from 'path';
 
 // テスト設定
@@ -21,11 +22,13 @@ interface UnprocessedFieldReport {
   testedFiles: number;
   filesWithUnprocessedFields: number;
   filesWithErrors: number;
+  filesWithTextMismatch: number;  // 追加: テキスト不一致ファイル数
   unprocessedFieldsByContext: Record<string, number>;
   details: Array<{
     xmlPath: string;
     warnings: string[];
     error?: string;
+    textCompare?: TextCompareResult;  // 追加: テキスト比較結果
   }>;
 }
 
@@ -51,6 +54,7 @@ async function batchRenderTest() {
     testedFiles: testDirs.length,
     filesWithUnprocessedFields: 0,
     filesWithErrors: 0,
+    filesWithTextMismatch: 0,  // 追加
     unprocessedFieldsByContext: {},
     details: []
   };
@@ -104,16 +108,28 @@ async function batchRenderTest() {
         throw new Error('不明なXML形式です');
       }
 
-      // レンダリング実行
+      // レンダリング実行（getLawComponentDataは破壊的にlawFullTextを変更するため、先にコピー）
+      const lawFullTextCopy = JSON.parse(JSON.stringify(lawFullText));  // ディープコピー
       const laws = getLawComponentData(lawFullText);
       const html = renderLaw(laws.lawNum, laws.lawBody, laws.lawTitle, [], new Map());
 
-      // 警告があった場合、レポートに追加
-      if (currentWarnings.length > 0) {
-        report.filesWithUnprocessedFields++;
+      // テキストコンテンツ比較（元のコピーを使用）
+      const textCompare = compareTextContent(lawFullTextCopy, html);
+
+      if (!textCompare.match) {
+        report.filesWithTextMismatch++;
+      }
+
+      // 警告またはテキスト不一致があった場合、レポートに追加
+      if (currentWarnings.length > 0 || !textCompare.match) {
+        if (currentWarnings.length > 0) {
+          report.filesWithUnprocessedFields++;
+        }
+
         report.details.push({
           xmlPath,
-          warnings: [...currentWarnings]
+          warnings: [...currentWarnings],
+          textCompare: textCompare.match ? undefined : textCompare  // 不一致時のみ保存
         });
       }
 
@@ -141,8 +157,10 @@ async function batchRenderTest() {
   console.log(`  総ファイル数: ${report.totalFiles}`);
   console.log(`  テスト済ファイル数: ${report.testedFiles}`);
   console.log(`  未処理フィールドを含むファイル数: ${report.filesWithUnprocessedFields}`);
+  console.log(`  テキスト不一致ファイル数: ${report.filesWithTextMismatch}`);  // 追加
   console.log(`  エラーが発生したファイル数: ${report.filesWithErrors}`);
   console.log(`  未処理フィールド検出率: ${((report.filesWithUnprocessedFields / report.testedFiles) * 100).toFixed(2)}%`);
+  console.log(`  テキスト一致率: ${(((report.testedFiles - report.filesWithTextMismatch) / report.testedFiles) * 100).toFixed(2)}%`);  // 追加
 
   console.log('\n📋 コンテキスト別未処理フィールド数:');
   const sortedContexts = Object.entries(report.unprocessedFieldsByContext)
@@ -180,6 +198,22 @@ async function batchRenderTest() {
       .forEach(d => {
         console.log(`  ${d.xmlPath}:`);
         d.warnings.slice(0, 3).forEach(w => console.log(`    ${w}`));
+      });
+  }
+
+  // テキスト不一致があった場合、サンプルを表示
+  if (report.filesWithTextMismatch > 0) {
+    console.log('\n⚠️  テキスト不一致サンプル（最初の5件）:');
+    report.details
+      .filter(d => d.textCompare && !d.textCompare.match)
+      .slice(0, 5)
+      .forEach(d => {
+        console.log(`  ${d.xmlPath}:`);
+        console.log(`    XML長さ: ${d.textCompare!.xmlTextNormalized.length}文字`);
+        console.log(`    HTML長さ: ${d.textCompare!.htmlTextNormalized.length}文字`);
+        if (d.textCompare!.diff) {
+          console.log(`    差分: ${d.textCompare!.diff.substring(0, 200)}...`);
+        }
       });
   }
 }

@@ -321,8 +321,12 @@ const renderLawTypeList = (
       return renderAppdxFormat(dt, addTreeElement);
     } else if ('TOC' in dt) {
       return renderTOC(dt, addTreeElement);
+    } else if ('Table' in dt) {
+      // QuoteStruct内に直接Tableが含まれる場合の処理
+      // dtはすでに{ Table: [...] }の形式
+      return renderTable(dt, addTreeElement);
     } else {
-      // その他の要素型は空文字列を返す（React側と同じくTableは処理しない）
+      // その他の要素型は空文字列を返す
       return '';
     }
   }).join('');
@@ -3458,10 +3462,10 @@ const renderFig = (
         class: 'max-w-full h-auto'
       }, ''));
     } else {
-      // law_revision_idが見つからない場合はプレースホルダー
+      // law_revision_idが見つからない場合はプレースホルダー（テキストなし）
       const innerContent = tag('span', {
         class: 'text-xs text-light-Text-PlaceHolder font-bold'
-      }, '画像を読み込み中...');
+      }, '');
       const innerWrapper = tag('div', {
         class: 'flex flex-col justify-center items-center'
       }, innerContent);
@@ -4016,10 +4020,23 @@ const renderNoteStruct = (
       content += renderRemarks([dt], childTreeElement);
       deleteField(dt, 'Remarks');
     } else if ('Note' in dt) {
-      // React仕様: LawNoteStructはNote要素をLawAnyに渡すが、
-      // LawAnyには"Note"ケースが実装されていないため、空のFragmentを返す
-      // したがって、Note要素は何も出力しない
-      content += '';
+      // Note要素の中身をレンダリング
+      // Note要素は配列形式で、その中にParagraph、Item等が含まれる
+      const noteArray = dt.Note;
+      noteArray.forEach((noteItem: any, noteIdx: number) => {
+        const noteItemTreeElement = [...childTreeElement, `Note_${noteIdx}`];
+
+        // Paragraphの処理
+        if ('Paragraph' in noteItem) {
+          content += renderParagraph([noteItem], noteItemTreeElement, noteIdx);
+        }
+        // Itemの処理
+        else if ('Item' in noteItem) {
+          content += renderItem([noteItem], noteItemTreeElement, false);
+        }
+        // 他の要素が含まれる可能性もあるが、現時点ではParagraphとItemのみ対応
+      });
+
       deleteField(dt, 'Note');
     }
   });
