@@ -21,7 +21,13 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(rm:*)",
-      "Bash(tsx test:*)"
+      "Bash(tsx test:*)",
+      "Bash(node -e:*)",
+      "Bash(powershell -Command \"Get-Content ''c:\\\\github\\\\sat_law\\\\test-invalid-xml-generator.ts'' | Measure-Object -Line | Select-Object -ExpandProperty Lines\")",
+      "Bash(Select-String -Pattern \"進捗|結果|ファイル数\")",
+      "Bash(Measure-Object)",
+      "Bash(Select-Object -ExpandProperty Count)",
+      "Bash(time npm run test:render:batch:*)"
     ],
     "deny": [],
     "ask": []

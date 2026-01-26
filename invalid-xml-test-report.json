@@ -1,0 +1,998 @@
+{
+  "totalTests": 55,
+  "passed": 55,
+  "failed": 0,
+  "details": [
+    {
+      "testCase": {
+        "elementName": "Article",
+        "renderFunctionName": "renderArticle",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n        <InvalidElement>これは不正な要素です</InvalidElement>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Article",
+          "InvalidElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Article (Law>LawBody>MainProvision_0>Article_0>Element_2): { InvalidElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Article",
+        "renderFunctionName": "renderArticle",
+        "patternName": "TableStructInArticle",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n        <TableStruct>\n          <Table>\n            <TableRow>\n              <TableColumn>\n                <Sentence>テスト</Sentence>\n              </TableColumn>\n            </TableRow>\n          </Table>\n        </TableStruct>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Article",
+          "TableStruct"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Article (Law>LawBody>MainProvision_0>Article_0>Element_2): { TableStruct }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Article",
+        "renderFunctionName": "renderArticle",
+        "patternName": "ChapterInArticle",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n        <Chapter Num=\"1\">\n          <ChapterTitle>第一章</ChapterTitle>\n          <Article Num=\"2\">\n            <ArticleTitle>第二条</ArticleTitle>\n            <Paragraph Num=\"1\">\n              <ParagraphNum/>\n              <ParagraphSentence><Sentence>テスト。</Sentence></ParagraphSentence>\n            </Paragraph>\n          </Article>\n        </Chapter>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Article",
+          "Chapter"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Article (Law>LawBody>MainProvision_0>Article_0>Element_2): { Chapter }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Paragraph",
+        "renderFunctionName": "renderParagraph",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n          <InvalidParagraphElement>不正な要素</InvalidParagraphElement>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Paragraph",
+          "InvalidParagraphElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Paragraph (Law>LawBody>MainProvision_0>Article_0>Paragraph_0>Element_2): { InvalidParagraphElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Paragraph",
+        "renderFunctionName": "renderParagraph",
+        "patternName": "ArticleInParagraph",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n          <Article Num=\"2\">\n            <ArticleTitle>第二条</ArticleTitle>\n            <Paragraph Num=\"1\">\n              <ParagraphNum/>\n              <ParagraphSentence><Sentence>入れ子の条。</Sentence></ParagraphSentence>\n            </Paragraph>\n          </Article>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Paragraph",
+          "Article"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Paragraph (Law>LawBody>MainProvision_0>Article_0>Paragraph_0>Element_2): { Article }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Paragraph",
+        "renderFunctionName": "renderParagraph",
+        "patternName": "UnknownTag",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n          <UnknownTag>未知のタグ</UnknownTag>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Paragraph",
+          "UnknownTag"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Paragraph (Law>LawBody>MainProvision_0>Article_0>Paragraph_0>Element_2): { UnknownTag }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Item",
+        "renderFunctionName": "renderItem",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号。</Sentence></ItemSentence>\n            <InvalidItemElement>不正な要素</InvalidItemElement>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Item",
+          "InvalidItemElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Item (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Element_2): { InvalidItemElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Item",
+        "renderFunctionName": "renderItem",
+        "patternName": "ChapterInItem",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号。</Sentence></ItemSentence>\n            <Chapter Num=\"1\">\n              <ChapterTitle>第一章</ChapterTitle>\n            </Chapter>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Item",
+          "Chapter"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Item (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Element_2): { Chapter }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Item",
+        "renderFunctionName": "renderItem",
+        "patternName": "TOCInItem",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号。</Sentence></ItemSentence>\n            <TOC>\n              <TOCLabel>目次</TOCLabel>\n            </TOC>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Item",
+          "TOC"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Item (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Element_2): { TOC }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "MainProvision",
+        "renderFunctionName": "renderMainProvision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n      <InvalidMainProvisionElement>不正な要素</InvalidMainProvisionElement>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] MainProvision",
+          "InvalidMainProvisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] MainProvision (Law>LawBody>MainProvision_1): { InvalidMainProvisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "MainProvision",
+        "renderFunctionName": "renderMainProvision",
+        "patternName": "LawBodyInMainProvision",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n      <LawBody>\n        <LawTitle>入れ子の法令本体</LawTitle>\n      </LawBody>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] MainProvision",
+          "LawBody"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] MainProvision (Law>LawBody>MainProvision_1): { LawBody }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "MainProvision",
+        "renderFunctionName": "renderMainProvision",
+        "patternName": "TOCInMainProvision",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n      <TOC>\n        <TOCLabel>目次</TOCLabel>\n      </TOC>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] MainProvision",
+          "TOC"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] MainProvision (Law>LawBody>MainProvision_1): { TOC }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "LawBody",
+        "renderFunctionName": "renderLawBody",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <InvalidLawBodyElement>不正な要素</InvalidLawBodyElement>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] LawBody",
+          "InvalidLawBodyElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] LawBody (Law>LawBody>Element_2): { InvalidLawBodyElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "LawBody",
+        "renderFunctionName": "renderLawBody",
+        "patternName": "ArticleInLawBody",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <Article Num=\"2\">\n      <ArticleTitle>第二条</ArticleTitle>\n      <Paragraph Num=\"1\">\n        <ParagraphNum/>\n        <ParagraphSentence><Sentence>LawBody直下の条。</Sentence></ParagraphSentence>\n      </Paragraph>\n    </Article>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] LawBody",
+          "Article"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] LawBody (Law>LawBody>Element_2): { Article }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "LawBody",
+        "renderFunctionName": "renderLawBody",
+        "patternName": "UnknownTag",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <UnknownLawBodyTag>未知のタグ</UnknownLawBodyTag>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] LawBody",
+          "UnknownLawBodyTag"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] LawBody (Law>LawBody>Element_2): { UnknownLawBodyTag }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Chapter",
+        "renderFunctionName": "renderChapter",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Chapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <Article Num=\"1\">\n          <ArticleTitle>第一条</ArticleTitle>\n          <Paragraph Num=\"1\">\n            <ParagraphNum/>\n            <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n          </Paragraph>\n        </Article>\n        <InvalidChapterElement>不正な要素</InvalidChapterElement>\n      </Chapter>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Chapter",
+          "InvalidChapterElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Chapter (Law>LawBody>MainProvision_0>Chapter_0>Element_2): { InvalidChapterElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Chapter",
+        "renderFunctionName": "renderChapter",
+        "patternName": "LawBodyInChapter",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Chapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <Article Num=\"1\">\n          <ArticleTitle>第一条</ArticleTitle>\n          <Paragraph Num=\"1\">\n            <ParagraphNum/>\n            <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n          </Paragraph>\n        </Article>\n        <LawBody><LawTitle>不正な入れ子</LawTitle></LawBody>\n      </Chapter>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Chapter",
+          "LawBody"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Chapter (Law>LawBody>MainProvision_0>Chapter_0>Element_2): { LawBody }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Section",
+        "renderFunctionName": "renderSection",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Chapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <Section Num=\"1\">\n          <SectionTitle>第一節　通則</SectionTitle>\n          <Article Num=\"1\">\n            <ArticleTitle>第一条</ArticleTitle>\n            <Paragraph Num=\"1\">\n              <ParagraphNum/>\n              <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n            </Paragraph>\n          </Article>\n          <InvalidSectionElement>不正な要素</InvalidSectionElement>\n        </Section>\n      </Chapter>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Section",
+          "InvalidSectionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Section (Law>LawBody>MainProvision_0>Chapter_0_Child_1>Section_0>Element_2): { InvalidSectionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Part",
+        "renderFunctionName": "renderPart",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Part Num=\"1\">\n        <PartTitle>第一編　総則</PartTitle>\n        <Chapter Num=\"1\">\n          <ChapterTitle>第一章　総則</ChapterTitle>\n          <Article Num=\"1\">\n            <ArticleTitle>第一条</ArticleTitle>\n            <Paragraph Num=\"1\">\n              <ParagraphNum/>\n              <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n            </Paragraph>\n          </Article>\n        </Chapter>\n        <InvalidPartElement>不正な要素</InvalidPartElement>\n      </Part>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Part",
+          "InvalidPartElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Part (Law>LawBody>MainProvision_0>Part_0>Element_2): { InvalidPartElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Subitem1",
+        "renderFunctionName": "renderSubitem1",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号の場合は、次に掲げるもの。</Sentence></ItemSentence>\n            <Subitem1 Num=\"1\">\n              <Subitem1Title>イ</Subitem1Title>\n              <Subitem1Sentence><Sentence>細目一。</Sentence></Subitem1Sentence>\n              <InvalidSubitem1Element>不正な要素</InvalidSubitem1Element>\n            </Subitem1>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Subitem1",
+          "InvalidSubitem1Element"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Subitem1 (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Subitem1_0>Element_2): { InvalidSubitem1Element }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Subitem3",
+        "renderFunctionName": "renderSubitem3",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号。</Sentence></ItemSentence>\n            <Subitem1 Num=\"1\">\n              <Subitem1Title>イ</Subitem1Title>\n              <Subitem1Sentence><Sentence>細目1。</Sentence></Subitem1Sentence>\n              <Subitem2 Num=\"1\">\n                <Subitem2Title>(1)</Subitem2Title>\n                <Subitem2Sentence><Sentence>細目2。</Sentence></Subitem2Sentence>\n                <Subitem3 Num=\"1\">\n                  <Subitem3Title>ａ</Subitem3Title>\n                  <Subitem3Sentence><Sentence>細目3。</Sentence></Subitem3Sentence>\n                  <InvalidSubitem3Element>不正な要素</InvalidSubitem3Element>\n                </Subitem3>\n              </Subitem2>\n            </Subitem1>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Subitem3",
+          "InvalidSubitem3Element"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Subitem3 (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Subitem1_0>Subitem2_0>Subitem3_0>Element_2): { InvalidSubitem3Element }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "SupplProvision",
+        "renderFunctionName": "renderSupplProvision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <SupplProvision>\n      <SupplProvisionLabel>附　則</SupplProvisionLabel>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>附則第一条。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n      <InvalidSupplProvisionElement>不正な要素</InvalidSupplProvisionElement>\n    </SupplProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] SupplProvision",
+          "InvalidSupplProvisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] SupplProvision (Law>LawBody>SupplProvision_2>Element_2): { InvalidSupplProvisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TableStruct",
+        "renderFunctionName": "renderTableStruct",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の表のとおり。</Sentence></ParagraphSentence>\n          <TableStruct>\n            <Table>\n              <TableRow>\n                <TableColumn>\n                  <Sentence>項目</Sentence>\n                </TableColumn>\n              </TableRow>\n            </Table>\n            <InvalidTableStructElement>不正な要素</InvalidTableStructElement>\n          </TableStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TableStruct",
+          "InvalidTableStructElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TableStruct (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>TableStruct_0>Element_1): { InvalidTableStructElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "FigStruct",
+        "renderFunctionName": "renderFigStruct",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の図のとおり。</Sentence></ParagraphSentence>\n          <FigStruct>\n            <Fig src=\"fig001.pdf\"/>\n            <InvalidFigStructElement>不正な要素</InvalidFigStructElement>\n          </FigStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] FigStruct",
+          "InvalidFigStructElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] FigStruct (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>FigStruct_0>Element_1): { InvalidFigStructElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "StyleStruct",
+        "renderFunctionName": "renderStyleStruct",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の様式のとおり。</Sentence></ParagraphSentence>\n          <StyleStruct>\n            <StyleStructTitle>様式第一</StyleStructTitle>\n            <Style>\n              <Sentence>様式の内容。</Sentence>\n            </Style>\n            <InvalidStyleStructElement>不正な要素</InvalidStyleStructElement>\n          </StyleStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] StyleStruct",
+          "InvalidStyleStructElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] StyleStruct (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>StyleStruct_0>Element_2): { InvalidStyleStructElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "AppdxTable",
+        "renderFunctionName": "renderAppdxTable",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <AppdxTable Num=\"1\">\n      <AppdxTableTitle>別表第一</AppdxTableTitle>\n      <TableStruct>\n        <Table>\n          <TableRow>\n            <TableColumn>\n              <Sentence>項目</Sentence>\n            </TableColumn>\n          </TableRow>\n        </Table>\n      </TableStruct>\n      <InvalidAppdxTableElement>不正な要素</InvalidAppdxTableElement>\n    </AppdxTable>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] AppdxTable",
+          "InvalidAppdxTableElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] AppdxTable (Law>LawBody_2>AppdxTable_0>Element_2): { InvalidAppdxTableElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Subsection",
+        "renderFunctionName": "renderSubsection",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Chapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <Section Num=\"1\">\n          <SectionTitle>第一節　通則</SectionTitle>\n          <Subsection Num=\"1\">\n            <SubsectionTitle>第一款　基本</SubsectionTitle>\n            <Article Num=\"1\">\n              <ArticleTitle>第一条</ArticleTitle>\n              <Paragraph Num=\"1\">\n                <ParagraphNum/>\n                <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n              </Paragraph>\n            </Article>\n            <InvalidSubsectionElement>不正な要素</InvalidSubsectionElement>\n          </Subsection>\n        </Section>\n      </Chapter>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Subsection",
+          "InvalidSubsectionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Subsection (Law>LawBody>MainProvision_0>Chapter_0_Child_1>Section_0_Child_1>Subsection_0>Element_2): { InvalidSubsectionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Division",
+        "renderFunctionName": "renderDivision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Chapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <Section Num=\"1\">\n          <SectionTitle>第一節　通則</SectionTitle>\n          <Subsection Num=\"1\">\n            <SubsectionTitle>第一款　基本</SubsectionTitle>\n            <Division Num=\"1\">\n              <DivisionTitle>第一目　原則</DivisionTitle>\n              <Article Num=\"1\">\n                <ArticleTitle>第一条</ArticleTitle>\n                <Paragraph Num=\"1\">\n                  <ParagraphNum/>\n                  <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n                </Paragraph>\n              </Article>\n              <InvalidDivisionElement>不正な要素</InvalidDivisionElement>\n            </Division>\n          </Subsection>\n        </Section>\n      </Chapter>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Division",
+          "InvalidDivisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Division (Law>LawBody>MainProvision_0>Chapter_0_Child_1>Section_0_Child_1>Subsection_0_Child_1>Division_0>Element_2): { InvalidDivisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOC",
+        "renderFunctionName": "renderTOC",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCChapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <ArticleRange>（第一条―第五条）</ArticleRange>\n      </TOCChapter>\n      <InvalidTOCElement>不正な要素</InvalidTOCElement>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOC",
+          "InvalidTOCElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOC (Law>LawBody>TOC>Element_2): { InvalidTOCElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCChapter",
+        "renderFunctionName": "renderTOCChapter",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCChapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <ArticleRange>（第一条―第五条）</ArticleRange>\n        <InvalidTOCChapterElement>不正な要素</InvalidTOCChapterElement>\n      </TOCChapter>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCChapter",
+          "InvalidTOCChapterElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCChapter (Law>LawBody>TOC_1>TOCChapter_0>Element_2): { InvalidTOCChapterElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCSection",
+        "renderFunctionName": "renderTOCSection",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCChapter Num=\"1\">\n        <ChapterTitle>第一章　総則</ChapterTitle>\n        <TOCSection Num=\"1\">\n          <SectionTitle>第一節　通則</SectionTitle>\n          <ArticleRange>（第一条―第三条）</ArticleRange>\n          <InvalidTOCSectionElement>不正な要素</InvalidTOCSectionElement>\n        </TOCSection>\n      </TOCChapter>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCSection",
+          "InvalidTOCSectionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCSection (Law>LawBody>TOC_1>TOCChapter_0>TOCSection_0>Element_2): { InvalidTOCSectionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCPart",
+        "renderFunctionName": "renderTOCPart",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCPart Num=\"1\">\n        <PartTitle>第一編　総則</PartTitle>\n        <ArticleRange>（第一条―第十条）</ArticleRange>\n        <InvalidTOCPartElement>不正な要素</InvalidTOCPartElement>\n      </TOCPart>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCPart",
+          "InvalidTOCPartElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCPart (Law>LawBody>TOC_1>TOCPart_0>Element_2): { InvalidTOCPartElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCArticle",
+        "renderFunctionName": "renderTOCArticle",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCArticle Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <ArticleCaption>総則</ArticleCaption>\n        <InvalidTOCArticleElement>不正な要素</InvalidTOCArticleElement>\n      </TOCArticle>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCArticle",
+          "InvalidTOCArticleElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCArticle (Law>LawBody>TOC_1>TOCArticle_0>Element_2): { InvalidTOCArticleElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCDivision",
+        "renderFunctionName": "renderTOCDivision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCPart Num=\"1\">\n        <PartTitle>第一編</PartTitle>\n        <TOCChapter Num=\"1\">\n          <ChapterTitle>第一章</ChapterTitle>\n          <TOCSection Num=\"1\">\n            <SectionTitle>第一節</SectionTitle>\n            <TOCSubsection Num=\"1\">\n              <SubsectionTitle>第一款</SubsectionTitle>\n              <TOCDivision Num=\"1\">\n                <DivisionTitle>第一目</DivisionTitle>\n                <ArticleRange>（第一条）</ArticleRange>\n                <InvalidTOCDivisionElement>不正な要素</InvalidTOCDivisionElement>\n              </TOCDivision>\n            </TOCSubsection>\n          </TOCSection>\n        </TOCChapter>\n      </TOCPart>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCDivision",
+          "InvalidTOCDivisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCDivision (Law>LawBody>TOC_1>TOCPart_0>TOCChapter_0>TOCSection_0_Child_1>TOCSubsection>TOCDivision_0>Element_2): { InvalidTOCDivisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCSubsection",
+        "renderFunctionName": "renderTOCSubsection",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCChapter Num=\"1\">\n        <ChapterTitle>第一章</ChapterTitle>\n        <TOCSection Num=\"1\">\n          <SectionTitle>第一節</SectionTitle>\n          <TOCSubsection Num=\"1\">\n            <SubsectionTitle>第一款</SubsectionTitle>\n            <ArticleRange>（第一条―第三条）</ArticleRange>\n            <InvalidTOCSubsectionElement>不正な要素</InvalidTOCSubsectionElement>\n          </TOCSubsection>\n        </TOCSection>\n      </TOCChapter>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCSubsection",
+          "InvalidTOCSubsectionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCSubsection (Law>LawBody>TOC_1>TOCChapter_0>TOCSection_0_Child_1>TOCSubsection>Element_2): { InvalidTOCSubsectionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TOCSupplProvision",
+        "renderFunctionName": "renderTOCSupplProvision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <TOC>\n      <TOCLabel>目次</TOCLabel>\n      <TOCSupplProvision>\n        <SupplProvisionLabel>附則</SupplProvisionLabel>\n        <InvalidTOCSupplProvisionElement>不正な要素</InvalidTOCSupplProvisionElement>\n      </TOCSupplProvision>\n    </TOC>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <SupplProvision>\n      <SupplProvisionLabel>附則</SupplProvisionLabel>\n      <Paragraph Num=\"1\">\n        <ParagraphNum/>\n        <ParagraphSentence><Sentence>この法律は、公布の日から施行する。</Sentence></ParagraphSentence>\n      </Paragraph>\n    </SupplProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TOCSupplProvision",
+          "InvalidTOCSupplProvisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TOCSupplProvision (Law>LawBody>TOC>TOCSupplProvision>Element_1): { InvalidTOCSupplProvisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "AmendProvision",
+        "renderFunctionName": "renderAmendProvision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次のように改正する。</Sentence></ParagraphSentence>\n          <AmendProvision>\n            <AmendProvisionSentence><Sentence>第一条を次のように改める。</Sentence></AmendProvisionSentence>\n            <InvalidAmendProvisionElement>不正な要素</InvalidAmendProvisionElement>\n          </AmendProvision>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] AmendProvision",
+          "InvalidAmendProvisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] AmendProvision (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>AmendProvision_0>Element_1): { InvalidAmendProvisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "NewProvision",
+        "renderFunctionName": "renderNewProvision",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次のように改正する。</Sentence></ParagraphSentence>\n          <AmendProvision>\n            <AmendProvisionSentence><Sentence>第二条を次のように改める。</Sentence></AmendProvisionSentence>\n            <NewProvision>\n              <Article Num=\"2\">\n                <ArticleTitle>第二条</ArticleTitle>\n                <Paragraph Num=\"1\">\n                  <ParagraphNum/>\n                  <ParagraphSentence><Sentence>新しい条文。</Sentence></ParagraphSentence>\n                </Paragraph>\n              </Article>\n              <InvalidNewProvisionElement>不正な要素</InvalidNewProvisionElement>\n            </NewProvision>\n          </AmendProvision>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] NewProvision",
+          "InvalidNewProvisionElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] NewProvision (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>AmendProvision_0>NewProvision_0>Element_1): { InvalidNewProvisionElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Class",
+        "renderFunctionName": "renderClass",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>次に掲げるもの。</Sentence></ItemSentence>\n            <Class Num=\"1\">\n              <ClassTitle>イ</ClassTitle>\n              <ClassSentence><Sentence>類の内容。</Sentence></ClassSentence>\n              <InvalidClassElement>不正な要素</InvalidClassElement>\n            </Class>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Class",
+          "InvalidClassElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Class (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Class_0>Element_2): { InvalidClassElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Remarks",
+        "renderFunctionName": "renderRemarks",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の表のとおり。</Sentence></ParagraphSentence>\n          <TableStruct>\n            <Table>\n              <TableRow>\n                <TableColumn>\n                  <Sentence>項目</Sentence>\n                </TableColumn>\n              </TableRow>\n            </Table>\n            <Remarks>\n              <RemarksLabel>備考</RemarksLabel>\n              <Sentence>備考の内容。</Sentence>\n              <InvalidRemarksElement>不正な要素</InvalidRemarksElement>\n            </Remarks>\n          </TableStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Remarks",
+          "InvalidRemarksElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Remarks (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>TableStruct_0>_Child_1>Remarks_0>Element_2): { InvalidRemarksElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "NoteStruct",
+        "renderFunctionName": "renderNoteStruct",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の表のとおり。</Sentence></ParagraphSentence>\n          <TableStruct>\n            <Table>\n              <TableRow>\n                <TableColumn>\n                  <Sentence>項目</Sentence>\n                  <NoteStruct>\n                    <NoteStructTitle>注</NoteStructTitle>\n                    <Note>注の内容</Note>\n                    <InvalidNoteStructElement>不正な要素</InvalidNoteStructElement>\n                  </NoteStruct>\n                </TableColumn>\n              </TableRow>\n            </Table>\n          </TableStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] NoteStruct",
+          "InvalidNoteStructElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] NoteStruct (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>TableStruct_0>_Child_0>Table>TableRow>TableColumn_0>NoteStruct>Element_2): { InvalidNoteStructElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Preamble",
+        "renderFunctionName": "renderPreamble",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <Preamble>\n      <Paragraph Num=\"1\">\n        <ParagraphNum/>\n        <ParagraphSentence><Sentence>前文の内容。</Sentence></ParagraphSentence>\n      </Paragraph>\n      <InvalidPreambleElement>不正な要素</InvalidPreambleElement>\n    </Preamble>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Preamble",
+          "InvalidPreambleElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Preamble (Law>LawBody>Preamble>Element_1): { InvalidPreambleElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Appdx",
+        "renderFunctionName": "renderAppdx",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <Appdx>\n      <ArithFormulaNum>算式第一</ArithFormulaNum>\n      <ArithFormula>x + y = z</ArithFormula>\n      <InvalidAppdxElement>不正な要素</InvalidAppdxElement>\n    </Appdx>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Appdx",
+          "InvalidAppdxElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Appdx (Law>LawBody_2>Appdx_0>Element_2): { InvalidAppdxElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "List",
+        "renderFunctionName": "renderList",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号。</Sentence></ItemSentence>\n            <List>\n              <ListSentence><Sentence>リスト項目。</Sentence></ListSentence>\n              <InvalidListElement>不正な要素</InvalidListElement>\n            </List>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] List",
+          "InvalidListElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] List (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Child_2>List_0>Element_1): { InvalidListElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "FormatStruct",
+        "renderFunctionName": "renderFormatStruct",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の各号に掲げる場合。</Sentence></ParagraphSentence>\n          <Item Num=\"1\">\n            <ItemTitle>一</ItemTitle>\n            <ItemSentence><Sentence>第一号。</Sentence></ItemSentence>\n            <FormatStruct>\n              <FormatStructTitle>書式第一</FormatStructTitle>\n              <Format><Sentence>書式内容。</Sentence></Format>\n              <InvalidFormatStructElement>不正な要素</InvalidFormatStructElement>\n            </FormatStruct>\n          </Item>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] FormatStruct",
+          "InvalidFormatStructElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] FormatStruct (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>Item_0>Child_2>FormatStruct_0>Element_2): { InvalidFormatStructElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "AppdxFig",
+        "renderFunctionName": "renderAppdxFig",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <AppdxFig Num=\"1\">\n      <AppdxFigTitle>別図第一</AppdxFigTitle>\n      <FigStruct>\n        <Fig src=\"fig001.pdf\"/>\n      </FigStruct>\n      <InvalidAppdxFigElement>不正な要素</InvalidAppdxFigElement>\n    </AppdxFig>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] AppdxFig",
+          "InvalidAppdxFigElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] AppdxFig (Law>LawBody_2>AppdxFig>Element_2): { InvalidAppdxFigElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "AppdxStyle",
+        "renderFunctionName": "renderAppdxStyle",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <AppdxStyle Num=\"1\">\n      <AppdxStyleTitle>別記様式第一</AppdxStyleTitle>\n      <StyleStruct>\n        <StyleStructTitle>様式第一</StyleStructTitle>\n        <Style><Sentence>様式内容。</Sentence></Style>\n      </StyleStruct>\n      <InvalidAppdxStyleElement>不正な要素</InvalidAppdxStyleElement>\n    </AppdxStyle>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] AppdxStyle",
+          "InvalidAppdxStyleElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] AppdxStyle (Law>LawBody_2>AppdxStyle>Element_2): { InvalidAppdxStyleElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "AppdxFormat",
+        "renderFunctionName": "renderAppdxFormat",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <AppdxFormat Num=\"1\">\n      <AppdxFormatTitle>別記書式第一</AppdxFormatTitle>\n      <FormatStruct>\n        <FormatStructTitle>書式第一</FormatStructTitle>\n        <Format><Sentence>書式内容。</Sentence></Format>\n      </FormatStruct>\n      <InvalidAppdxFormatElement>不正な要素</InvalidAppdxFormatElement>\n    </AppdxFormat>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] AppdxFormat",
+          "InvalidAppdxFormatElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] AppdxFormat (Law>LawBody_2>AppdxFormat>Element_2): { InvalidAppdxFormatElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "AppdxNote",
+        "renderFunctionName": "renderAppdxNote",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <AppdxNote Num=\"1\">\n      <AppdxNoteTitle>別記第一</AppdxNoteTitle>\n      <NoteStruct>\n        <Note>注の内容</Note>\n      </NoteStruct>\n      <InvalidAppdxNoteElement>不正な要素</InvalidAppdxNoteElement>\n    </AppdxNote>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] AppdxNote",
+          "InvalidAppdxNoteElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] AppdxNote (Law>LawBody_2>AppdxNote_0>Element_2): { InvalidAppdxNoteElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "EnactStatement",
+        "renderFunctionName": "renderEnactStatement",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <EnactStatement>\n      <Sentence>公布の日から施行する。</Sentence>\n      <InvalidEnactStatementElement>不正な要素</InvalidEnactStatementElement>\n    </EnactStatement>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] EnactStatement",
+          "InvalidEnactStatementElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] EnactStatement (Law>LawBody>EnactStatement_0>Element_0): { Sentence }",
+        "[未処理フィールド検出] EnactStatement (Law>LawBody>EnactStatement_0>Element_1): { InvalidEnactStatementElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "Table",
+        "renderFunctionName": "renderTable",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の表のとおり。</Sentence></ParagraphSentence>\n          <TableStruct>\n            <Table>\n              <TableRow>\n                <TableColumn><Sentence>項目</Sentence></TableColumn>\n              </TableRow>\n              <InvalidTableElement>不正な要素</InvalidTableElement>\n            </Table>\n          </TableStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] Table",
+          "InvalidTableElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] Table (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>TableStruct_0>_Child_0>Table>Element_1): { InvalidTableElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "TableColumn",
+        "renderFunctionName": "renderTableColumn",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>次の表のとおり。</Sentence></ParagraphSentence>\n          <TableStruct>\n            <Table>\n              <TableRow>\n                <TableColumn>\n                  <Sentence>項目</Sentence>\n                  <InvalidTableColumnElement>不正な要素</InvalidTableColumnElement>\n                </TableColumn>\n              </TableRow>\n            </Table>\n          </TableStruct>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] TableColumn",
+          "InvalidTableColumnElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] TableColumn (Law>LawBody>MainProvision_0>Article_0>Paragraph_0_Child_2>TableStruct_0>_Child_0>Table>TableRow>TableColumn_0>Element_1): { InvalidTableColumnElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "SupplProvisionAppdxTable",
+        "renderFunctionName": "renderSupplProvisionAppdxTable",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <SupplProvision>\n      <SupplProvisionLabel>附則</SupplProvisionLabel>\n      <Paragraph Num=\"1\">\n        <ParagraphNum/>\n        <ParagraphSentence><Sentence>附則。</Sentence></ParagraphSentence>\n      </Paragraph>\n      <SupplProvisionAppdxTable Num=\"1\">\n        <SupplProvisionAppdxTableTitle>附則別表第一</SupplProvisionAppdxTableTitle>\n        <TableStruct>\n          <Table>\n            <TableRow>\n              <TableColumn><Sentence>項目</Sentence></TableColumn>\n            </TableRow>\n          </Table>\n        </TableStruct>\n        <InvalidSupplProvisionAppdxTableElement>不正な要素</InvalidSupplProvisionAppdxTableElement>\n      </SupplProvisionAppdxTable>\n    </SupplProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] SupplProvisionAppdxTable",
+          "InvalidSupplProvisionAppdxTableElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] SupplProvisionAppdxTable (Law>LawBody>SupplProvision_2_Child_2>SupplProvisionAppdxTable_0>Element_2): { InvalidSupplProvisionAppdxTableElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "SupplProvisionAppdxStyle",
+        "renderFunctionName": "renderSupplProvisionAppdxStyle",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <SupplProvision>\n      <SupplProvisionLabel>附則</SupplProvisionLabel>\n      <Paragraph Num=\"1\">\n        <ParagraphNum/>\n        <ParagraphSentence><Sentence>附則。</Sentence></ParagraphSentence>\n      </Paragraph>\n      <SupplProvisionAppdxStyle Num=\"1\">\n        <SupplProvisionAppdxStyleTitle>附則別記様式第一</SupplProvisionAppdxStyleTitle>\n        <StyleStruct>\n          <StyleStructTitle>様式第一</StyleStructTitle>\n          <Style><Sentence>様式内容。</Sentence></Style>\n        </StyleStruct>\n        <InvalidSupplProvisionAppdxStyleElement>不正な要素</InvalidSupplProvisionAppdxStyleElement>\n      </SupplProvisionAppdxStyle>\n    </SupplProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] SupplProvisionAppdxStyle",
+          "InvalidSupplProvisionAppdxStyleElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] SupplProvisionAppdxStyle (Law>LawBody>SupplProvision_2_Child_2>SupplProvisionAppdxStyle_0>Element_2): { InvalidSupplProvisionAppdxStyleElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    },
+    {
+      "testCase": {
+        "elementName": "SupplProvisionAppdx",
+        "renderFunctionName": "renderSupplProvisionAppdx",
+        "patternName": "InvalidElement",
+        "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Law Era=\"Heisei\" Year=\"25\" Num=\"36\" LawType=\"Act\" Lang=\"ja\">\n  <LawNum>平成二十五年法律第三十六号</LawNum>\n  <LawBody>\n    <LawTitle>テスト法</LawTitle>\n    <MainProvision>\n      <Article Num=\"1\">\n        <ArticleTitle>第一条</ArticleTitle>\n        <Paragraph Num=\"1\">\n          <ParagraphNum/>\n          <ParagraphSentence><Sentence>テスト条文。</Sentence></ParagraphSentence>\n        </Paragraph>\n      </Article>\n    </MainProvision>\n    <SupplProvision>\n      <SupplProvisionLabel>附則</SupplProvisionLabel>\n      <Paragraph Num=\"1\">\n        <ParagraphNum/>\n        <ParagraphSentence><Sentence>附則。</Sentence></ParagraphSentence>\n      </Paragraph>\n      <SupplProvisionAppdx>\n        <ArithFormulaNum>附則算式第一</ArithFormulaNum>\n        <ArithFormula>x + y = z</ArithFormula>\n        <InvalidSupplProvisionAppdxElement>不正な要素</InvalidSupplProvisionAppdxElement>\n      </SupplProvisionAppdx>\n    </SupplProvision>\n  </LawBody>\n</Law>",
+        "expectedWarnings": [
+          "[未処理フィールド検出] SupplProvisionAppdx",
+          "InvalidSupplProvisionAppdxElement"
+        ]
+      },
+      "passed": true,
+      "capturedWarnings": [
+        "[未処理フィールド検出] SupplProvisionAppdx (Law>LawBody>SupplProvision_2_Child_2>SupplProvisionAppdx_0>Element_2): { InvalidSupplProvisionAppdxElement }"
+      ],
+      "missingWarnings": [],
+      "unexpectedWarnings": []
+    }
+  ]
+}

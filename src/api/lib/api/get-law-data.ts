@@ -48,7 +48,6 @@ import { getEraLabel, getTypeByFind } from "../law/law";
  */
 export const getLawComponentData = (law: LawData) => {
   try {
-    console.log(law);
     // 法令番号
     const lawNum =
       getTypeByFind<LawNumType>(law.Law, "LawNum") ??

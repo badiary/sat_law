@@ -4,7 +4,7 @@
  * 未処理フィールドを検出してレポートを出力する
  */
 
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import { readdirSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
 import { getLawComponentData } from './src/api/lib/api/get-law-data';
 import { renderLaw } from './src/api/typescript-renderer';
@@ -33,8 +33,12 @@ async function batchRenderTest() {
   console.log('=== XMLバッチレンダリングテスト ===\n');
   console.log(`テストディレクトリ: ${ALL_XML_DIR}`);
 
-  // all_xmlディレクトリのサブディレクトリを取得
-  const dirs = readdirSync(ALL_XML_DIR);
+  // all_xmlディレクトリのサブディレクトリを取得（ディレクトリのみ、ファイルは除外）
+  const allEntries = readdirSync(ALL_XML_DIR);
+  const dirs = allEntries.filter(entry => {
+    const fullPath = join(ALL_XML_DIR, entry);
+    return statSync(fullPath).isDirectory();
+  });
   console.log(`総XMLディレクトリ数: ${dirs.length}`);
 
   // サンプリング
@@ -123,7 +127,7 @@ async function batchRenderTest() {
       report.details.push({
         xmlPath,
         warnings: [...currentWarnings],
-        error: error.message
+        error: error.message + '\n' + error.stack
       });
       // エラーは継続（すべてのファイルをテスト）
     }

@@ -9,7 +9,8 @@
     "test:render": "tsx test-render.ts",
     "test:render:batch": "tsx test-batch-render.ts",
     "test:render:batch:sample": "tsx test-batch-render.ts 100",
-    "test:field-tracker": "tsx test-field-tracker.ts"
+    "test:field-tracker": "tsx test-field-tracker.ts",
+    "test:invalid-xml": "tsx test-invalid-xml-runner.ts"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
