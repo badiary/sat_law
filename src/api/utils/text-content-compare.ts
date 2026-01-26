@@ -9,6 +9,9 @@
  * XMLオブジェクトから全テキストコンテンツを抽出
  * fast-xml-parserでパースしたXMLから、全ての'_'フィールド（テキストノード）を再帰的に収集
  *
+ * 注: Extract="true" 属性（「抄」を意味する）や AmendLawNum 属性などは
+ * レンダリング時にHTMLに含まれるため、属性値もテキストとして収集する
+ *
  * @param obj - XMLパース結果のオブジェクトまたは配列
  * @returns 抽出されたテキストの連結文字列
  */
@@ -16,20 +19,54 @@ export function extractTextFromXML(obj: any): string {
   let text = '';
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => {
+    // preserveOrder:true 形式の場合、配列を順に処理
+    for (let i = 0; i < obj.length; i++) {
+      const item = obj[i];
       text += extractTextFromXML(item);
-    });
+    }
   } else if (typeof obj === 'object' && obj !== null) {
     // '_' フィールド（テキストノード）を収集
     if ('_' in obj && obj._ !== undefined && obj._ !== null) {
       text += String(obj._);
     }
-    // 再帰的に他のフィールドを処理（':@'属性は除外）
-    Object.keys(obj).forEach(key => {
-      if (key !== '_' && key !== ':@') {
-        text += extractTextFromXML(obj[key]);
+
+    // SupplProvision要素の場合、HTMLレンダリング順序に合わせて処理
+    // 順序: SupplProvisionLabel → AmendLawNum → Extract → その他の要素
+    if (obj.SupplProvision !== undefined && Array.isArray(obj.SupplProvision)) {
+      // 1. SupplProvisionLabelを先に処理
+      obj.SupplProvision.forEach((item: any) => {
+        if (item.SupplProvisionLabel) {
+          text += extractTextFromXML(item.SupplProvisionLabel);
+        }
+      });
+
+      // 2. 属性由来のテキストを追加（AmendLawNum → Extract の順）
+      const attrs = obj[':@'];
+      if (attrs) {
+        // AmendLawNum属性がある場合は追加（改正法令番号）
+        if (attrs.AmendLawNum) {
+          text += `（${attrs.AmendLawNum}）`;
+        }
+        // Extract属性がtrueの場合は「抄」を追加
+        if (attrs.Extract === 'true') {
+          text += '抄';
+        }
       }
-    });
+
+      // 3. その他の要素を処理（SupplProvisionLabel以外）
+      obj.SupplProvision.forEach((item: any) => {
+        if (!item.SupplProvisionLabel) {
+          text += extractTextFromXML(item);
+        }
+      });
+    } else {
+      // SupplProvision以外のフィールドを再帰的に処理（':@'属性は除外）
+      Object.keys(obj).forEach(key => {
+        if (key !== '_' && key !== ':@') {
+          text += extractTextFromXML(obj[key]);
+        }
+      });
+    }
   }
 
   return text;

@@ -2176,7 +2176,7 @@ const renderSupplProvision = (
   }
 
   // Extract属性（抄）
-  if (supplProvision[':@']?.Extract) {
+  if (supplProvision[':@']?.Extract === 'true') {
     labelText += '　抄';
   }
 
