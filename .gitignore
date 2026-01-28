@@ -80,7 +80,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# dist (GitHub Pages公開用にコミット対象とする)
 
 # Gatsby files
 .cache/
