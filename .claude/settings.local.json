@@ -32,7 +32,12 @@
       "Bash(do npm run test:incremental)",
       "Bash(done)",
       "Bash(break)",
-      "Bash(while ps aux)"
+      "Bash(while ps aux)",
+      "Bash(do echo \"=== Testing: $file ===\")",
+      "Bash(git reset:*)",
+      "Bash(do npx tsx test-incremental.ts)",
+      "Bash(shuf:*)",
+      "Bash(do)"
     ],
     "deny": [],
     "ask": []

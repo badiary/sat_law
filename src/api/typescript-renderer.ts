@@ -209,10 +209,31 @@ const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string
       const style = getLineStyle(dt.Style);
       return tag('span', { style }, renderTextNode(dt.Line, treeElement));
     } else if ('Ruby' in dt) {
-      // ルビ
-      const text = getType<TextType>(dt.Ruby, '_')[0]._;
-      const rt = getType<RtType>(dt.Ruby, 'Rt')[0].Rt[0]._;
-      return `<ruby>${text}<rt>${rt}</rt></ruby>`;
+      // ルビ - 複数のテキスト+Rtペアに対応
+      // Ruby配列: [{_: "は"}, {Rt: [{_: "ヽ"}]}, {_: "い"}, {Rt: [{_: "ヽ"}]}] のような構造
+      // 各テキスト+Rtペアごとに独立した<ruby>タグを生成
+      let result = '';
+      let currentText = '';
+
+      for (let i = 0; i < dt.Ruby.length; i++) {
+        const item = dt.Ruby[i];
+        if ('_' in item) {
+          // テキストノード - 保持
+          currentText = item._;
+        } else if ('Rt' in item && currentText) {
+          // ルビ要素 - 直前のテキストとペアで<ruby>タグを生成
+          const rtText = item.Rt[0]._;
+          result += `<ruby>${currentText}<rt>${rtText}</rt></ruby>`;
+          currentText = ''; // リセット
+        }
+      }
+
+      // テキストのみ残っている場合（Rtがない場合）はそのまま追加
+      if (currentText) {
+        result += currentText;
+      }
+
+      return result;
     } else if ('Sup' in dt) {
       // 上付き文字
       const text = getType<TextType>(dt.Sup, '_')[0]._;
@@ -321,6 +342,8 @@ const renderLawTypeList = (
       return renderAppdxFormat(dt, addTreeElement);
     } else if ('TOC' in dt) {
       return renderTOC(dt, addTreeElement);
+    } else if ('TOCSection' in dt) {
+      return renderTOCSection([dt], addTreeElement);
     } else if ('Table' in dt) {
       // QuoteStruct内に直接Tableが含まれる場合の処理
       // dtはすでに{ Table: [...] }の形式
@@ -1204,27 +1227,28 @@ const renderSubitem2 = (
     }
     content += renderSubitem2Sentence(Subitem2Sentence, addTreeElement);
 
+    const mainContent = tag('div', { class: `_div_Subitem2Sentence ${paddingClass} indent-1` }, content);
+    const subitem3Content = renderSubitem3(Subitem3, addTreeElement);
+
     // React版と同様に、dt.Subitem2配列からTableStruct, FigStruct, StyleStruct, Listを処理
-    // これらの要素は_div_Subitem2Sentenceの中に出力される
+    // これらの要素はSubitem3の後に出力される
+    let additionalContent = '';
     dt.Subitem2.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem2_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
-        content += renderTableStruct([dt2], addTreeElement2);
+        additionalContent += renderTableStruct([dt2], addTreeElement2);
         deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
-        content += renderFigStruct([dt2], addTreeElement2);
+        additionalContent += renderFigStruct([dt2], addTreeElement2);
         deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
-        content += renderStyleStruct([dt2], addTreeElement2);
+        additionalContent += renderStyleStruct([dt2], addTreeElement2);
         deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
-        content += renderList([dt2], addTreeElement2);
+        additionalContent += renderList([dt2], addTreeElement2);
         deleteField(dt2, 'List');
       }
     });
-
-    const mainContent = tag('div', { class: `_div_Subitem2Sentence ${paddingClass} indent-1` }, content);
-    const subitem3Content = renderSubitem3(Subitem3, addTreeElement);
 
     // 処理済みフィールドを削除（使用後、未処理フィールドチェック直前）
     deleteFieldFromArray(dt.Subitem2, 'Subitem2Title');
@@ -1236,7 +1260,7 @@ const renderSubitem2 = (
       checkUnprocessedFields(sub2, 'Subitem2', [...addTreeElement, `Element_${sub2Idx}`]);
     });
 
-    return mainContent + subitem3Content;
+    return mainContent + subitem3Content + additionalContent;
   }).join('');
 };
 
@@ -1265,27 +1289,28 @@ const renderSubitem1 = (
     }
     content += renderSubitem1Sentence(Subitem1Sentence, addTreeElement);
 
+    const mainContent = tag('div', { class: `_div_Subitem1Sentence ${paddingClass} indent-1` }, content);
+    const subitem2Content = renderSubitem2(Subitem2, addTreeElement);
+
     // React版と同様に、dt.Subitem1配列からTableStruct, FigStruct, StyleStruct, Listを処理
-    // これらの要素は_div_Subitem1Sentenceの中に出力される
+    // これらの要素はSubitem2の後に出力される
+    let additionalContent = '';
     dt.Subitem1.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem1_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
-        content += renderTableStruct([dt2], addTreeElement2);
+        additionalContent += renderTableStruct([dt2], addTreeElement2);
         deleteField(dt2, 'TableStruct');
       } else if ('FigStruct' in dt2) {
-        content += renderFigStruct([dt2], addTreeElement2);
+        additionalContent += renderFigStruct([dt2], addTreeElement2);
         deleteField(dt2, 'FigStruct');
       } else if ('StyleStruct' in dt2) {
-        content += renderStyleStruct([dt2], addTreeElement2);
+        additionalContent += renderStyleStruct([dt2], addTreeElement2);
         deleteField(dt2, 'StyleStruct');
       } else if ('List' in dt2) {
-        content += renderList([dt2], addTreeElement2);
+        additionalContent += renderList([dt2], addTreeElement2);
         deleteField(dt2, 'List');
       }
     });
-
-    const mainContent = tag('div', { class: `_div_Subitem1Sentence ${paddingClass} indent-1` }, content);
-    const subitem2Content = renderSubitem2(Subitem2, addTreeElement);
 
     // 処理済みフィールドを削除（使用後、未処理フィールドチェック直前）
     deleteFieldFromArray(dt.Subitem1, 'Subitem1Title');
@@ -1297,7 +1322,7 @@ const renderSubitem1 = (
       checkUnprocessedFields(sub1, 'Subitem1', [...addTreeElement, `Element_${sub1Idx}`]);
     });
 
-    return mainContent + subitem2Content;
+    return mainContent + subitem2Content + additionalContent;
   }).join('');
 };
 
@@ -2050,20 +2075,35 @@ const renderArticle = (
     // 全角スペース
     articleTitleContent += '　';
 
-    // 第1項（項番号なし）
+    // 第1項（項番号なし）- Num属性が1または未定義の場合のみ
+    // Num > 1の場合は第2項以降として扱う
     if (Paragraph.length > 0) {
-      articleTitleContent += renderParagraph([Paragraph[0]], addTreeElement, 0);
-    }
+      const firstParagraphNum = Paragraph[0][':@']?.Num;
+      const numValue = typeof firstParagraphNum === 'string' ? parseInt(firstParagraphNum) : firstParagraphNum;
+      const isFirstParagraph = !firstParagraphNum || numValue === 1;
 
-    content += tag('div', { class: '_div_ArticleTitle pl-4 indent-1' }, articleTitleContent);
+      if (isFirstParagraph) {
+        articleTitleContent += renderParagraph([Paragraph[0]], addTreeElement, 0);
+      }
 
-    // 第2項以降
-    if (Paragraph.length > 1) {
-      content += renderParagraph(
-        Paragraph.filter((dt, i) => i > 0),
-        [...treeElement, `Article_${index}_Second`],
-        1
-      );
+      content += tag('div', { class: '_div_ArticleTitle pl-4 indent-1' }, articleTitleContent);
+
+      // 第2項以降 - 最初のParagraphがNum > 1の場合は全て含める
+      const secondParagraphs = isFirstParagraph
+        ? Paragraph.filter((_dt, i) => i > 0)
+        : Paragraph;
+
+      if (secondParagraphs.length > 0) {
+        // isFirstParagraph = falseの場合、parentParagraphIndexを1にして
+        // renderParagraph内の「Article の第1項」条件（index + parentParagraphIndex === 0）を回避
+        content += renderParagraph(
+          secondParagraphs,
+          [...treeElement, `Article_${index}_Second`],
+          isFirstParagraph ? 1 : 1
+        );
+      }
+    } else {
+      content += tag('div', { class: '_div_ArticleTitle pl-4 indent-1' }, articleTitleContent);
     }
 
     // SupplNote（補足）
@@ -2176,7 +2216,8 @@ const renderSupplProvision = (
   }
 
   // Extract属性（抄）
-  if (supplProvision[':@']?.Extract === 'true') {
+  const extractValue: boolean | string | undefined = supplProvision[':@']?.Extract;
+  if (extractValue === true || extractValue === 'true') {
     labelText += '　抄';
   }
 
@@ -2196,13 +2237,10 @@ const renderSupplProvision = (
   supplProvision.SupplProvision.forEach((dt: any) => {
     if ('SupplProvisionAppdxTable' in dt) {
       content += renderSupplProvisionAppdxTable([dt], addTreeElement(2));
-      deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdxTable');
     } else if ('SupplProvisionAppdxStyle' in dt) {
       content += renderSupplProvisionAppdxStyle([dt], addTreeElement(2));
-      deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdxStyle');
     } else if ('SupplProvisionAppdx' in dt) {
       content += renderSupplProvisionAppdx([dt], addTreeElement(2));
-      deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdx');
     }
   });
 
@@ -2211,6 +2249,9 @@ const renderSupplProvision = (
   deleteFieldFromArray(supplProvision.SupplProvision, 'Paragraph');
   deleteFieldFromArray(supplProvision.SupplProvision, 'Article');
   deleteFieldFromArray(supplProvision.SupplProvision, 'Chapter');
+  deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdxTable');
+  deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdxStyle');
+  deleteFieldFromArray(supplProvision.SupplProvision, 'SupplProvisionAppdx');
 
   // 未処理フィールドチェック
   supplProvision.SupplProvision.forEach((sp, spIdx) => {
@@ -3246,7 +3287,7 @@ const renderStyleStruct = (
     // Style と Remarks（LawAny経由で処理）
     dt.StyleStruct.forEach((dt2: any, index2: number) => {
       if ('Style' in dt2) {
-        // Style内の要素を処理（Sentence, Fig, List, TableStruct, FigStruct, Item等）
+        // Style内の要素を処理（Sentence, Fig, List, Table, TableStruct, FigStruct, Item等）
         Style.Style.forEach((styleItem: any) => {
           if ('Sentence' in styleItem) {
             content += renderSentence([styleItem], addTreeElement(index2), false);
@@ -3257,6 +3298,10 @@ const renderStyleStruct = (
           } else if ('List' in styleItem) {
             content += renderList([styleItem], addTreeElement(index2));
             deleteField(styleItem, 'List');
+          } else if ('Table' in styleItem) {
+            // 直接Table要素がある場合（TableStructなし）
+            content += renderTable(styleItem, addTreeElement(index2));
+            deleteField(styleItem, 'Table');
           } else if ('TableStruct' in styleItem) {
             content += renderTableStruct([styleItem], addTreeElement(index2));
             deleteField(styleItem, 'TableStruct');
@@ -3429,12 +3474,13 @@ const renderFig = (
         title: 'PDFファイルを開く'
       }, 'PDFを開く');
     } else {
-      // law_revision_idが見つからない場合は空のspan
-      return tag('span', {
-        class: 'text-gray-400',
-        'aria-label': 'PDFファイル',
-        title: 'PDFファイル'
-      }, '');
+      // law_revision_idが見つからない場合は「（略）」を表示
+      // Styleの子要素かどうかで分岐
+      if (treeElement.some(dt => /^Style(Struct)?_.*/.test(dt))) {
+        return tag('div', { class: '_div_Fig_noPdf pl-8' }, '（略）');
+      } else {
+        return tag('span', { class: '_span_Fig_noImg inline-block pl-4' }, '（略）');
+      }
     }
   } else if (src === '') {
     // ブランク: Styleの子要素かどうかで分岐
@@ -4034,7 +4080,31 @@ const renderNoteStruct = (
         else if ('Item' in noteItem) {
           content += renderItem([noteItem], noteItemTreeElement, false);
         }
-        // 他の要素が含まれる可能性もあるが、現時点ではParagraphとItemのみ対応
+        // Sentenceの処理
+        else if ('Sentence' in noteItem) {
+          const isPrecedingSentence = noteIdx > 0 &&
+            noteArray.slice(0, noteIdx).some((item: any) => 'Sentence' in item);
+          content += renderSentence([noteItem], noteItemTreeElement, isPrecedingSentence);
+        }
+        // ArithFormulaの処理
+        // ArithFormula内には複数のSentence要素が含まれる
+        else if ('ArithFormula' in noteItem) {
+          const arithFormulaElement = noteItem.ArithFormula;
+          arithFormulaElement.forEach((arithItem: any, arithIdx: number) => {
+            const arithItemTreeElement = [...noteItemTreeElement, `ArithFormula_${arithIdx}`];
+            if ('Sentence' in arithItem) {
+              // ArithFormula内のSentence要素を処理
+              // isPrecedingSentenceは常にtrue（前のSentence要素と連続している）
+              const isPrecedingSentence = arithIdx > 0;
+              content += renderSentence([arithItem], arithItemTreeElement, isPrecedingSentence);
+            }
+          });
+        }
+        // Figの処理
+        else if ('Fig' in noteItem) {
+          content += renderFig(noteItem.Fig, noteItemTreeElement);
+        }
+        // 他の要素が含まれる可能性もある
       });
 
       deleteField(dt, 'Note');
@@ -4123,19 +4193,19 @@ const renderAppdxNote = (
       content += tag('div', { class: '_div_AppdxNoteTitle' }, titleContent);
     }
 
-    // NoteStruct, FigStruct, TableStruct を処理
+    // FigStruct, NoteStruct, TableStruct を処理（XML順序通り）
     dt.AppdxNote.forEach((dt2, index2) => {
       const childTreeElement = [
         ...addTreeElement,
         `_Child_${index2}`
       ];
 
-      if ('NoteStruct' in dt2) {
-        content += renderNoteStruct(dt2, childTreeElement);
-        deleteField(dt2, 'NoteStruct');
-      } else if ('FigStruct' in dt2) {
+      if ('FigStruct' in dt2) {
         content += renderFigStruct([dt2], childTreeElement);
         deleteField(dt2, 'FigStruct');
+      } else if ('NoteStruct' in dt2) {
+        content += renderNoteStruct(dt2, childTreeElement);
+        deleteField(dt2, 'NoteStruct');
       } else if ('TableStruct' in dt2) {
         content += renderTableStruct([dt2], childTreeElement);
         deleteField(dt2, 'TableStruct');
