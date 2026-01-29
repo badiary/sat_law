@@ -1,9 +1,8 @@
 ﻿/**
- * TypeScriptでXMLからHTMLを生成する（Reactなし）
+ * TypeScriptでXMLからHTMLを生成する
  *
  * 目的:
- * - 既存のReactコンポーネントと同じHTMLを純粋なTypeScriptで生成
- * - Reactコンポーネントのロジックを忠実に再現
+ * - 法令XMLデータを純粋なTypeScriptでHTMLに変換
  */
 
 import { getType, getTypeByFind, getParentElement } from './lib/law/law';
@@ -248,7 +247,7 @@ const renderTextNode = (val: Array<TextNodeType>, treeElement: string[]): string
       const quoteStructList = Array.isArray(dt.QuoteStruct) ? dt.QuoteStruct : [dt.QuoteStruct];
       return renderLawTypeList(quoteStructList, treeElement, 'QuoteStruct');
     } else if ('ArithFormula' in dt) {
-      // 算術式 - React側と同じく<div class="pl-4">でラップ
+      // 算術式 - <div class="pl-4">でラップ
       // Sub/Supタグを正しく<sub>/<sup>として出力（e-gov法令API仕様に準拠）
       const arithContent = dt.ArithFormula.map((item: any) => {
         if ('Sub' in item) {
@@ -371,7 +370,7 @@ const renderSentence = (
     if (getParentElement(treeElement) === 'Remarks') {
       return tag('div', {}, textContent + ' ');
     } else {
-      // TableColumn, ArithFormula の場合は改行が入る可能性あり（Reactコードでは空文字列出力）
+      // TableColumn, ArithFormula の場合は改行が入る可能性あり（空文字列出力）
       return textContent;
     }
   }).join('');
@@ -1109,7 +1108,7 @@ const renderSubitem4 = (
     }
     content += renderSubitem4Sentence(Subitem4Sentence, addTreeElement);
 
-    // React版と同様に、dt.Subitem4配列からTableStruct, FigStruct, StyleStruct, Listを処理
+    // dt.Subitem4配列からTableStruct, FigStruct, StyleStruct, Listを処理
     dt.Subitem4.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem4_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
@@ -1168,7 +1167,7 @@ const renderSubitem3 = (
     }
     content += renderSubitem3Sentence(Subitem3Sentence, addTreeElement);
 
-    // React版と同様に、dt.Subitem3配列からTableStruct, FigStruct, StyleStruct, Listを処理
+    // dt.Subitem3配列からTableStruct, FigStruct, StyleStruct, Listを処理
     dt.Subitem3.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Subitem3_${index}`, `Child_${index2}`];
       if ('TableStruct' in dt2) {
@@ -1230,7 +1229,7 @@ const renderSubitem2 = (
     const mainContent = tag('div', { class: `_div_Subitem2Sentence ${paddingClass} indent-1` }, content);
     const subitem3Content = renderSubitem3(Subitem3, addTreeElement);
 
-    // React版と同様に、dt.Subitem2配列からTableStruct, FigStruct, StyleStruct, Listを処理
+    // dt.Subitem2配列からTableStruct, FigStruct, StyleStruct, Listを処理
     // これらの要素はSubitem3の後に出力される
     let additionalContent = '';
     dt.Subitem2.forEach((dt2: any, index2: number) => {
@@ -1292,7 +1291,7 @@ const renderSubitem1 = (
     const mainContent = tag('div', { class: `_div_Subitem1Sentence ${paddingClass} indent-1` }, content);
     const subitem2Content = renderSubitem2(Subitem2, addTreeElement);
 
-    // React版と同様に、dt.Subitem1配列からTableStruct, FigStruct, StyleStruct, Listを処理
+    // dt.Subitem1配列からTableStruct, FigStruct, StyleStruct, Listを処理
     // これらの要素はSubitem2の後に出力される
     let additionalContent = '';
     dt.Subitem1.forEach((dt2: any, index2: number) => {
@@ -1444,7 +1443,7 @@ const renderItem = (
     const classHtml = renderClass(Class, addTreeElement);
 
     // 子要素（List, TableStruct, FigStruct, StyleStruct, FormatStruct）のレンダリング
-    // React側と同様に dt.Item 配列をループして処理
+    // dt.Item 配列をループして処理
     let childrenHtml = '';
     dt.Item.forEach((dt2: any, index2: number) => {
       const addTreeElement2 = [...treeElement, `Item_${index}`, `Child_${index2}`];
@@ -1727,7 +1726,7 @@ const renderParagraph = (
     const sentenceHtml = tag('div', { class: sentenceClass }, sentenceContent);
 
     // 子要素（Item, TableStruct, FigStruct, List等）のレンダリング
-    // React版と同じく、dt.Paragraph配列を順番に処理することで正しい順序を維持
+    // dt.Paragraph配列を順番に処理することで正しい順序を維持
     let childrenHtml = '';
     dt.Paragraph.forEach((dt2: any, index2: number) => {
       const addTreeElementChild = [
@@ -2233,7 +2232,7 @@ const renderSupplProvision = (
   content += renderArticle(Article, addTreeElement(1));
 
   // SupplProvisionAppdxTable、SupplProvisionAppdxStyle、SupplProvisionAppdx等の処理
-  // React側と同じく、XML内での出現順序を保持する必要がある
+  // XML内での出現順序を保持する必要がある
   supplProvision.SupplProvision.forEach((dt: any) => {
     if ('SupplProvisionAppdxTable' in dt) {
       content += renderSupplProvisionAppdxTable([dt], addTreeElement(2));
@@ -2418,7 +2417,7 @@ const renderSupplProvisionAppdx = (
     }
 
     // ArithFormula (getTextNode相当)
-    // React版では ArithFormula は <div class="pl-4"> でラップされる
+    // ArithFormula は <div class="pl-4"> でラップされる
     if (ArithFormula.length > 0) {
       ArithFormula.forEach((arithFormula) => {
         const arithFormulaContent = renderLawTypeList(
@@ -2776,7 +2775,7 @@ const renderTOC = (
 
   let content = '';
 
-  // TOCLabel（目次ラベル） - React側と同じく、存在しない場合でも空divを出力
+  // TOCLabel（目次ラベル） - 存在しない場合でも空divを出力
   content += tag('div', { class: '_div_TOCLabel' },
     TOCLabel !== undefined ? renderTextNode(TOCLabel.TOCLabel, addTreeElement()) : ''
   );
@@ -3626,7 +3625,7 @@ const renderAppdx = (
     }
 
     // ArithFormula (getTextNode相当)
-    // React版では ArithFormula は <div class="pl-4"> でラップされる
+    // ArithFormula は <div class="pl-4"> でラップされる
     if (ArithFormula.length > 0) {
       ArithFormula.forEach((arithFormula) => {
         const arithFormulaContent = renderLawTypeList(
@@ -3677,7 +3676,7 @@ const renderRemarks = (
       : '';
     content += tag('div', { class: '_div_RemarksLabel' }, remarksLabelText);
 
-    // Sentenceをdivでラップ（React仕様: Remarks内のSentenceは末尾にスペースを追加）
+    // Sentenceをdivでラップ（Remarks内のSentenceは末尾にスペースを追加）
     Sentence.forEach((sentence) => {
       content += tag('div', {}, renderTextNode(sentence.Sentence, addTreeElement) + ' ');
     });

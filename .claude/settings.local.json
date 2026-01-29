@@ -37,7 +37,12 @@
       "Bash(git reset:*)",
       "Bash(do npx tsx test-incremental.ts)",
       "Bash(shuf:*)",
-      "Bash(do)"
+      "Bash(do)",
+      "Bash(if [ -d \"public\" ])",
+      "Bash(then ls -la public/)",
+      "Bash(else echo \"publicフォルダは存在しません\")",
+      "Bash(fi)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []

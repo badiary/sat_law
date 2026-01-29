@@ -1,23 +1,430 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>統合法令閲覧システム</title>
-  <link rel="shortcut icon" type="image/x-icon"
-    href="favicon.ico" />
+  <title>法令検索 - 統合法令閲覧システム</title>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
   <link rel="stylesheet" href="./css/style.css" />
-  <script defer src="./dist/api.js"></script>
-  <script defer src="./dist/viewer.js"></script>
-  <script defer src="./js/breadcrumb-navigation.js"></script>
+  <style>
+    /* 検索画面専用スタイル */
+    body {
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .search-container {
+      background-color: #fff;
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 800px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-container h1 {
+      margin: 0 0 1.5rem 0;
+      font-size: 1.75rem;
+      color: #333;
+      text-align: center;
+    }
+
+    #search-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #search-query {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #search-query:focus {
+      border-color: #0066cc;
+    }
+
+    #search-button {
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    #search-button:hover {
+      background-color: #0052a3;
+    }
+
+    #search-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 詳細検索トグルボタン */
+    .toggle-advanced-btn {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      background-color: #f0f0f0;
+      color: #333;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+    }
+
+    .toggle-advanced-btn:hover {
+      background-color: #e0e0e0;
+    }
+
+    /* 詳細検索パネル */
+    .advanced-search-panel {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .search-option-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .option-label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    #category-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .search-option-group small {
+      display: block;
+      color: #666;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
+
+    .date-range-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-range-group input[type="date"] {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .date-separator {
+      color: #666;
+    }
+
+    .search-actions {
+      margin-top: 1.5rem;
+      text-align: right;
+    }
+
+    .clear-button {
+      padding: 0.5rem 1.5rem;
+      font-size: 0.9rem;
+      background-color: #fff;
+      color: #666;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .clear-button:hover {
+      background-color: #f5f5f5;
+      border-color: #999;
+      color: #333;
+    }
+
+    /* 適用中フィルター表示 */
+    #applied-filters {
+      padding: 0.75rem 1rem;
+      background-color: #e3f2fd;
+      border-left: 3px solid #0066cc;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      display: none;
+    }
+
+    #applied-filters:not(:empty) {
+      display: block;
+    }
+
+    #applied-filters strong {
+      color: #0066cc;
+    }
+
+    /* 法令種別バッジ */
+    .law-type-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+      margin-right: 0.5rem;
+    }
+
+    .law-type-Constitution {
+      background-color: #8e24aa;
+    }
+
+    .law-type-Act {
+      background-color: #0066cc;
+    }
+
+    .law-type-CabinetOrder {
+      background-color: #ff6600;
+    }
+
+    .law-type-ImperialOrder {
+      background-color: #c62828;
+    }
+
+    .law-type-MinisterialOrdinance {
+      background-color: #00897b;
+    }
+
+    .law-type-Rule {
+      background-color: #6d4c41;
+    }
+
+    .law-type-Misc {
+      background-color: #757575;
+    }
+
+    .results-container {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+    }
+
+    #result-count {
+      padding: 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    #result-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #result-list li {
+      background-color: #fff;
+      padding: 1.25rem 2rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #result-list li:hover {
+      background-color: #f0f7ff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .law-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0066cc;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .law-meta {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: #666;
+      flex-wrap: wrap;
+    }
+
+    .law-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .pagination {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination button {
+      padding: 0.5rem 1.5rem;
+      font-size: 0.9rem;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background-color: #0052a3;
+    }
+
+    .pagination button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    #page-info {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    #spinner.visible {
+      display: flex;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: #666;
+      font-size: 1.1rem;
+    }
+
+    .error-message {
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+      color: #856404;
+      padding: 1rem 2rem;
+      margin: 1rem auto;
+      max-width: 800px;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .search-container {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+
+      .search-container h1 {
+        font-size: 1.5rem;
+      }
+
+      #search-form {
+        flex-direction: column;
+      }
+
+      #search-button {
+        width: 100%;
+      }
+
+      .advanced-search-panel {
+        padding: 1rem;
+      }
+
+      .checkbox-group {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .date-range-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .date-separator {
+        text-align: center;
+      }
+
+      .results-container,
+      .pagination {
+        margin-left: 1rem;
+        margin-right: 1rem;
+      }
+
+      #result-list li {
+        padding: 1rem;
+      }
+
+      .law-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .pagination {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .pagination button {
+        width: 100%;
+      }
+
+      #applied-filters {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
 </head>
 
 <body>
-
+  <!-- ローディングスピナー -->
   <div id="spinner">
     <div id="spinner_inside">
-      <p id="loading_message"></p>
+      <p id="loading_message">検索中...</p>
       <div class="lds-ellipsis">
         <div></div>
         <div></div>
@@ -27,339 +434,435 @@
     </div>
   </div>
 
-  <!-- Viewer UI components -->
-  <div class="top" id="viewer-toolbar">
-    <ul>
-      <li id="word_menu">
-        <div>
-          <label><img src="./img/lightness.png" class="icon2" title="ワード反転色の輝度" /></label>
-          <input type="range" id="word_inversion_lightness" name="word_inversion_lightness" min="0.2" max="0.8"
-            step="0.1" />
-        </div>
-      </li>
-      <li>
-        <div id="word_query" contenteditable="true" placeholder="反転ワードを入力...(Ctrl+Shift+F)"></div>
-      </li>
-      <li>
-        <span id="fusoku_display" class="chikujo">附則表示切替</span>
-      </li>
-      <li class="blank"><input id="article_jump" type="text" placeholder="条文番号ジャンプ（Ctrl+/）" /></li>
-      <li id="zumen_analysis"></li>
-    </ul>
-  </div>
+  <!-- 検索フォーム -->
+  <div class="search-container">
+    <h1>法令検索</h1>
+    <form id="search-form">
+      <input type="text" id="search-query" placeholder="法令名を入力してください（例: 特許法、民法、著作権法）"
+        autofocus />
+      <button type="submit" id="search-button">検索</button>
+    </form>
 
-  <!-- Breadcrumb Navigation -->
-  <nav id="breadcrumb-navigation" aria-label="法令構造ナビゲーション">
-    <div class="container mx-auto px-2 md:px-4 py-1">
-      <div class="flex items-center">
-        <ul id="breadcrumb-list" class="flex items-center space-x-1 md:space-x-2 text-xs overflow-x-auto whitespace-nowrap flex-1 min-w-0" role="navigation" aria-label="パンくずリスト">
-          <!-- パンくずアイテムが動的に挿入される -->
-        </ul>
-      </div>
-    </div>
-  </nav>
+    <!-- 詳細検索トグルボタン -->
+    <button type="button" id="toggle-advanced" class="toggle-advanced-btn">詳細検索 ▼</button>
 
-  <div class="bottom" id="viewer-content">
-    <div id="color_picker">
-      <img style="margin-right: 2px" src="./img/colormap.gif" usemap="#colormap" alt="colormap" />
-    </div>
-
-    <div id="text" class="column">
-      <div id="main">
-        <div id="contenteditable_container">
-          <div id="content">e-govの法令APIからデータを読み込み中...</div>
+    <!-- 詳細検索パネル -->
+    <div id="advanced-search" class="advanced-search-panel" style="display: none;">
+      <!-- 法令種別 -->
+      <div class="search-option-group">
+        <label class="option-label">法令種別:</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="law_type" value="Act"> 法律</label>
+          <label><input type="checkbox" name="law_type" value="CabinetOrder"> 政令</label>
+          <label><input type="checkbox" name="law_type" value="MinisterialOrdinance"> 府省令</label>
+          <label><input type="checkbox" name="law_type" value="Constitution"> 憲法</label>
+          <label><input type="checkbox" name="law_type" value="ImperialOrder"> 勅令</label>
+          <label><input type="checkbox" name="law_type" value="Rule"> 規則</label>
         </div>
       </div>
-      <div id="spectrum">
-        <canvas id="spectrum_bar" width="1" height="1"> </canvas>
+
+      <!-- 分野選択 -->
+      <div class="search-option-group">
+        <label class="option-label" for="category-select">分野:</label>
+        <select id="category-select" name="category_cd" multiple size="6">
+          <option value="002">刑事</option>
+          <option value="020">労働</option>
+          <option value="028">教育</option>
+          <option value="030">厚生</option>
+          <option value="035">社会福祉</option>
+          <option value="041">司法</option>
+          <option value="046">民事</option>
+          <option value="001">憲法</option>
+          <option value="003">財務通則</option>
+          <option value="013">国税</option>
+          <option value="024">金融・保険</option>
+          <option value="043">農業</option>
+          <option value="047">建築・住宅</option>
+        </select>
+        <small>Ctrl/Cmdキーで複数選択</small>
+      </div>
+
+      <!-- 廃止状況 -->
+      <div class="search-option-group">
+        <label class="option-label">廃止状況:</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="repeal_status" value="None" checked> 現行</label>
+          <label><input type="checkbox" name="repeal_status" value="Repeal"> 廃止</label>
+          <label><input type="checkbox" name="repeal_status" value="Expire"> 失効</label>
+          <label><input type="checkbox" name="repeal_status" value="Suspend"> 停止</label>
+        </div>
+      </div>
+
+      <!-- 公布日範囲 -->
+      <div class="search-option-group">
+        <label class="option-label">公布日:</label>
+        <div class="date-range-group">
+          <input type="date" name="promulgation_date_from" placeholder="開始日">
+          <span class="date-separator">～</span>
+          <input type="date" name="promulgation_date_to" placeholder="終了日">
+        </div>
+      </div>
+
+      <!-- アクションボタン -->
+      <div class="search-actions">
+        <button type="button" id="clear-filters" class="clear-button">条件クリア</button>
       </div>
     </div>
   </div>
 
-  <map id="colormap" name="colormap"><area style="cursor: pointer" shape="poly"
-      coords="63,0,72,4,72,15,63,19,54,15,54,4" alt="#003366" /><area style="cursor: pointer" shape="poly"
-      coords="81,0,90,4,90,15,81,19,72,15,72,4" alt="#336699" /><area style="cursor: pointer" shape="poly"
-      coords="99,0,108,4,108,15,99,19,90,15,90,4" alt="#3366CC" /><area style="cursor: pointer" shape="poly"
-      coords="117,0,126,4,126,15,117,19,108,15,108,4" alt="#003399" /><area style="cursor: pointer" shape="poly"
-      coords="135,0,144,4,144,15,135,19,126,15,126,4" alt="#000099" /><area style="cursor: pointer" shape="poly"
-      coords="153,0,162,4,162,15,153,19,144,15,144,4" alt="#0000CC" /><area style="cursor: pointer" shape="poly"
-      coords="171,0,180,4,180,15,171,19,162,15,162,4" alt="#000066" /><area style="cursor: pointer" shape="poly"
-      coords="54,15,63,19,63,30,54,34,45,30,45,19" alt="#006666" /><area style="cursor: pointer" shape="poly"
-      coords="72,15,81,19,81,30,72,34,63,30,63,19" alt="#006699" /><area style="cursor: pointer" shape="poly"
-      coords="90,15,99,19,99,30,90,34,81,30,81,19" alt="#0099CC" /><area style="cursor: pointer" shape="poly"
-      coords="108,15,117,19,117,30,108,34,99,30,99,19" alt="#0066CC" /><area style="cursor: pointer" shape="poly"
-      coords="126,15,135,19,135,30,126,34,117,30,117,19" alt="#0033CC" /><area style="cursor: pointer" shape="poly"
-      coords="144,15,153,19,153,30,144,34,135,30,135,19" alt="#0000FF" /><area style="cursor: pointer" shape="poly"
-      coords="162,15,171,19,171,30,162,34,153,30,153,19" alt="#3333FF" /><area style="cursor: pointer" shape="poly"
-      coords="180,15,189,19,189,30,180,34,171,30,171,19" alt="#333399" /><area style="cursor: pointer" shape="poly"
-      coords="45,30,54,34,54,45,45,49,36,45,36,34" alt="#669999" /><area style="cursor: pointer" shape="poly"
-      coords="63,30,72,34,72,45,63,49,54,45,54,34" alt="#009999" /><area style="cursor: pointer" shape="poly"
-      coords="81,30,90,34,90,45,81,49,72,45,72,34" alt="#33CCCC" /><area style="cursor: pointer" shape="poly"
-      coords="99,30,108,34,108,45,99,49,90,45,90,34" alt="#00CCFF" /><area style="cursor: pointer" shape="poly"
-      coords="117,30,126,34,126,45,117,49,108,45,108,34" alt="#0099FF" /><area style="cursor: pointer" shape="poly"
-      coords="135,30,144,34,144,45,135,49,126,45,126,34" alt="#0066FF" /><area style="cursor: pointer" shape="poly"
-      coords="153,30,162,34,162,45,153,49,144,45,144,34" alt="#3366FF" /><area style="cursor: pointer" shape="poly"
-      coords="171,30,180,34,180,45,171,49,162,45,162,34" alt="#3333CC" /><area style="cursor: pointer" shape="poly"
-      coords="189,30,198,34,198,45,189,49,180,45,180,34" alt="#666699" /><area style="cursor: pointer" shape="poly"
-      coords="36,45,45,49,45,60,36,64,27,60,27,49" alt="#339966" /><area style="cursor: pointer" shape="poly"
-      coords="54,45,63,49,63,60,54,64,45,60,45,49" alt="#00CC99" /><area style="cursor: pointer" shape="poly"
-      coords="72,45,81,49,81,60,72,64,63,60,63,49" alt="#00FFCC" /><area style="cursor: pointer" shape="poly"
-      coords="90,45,99,49,99,60,90,64,81,60,81,49" alt="#00FFFF" /><area style="cursor: pointer" shape="poly"
-      coords="108,45,117,49,117,60,108,64,99,60,99,49" alt="#33CCFF" /><area style="cursor: pointer" shape="poly"
-      coords="126,45,135,49,135,60,126,64,117,60,117,49" alt="#3399FF" /><area style="cursor: pointer" shape="poly"
-      coords="144,45,153,49,153,60,144,64,135,60,135,49" alt="#6699FF" /><area style="cursor: pointer" shape="poly"
-      coords="162,45,171,49,171,60,162,64,153,60,153,49" alt="#6666FF" /><area style="cursor: pointer" shape="poly"
-      coords="180,45,189,49,189,60,180,64,171,60,171,49" alt="#6600FF" /><area style="cursor: pointer" shape="poly"
-      coords="198,45,207,49,207,60,198,64,189,60,189,49" alt="#6600CC" /><area style="cursor: pointer" shape="poly"
-      coords="27,60,36,64,36,75,27,79,18,75,18,64" alt="#339933" /><area style="cursor: pointer" shape="poly"
-      coords="45,60,54,64,54,75,45,79,36,75,36,64" alt="#00CC66" /><area style="cursor: pointer" shape="poly"
-      coords="63,60,72,64,72,75,63,79,54,75,54,64" alt="#00FF99" /><area style="cursor: pointer" shape="poly"
-      coords="81,60,90,64,90,75,81,79,72,75,72,64" alt="#66FFCC" /><area style="cursor: pointer" shape="poly"
-      coords="99,60,108,64,108,75,99,79,90,75,90,64" alt="#66FFFF" /><area style="cursor: pointer" shape="poly"
-      coords="117,60,126,64,126,75,117,79,108,75,108,64" alt="#66CCFF" /><area style="cursor: pointer" shape="poly"
-      coords="135,60,144,64,144,75,135,79,126,75,126,64" alt="#99CCFF" /><area style="cursor: pointer" shape="poly"
-      coords="153,60,162,64,162,75,153,79,144,75,144,64" alt="#9999FF" /><area style="cursor: pointer" shape="poly"
-      coords="171,60,180,64,180,75,171,79,162,75,162,64" alt="#9966FF" /><area style="cursor: pointer" shape="poly"
-      coords="189,60,198,64,198,75,189,79,180,75,180,64" alt="#9933FF" /><area style="cursor: pointer" shape="poly"
-      coords="207,60,216,64,216,75,207,79,198,75,198,64" alt="#9900FF" /><area style="cursor: pointer" shape="poly"
-      coords="18,75,27,79,27,90,18,94,9,90,9,79" alt="#006600" /><area style="cursor: pointer" shape="poly"
-      coords="36,75,45,79,45,90,36,94,27,90,27,79" alt="#00CC00" /><area style="cursor: pointer" shape="poly"
-      coords="54,75,63,79,63,90,54,94,45,90,45,79" alt="#00FF00" /><area style="cursor: pointer" shape="poly"
-      coords="72,75,81,79,81,90,72,94,63,90,63,79" alt="#66FF99" /><area style="cursor: pointer" shape="poly"
-      coords="90,75,99,79,99,90,90,94,81,90,81,79" alt="#99FFCC" /><area style="cursor: pointer" shape="poly"
-      coords="108,75,117,79,117,90,108,94,99,90,99,79" alt="#CCFFFF" /><area style="cursor: pointer" shape="poly"
-      coords="126,75,135,79,135,90,126,94,117,90,117,79" alt="#CCCCFF" /><area style="cursor: pointer" shape="poly"
-      coords="144,75,153,79,153,90,144,94,135,90,135,79" alt="#CC99FF" /><area style="cursor: pointer" shape="poly"
-      coords="162,75,171,79,171,90,162,94,153,90,153,79" alt="#CC66FF" /><area style="cursor: pointer" shape="poly"
-      coords="180,75,189,79,189,90,180,94,171,90,171,79" alt="#CC33FF" /><area style="cursor: pointer" shape="poly"
-      coords="198,75,207,79,207,90,198,94,189,90,189,79" alt="#CC00FF" /><area style="cursor: pointer" shape="poly"
-      coords="216,75,225,79,225,90,216,94,207,90,207,79" alt="#9900CC" /><area style="cursor: pointer" shape="poly"
-      coords="9,90,18,94,18,105,9,109,0,105,0,94" alt="#003300" /><area style="cursor: pointer" shape="poly"
-      coords="27,90,36,94,36,105,27,109,18,105,18,94" alt="#009933" /><area style="cursor: pointer" shape="poly"
-      coords="45,90,54,94,54,105,45,109,36,105,36,94" alt="#33CC33" /><area style="cursor: pointer" shape="poly"
-      coords="63,90,72,94,72,105,63,109,54,105,54,94" alt="#66FF66" /><area style="cursor: pointer" shape="poly"
-      coords="81,90,90,94,90,105,81,109,72,105,72,94" alt="#99FF99" /><area style="cursor: pointer" shape="poly"
-      coords="99,90,108,94,108,105,99,109,90,105,90,94" alt="#CCFFCC" /><area style="cursor: pointer" shape="poly"
-      coords="117,90,126,94,126,105,117,109,108,105,108,94" alt="#FFFFFF" /><area style="cursor: pointer" shape="poly"
-      coords="135,90,144,94,144,105,135,109,126,105,126,94" alt="#FFCCFF" /><area style="cursor: pointer" shape="poly"
-      coords="153,90,162,94,162,105,153,109,144,105,144,94" alt="#FF99FF" /><area style="cursor: pointer" shape="poly"
-      coords="171,90,180,94,180,105,171,109,162,105,162,94" alt="#FF66FF" /><area style="cursor: pointer" shape="poly"
-      coords="189,90,198,94,198,105,189,109,180,105,180,94" alt="#FF00FF" /><area style="cursor: pointer" shape="poly"
-      coords="207,90,216,94,216,105,207,109,198,105,198,94" alt="#CC00CC" /><area style="cursor: pointer" shape="poly"
-      coords="225,90,234,94,234,105,225,109,216,105,216,94" alt="#660066" /><area style="cursor: pointer" shape="poly"
-      coords="18,105,27,109,27,120,18,124,9,120,9,109" alt="#336600" /><area style="cursor: pointer" shape="poly"
-      coords="36,105,45,109,45,120,36,124,27,120,27,109" alt="#009900" /><area style="cursor: pointer" shape="poly"
-      coords="54,105,63,109,63,120,54,124,45,120,45,109" alt="#66FF33" /><area style="cursor: pointer" shape="poly"
-      coords="72,105,81,109,81,120,72,124,63,120,63,109" alt="#99FF66" /><area style="cursor: pointer" shape="poly"
-      coords="90,105,99,109,99,120,90,124,81,120,81,109" alt="#CCFF99" /><area style="cursor: pointer" shape="poly"
-      coords="108,105,117,109,117,120,108,124,99,120,99,109" alt="#FFFFCC" /><area style="cursor: pointer" shape="poly"
-      coords="126,105,135,109,135,120,126,124,117,120,117,109" alt="#FFCCCC" /><area style="cursor: pointer"
-      shape="poly" coords="144,105,153,109,153,120,144,124,135,120,135,109" alt="#FF99CC" /><area
-      style="cursor: pointer" shape="poly" coords="162,105,171,109,171,120,162,124,153,120,153,109"
-      alt="#FF66CC" /><area style="cursor: pointer" shape="poly"
-      coords="180,105,189,109,189,120,180,124,171,120,171,109" alt="#FF33CC" /><area style="cursor: pointer"
-      shape="poly" coords="198,105,207,109,207,120,198,124,189,120,189,109" alt="#CC0099" /><area
-      style="cursor: pointer" shape="poly" coords="216,105,225,109,225,120,216,124,207,120,207,109"
-      alt="#993399" /><area style="cursor: pointer" shape="poly" coords="27,120,36,124,36,135,27,139,18,135,18,124"
-      alt="#333300" /><area style="cursor: pointer" shape="poly" coords="45,120,54,124,54,135,45,139,36,135,36,124"
-      alt="#669900" /><area style="cursor: pointer" shape="poly" coords="63,120,72,124,72,135,63,139,54,135,54,124"
-      alt="#99FF33" /><area style="cursor: pointer" shape="poly" coords="81,120,90,124,90,135,81,139,72,135,72,124"
-      alt="#CCFF66" /><area style="cursor: pointer" shape="poly" coords="99,120,108,124,108,135,99,139,90,135,90,124"
-      alt="#FFFF99" /><area style="cursor: pointer" shape="poly"
-      coords="117,120,126,124,126,135,117,139,108,135,108,124" alt="#FFCC99" /><area style="cursor: pointer"
-      shape="poly" coords="135,120,144,124,144,135,135,139,126,135,126,124" alt="#FF9999" /><area
-      style="cursor: pointer" shape="poly" coords="153,120,162,124,162,135,153,139,144,135,144,124"
-      alt="#FF6699" /><area style="cursor: pointer" shape="poly"
-      coords="171,120,180,124,180,135,171,139,162,135,162,124" alt="#FF3399" /><area style="cursor: pointer"
-      shape="poly" coords="189,120,198,124,198,135,189,139,180,135,180,124" alt="#CC3399" /><area
-      style="cursor: pointer" shape="poly" coords="207,120,216,124,216,135,207,139,198,135,198,124"
-      alt="#990099" /><area style="cursor: pointer" shape="poly" coords="36,135,45,139,45,150,36,154,27,150,27,139"
-      alt="#666633" /><area style="cursor: pointer" shape="poly" coords="54,135,63,139,63,150,54,154,45,150,45,139"
-      alt="#99CC00" /><area style="cursor: pointer" shape="poly" coords="72,135,81,139,81,150,72,154,63,150,63,139"
-      alt="#CCFF33" /><area style="cursor: pointer" shape="poly" coords="90,135,99,139,99,150,90,154,81,150,81,139"
-      alt="#FFFF66" /><area style="cursor: pointer" shape="poly" coords="108,135,117,139,117,150,108,154,99,150,99,139"
-      alt="#FFCC66" /><area style="cursor: pointer" shape="poly"
-      coords="126,135,135,139,135,150,126,154,117,150,117,139" alt="#FF9966" /><area style="cursor: pointer"
-      shape="poly" coords="144,135,153,139,153,150,144,154,135,150,135,139" alt="#FF6666" /><area
-      style="cursor: pointer" shape="poly" coords="162,135,171,139,171,150,162,154,153,150,153,139"
-      alt="#FF0066" /><area style="cursor: pointer" shape="poly"
-      coords="180,135,189,139,189,150,180,154,171,150,171,139" alt="#CC6699" /><area style="cursor: pointer"
-      shape="poly" coords="198,135,207,139,207,150,198,154,189,150,189,139" alt="#993366" /><area
-      style="cursor: pointer" shape="poly" coords="45,150,54,154,54,165,45,169,36,165,36,154" alt="#999966" /><area
-      style="cursor: pointer" shape="poly" coords="63,150,72,154,72,165,63,169,54,165,54,154" alt="#CCCC00" /><area
-      style="cursor: pointer" shape="poly" coords="81,150,90,154,90,165,81,169,72,165,72,154" alt="#FFFF00" /><area
-      style="cursor: pointer" shape="poly" coords="99,150,108,154,108,165,99,169,90,165,90,154" alt="#FFCC00" /><area
-      style="cursor: pointer" shape="poly" coords="117,150,126,154,126,165,117,169,108,165,108,154"
-      alt="#FF9933" /><area style="cursor: pointer" shape="poly"
-      coords="135,150,144,154,144,165,135,169,126,165,126,154" alt="#FF6600" /><area style="cursor: pointer"
-      shape="poly" coords="153,150,162,154,162,165,153,169,144,165,144,154" alt="#FF5050" /><area
-      style="cursor: pointer" shape="poly" coords="171,150,180,154,180,165,171,169,162,165,162,154"
-      alt="#CC0066" /><area style="cursor: pointer" shape="poly"
-      coords="189,150,198,154,198,165,189,169,180,165,180,154" alt="#660033" /><area style="cursor: pointer"
-      shape="poly" coords="54,165,63,169,63,180,54,184,45,180,45,169" alt="#996633" /><area style="cursor: pointer"
-      shape="poly" coords="72,165,81,169,81,180,72,184,63,180,63,169" alt="#CC9900" /><area style="cursor: pointer"
-      shape="poly" coords="90,165,99,169,99,180,90,184,81,180,81,169" alt="#FF9900" /><area style="cursor: pointer"
-      shape="poly" coords="108,165,117,169,117,180,108,184,99,180,99,169" alt="#CC6600" /><area style="cursor: pointer"
-      shape="poly" coords="126,165,135,169,135,180,126,184,117,180,117,169" alt="#FF3300" /><area
-      style="cursor: pointer" shape="poly" coords="144,165,153,169,153,180,144,184,135,180,135,169"
-      alt="#FF0000" /><area style="cursor: pointer" shape="poly"
-      coords="162,165,171,169,171,180,162,184,153,180,153,169" alt="#CC0000" /><area style="cursor: pointer"
-      shape="poly" coords="180,165,189,169,189,180,180,184,171,180,171,169" alt="#990033" /><area
-      style="cursor: pointer" shape="poly" coords="63,180,72,184,72,195,63,199,54,195,54,184" alt="#663300" /><area
-      style="cursor: pointer" shape="poly" coords="81,180,90,184,90,195,81,199,72,195,72,184" alt="#996600" /><area
-      style="cursor: pointer" shape="poly" coords="99,180,108,184,108,195,99,199,90,195,90,184" alt="#CC3300" /><area
-      style="cursor: pointer" shape="poly" coords="117,180,126,184,126,195,117,199,108,195,108,184"
-      alt="#993300" /><area style="cursor: pointer" shape="poly"
-      coords="135,180,144,184,144,195,135,199,126,195,126,184" alt="#990000" /><area style="cursor: pointer"
-      shape="poly" coords="153,180,162,184,162,195,153,199,144,195,144,184" alt="#800000" /><area
-      style="cursor: pointer" shape="poly" coords="171,180,180,184,180,195,171,199,162,195,162,184"
-      alt="#993333" /></map>
+  <!-- 検索結果 -->
+  <div class="results-container">
+    <!-- 適用中フィルター表示 -->
+    <div id="applied-filters"></div>
+    <div id="result-count"></div>
+    <ul id="result-list"></ul>
+  </div>
+
+  <!-- ページネーション -->
+  <div class="pagination" id="pagination" style="display: none;">
+    <button id="prev-page" disabled>前へ</button>
+    <span id="page-info"></span>
+    <button id="next-page" disabled>次へ</button>
+  </div>
 
   <script>
-    // Initialize function that will be called when law data is ready
-    window.showLawViewer = function(data) {
-      // Set the content
-      document.getElementById('content').innerHTML = data.content;
-      document.title = data.lawTitle;
+    // グローバル変数
+    let currentQuery = '';
+    let currentOffset = 0;
+    let currentResponse = null;
+    const ITEMS_PER_PAGE = 50;
 
-      // Trigger viewer initialization
-      if (window.initialize) {
-        window.initialize();
-      }
-
-      // Call HTML-based initialization
-      initializeViewerEvents();
-
-      // Initialize breadcrumb navigation (DOM更新を待ってから確実に実行)
-      // requestAnimationFrameを使用してDOM更新完了を待つ
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (window.initializeBreadcrumbNavigation) {
-            window.initializeBreadcrumbNavigation();
-          }
-        });
-      });
+    // 法令種別の定義
+    const LAW_TYPES = {
+      'Constitution': '憲法',
+      'Act': '法律',
+      'CabinetOrder': '政令',
+      'ImperialOrder': '勅令',
+      'MinisterialOrdinance': '府省令',
+      'Rule': '規則',
+      'Misc': 'その他'
     };
 
-    // HTML-based viewer event initialization (from original viewer.html)
-    const initializeViewerEvents = () => {
-      // 括弧のイベント
-      const addBracketEvent = (span) => {
-        if (!span.classList.contains("bracket")) return;
-        span.addEventListener("mouseover", (e) => {
-          const container = e.target.closest("span.bracket");
-          container.style.backgroundColor = "lemonchiffon";
-          Array.from(container.querySelectorAll("span.bracket")).forEach(
-            (childSpan) => {
-              childSpan.style.backgroundColor = "lemonchiffon";
-            }
-          );
-        });
-        span.addEventListener("mouseout", (e) => {
-          const container = e.target.closest("span.bracket");
-          container.style.removeProperty("background-color");
-          Array.from(container.querySelectorAll("span.bracket")).forEach(
-            (childSpan) => {
-              childSpan.style.removeProperty("background-color");
-            }
-          );
-        });
-        span.addEventListener("click", (e) => {
-          if (e.target.closest("span.defined, a")) return;
-          const bracketSpan = e.target.closest("span.bracket");
-          if (!bracketSpan) return;
-
-          bracketSpan.id = "tempAbbr";
-          const abbr = document.createElement("span");
-          abbr.setAttribute("outerHTML", span.outerHTML);
-          abbr.classList.add("abbr");
-          abbr.textContent = `${bracketSpan.textContent.slice(0, 1)}...${bracketSpan.textContent.slice(-1)}`;
-          addBracketAbbrEvent(abbr);
-          bracketSpan.replaceWith(abbr);
-
-          e.stopPropagation();
-        });
-      };
-
-      const addBracketAbbrEvent = (abbr) => {
-        abbr.addEventListener("click", (e) => {
-          e.target.outerHTML = e.target.getAttribute("outerHTML");
-
-          const span = document.getElementById("tempAbbr");
-          span.removeAttribute("id");
-          span.style.removeProperty("background-color");
-
-          addBracketEvent(span);
-          [...span.querySelectorAll("span.bracket")].forEach((childSpan) => {
-            addBracketEvent(childSpan);
-          });
-          [...span.querySelectorAll("span.abbr")].forEach((childAbbr) => {
-            addBracketAbbrEvent(childAbbr);
-          });
-
-          e.stopPropagation();
-        });
-      };
-
-      [...document.querySelectorAll("span.bracket")].forEach((span) => {
-        addBracketEvent(span);
-      });
-
-      function zenkaku2Hankaku(str) {
-        return str.replace(/[Ａ-Ｚａ-ｚ０-９－]/g, (s) => {
-          return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
-        });
-      }
-
-      const articleJump = document.getElementById("article_jump");
-      if (articleJump) {
-        articleJump.addEventListener("keypress", (e) => {
-          if (e.keyCode !== 13) return;
-          e.target.value = zenkaku2Hankaku(e.target.value);
-          const element = document.querySelector(`a[name="article${e.target.value}"]`);
-          if (element) { element.scrollIntoView(); }
-        });
-      }
-
-      // Tooltip functionality
-      let tooltipElem;
-      document.onclick = (event) => {
-        if (tooltipElem) {
-          if (!event.target.closest(".tooltip")) {
-            tooltipElem.remove();
-            tooltipElem = null;
-            return;
-          } else {
-            return;
-          }
-        }
-
-        let target = event.target.closest("[data-tooltip]");
-        if (!target) return;
-
-        let tooltipHtml = target.dataset.tooltip;
-        if (!tooltipHtml) return;
-
-        tooltipElem = document.createElement('div');
-        tooltipElem.className = 'tooltip';
-        tooltipElem.innerHTML = tooltipHtml;
-        document.body.append(tooltipElem);
-
-        let coords = target.getBoundingClientRect();
-
-        let left = coords.left + (target.offsetWidth - tooltipElem.offsetWidth) / 2;
-        if (left < 0) left = 0;
-
-        let top = coords.top + 20;
-        if (top < 0) {
-          top = coords.top + target.offsetHeight + 5;
-        }
-
-        tooltipElem.style.left = left + 'px';
-        tooltipElem.style.top = top + 'px';
-      };
+    // 分野コードの定義（全50分類）
+    const CATEGORIES = {
+      '001': '憲法', '002': '刑事', '003': '財務通則', '004': '水産業',
+      '005': '観光', '006': '国会', '007': '警察', '008': '国有財産',
+      '009': '鉱業', '010': '郵務', '011': '行政組織', '012': '消防',
+      '013': '国税', '014': '工業', '015': '電気通信', '016': '国家公務員',
+      '017': '国土開発', '018': '事業', '019': '商業', '020': '労働',
+      '021': '行政手続', '022': '土地', '023': '国債', '024': '金融・保険',
+      '025': '環境保全', '026': '統計', '027': '都市計画', '028': '教育',
+      '029': '外国為替・貿易', '030': '厚生', '031': '地方自治', '032': '道路',
+      '033': '文化', '034': '陸運', '035': '社会福祉', '036': '地方財政',
+      '037': '河川', '038': '産業通則', '039': '海運', '040': '社会保険',
+      '041': '司法', '042': '災害対策', '043': '農業', '044': '航空',
+      '045': '防衛', '046': '民事', '047': '建築・住宅', '048': '林業',
+      '049': '貨物運送', '050': '外事'
     };
 
+    // 廃止状況の定義
+    const REPEAL_STATUSES = {
+      'None': '現行',
+      'Repeal': '廃止',
+      'Expire': '失効',
+      'Suspend': '停止',
+      'LossOfEffectiveness': '実効性喪失'
+    };
+
+    // 検索パラメータ収集関数
+    function collectSearchParams(offset = 0) {
+      const params = new URLSearchParams();
+
+      // 法令名
+      const lawTitle = document.getElementById('search-query').value.trim();
+      if (lawTitle) {
+        params.append('law_title', lawTitle);
+      }
+
+      // 法令種別（複数選択）
+      const lawTypes = Array.from(document.querySelectorAll('input[name="law_type"]:checked'))
+        .map(cb => cb.value);
+      if (lawTypes.length > 0) {
+        params.append('law_type', lawTypes.join(','));
+      }
+
+      // 分野（複数選択）
+      const categories = Array.from(document.querySelectorAll('#category-select option:checked'))
+        .map(opt => opt.value);
+      if (categories.length > 0) {
+        params.append('category_cd', categories.join(','));
+      }
+
+      // 廃止状況（複数選択）
+      const repealStatuses = Array.from(document.querySelectorAll('input[name="repeal_status"]:checked'))
+        .map(cb => cb.value);
+      if (repealStatuses.length > 0) {
+        params.append('repeal_status', repealStatuses.join(','));
+      }
+
+      // 公布日範囲
+      const dateFrom = document.querySelector('input[name="promulgation_date_from"]').value;
+      const dateTo = document.querySelector('input[name="promulgation_date_to"]').value;
+      if (dateFrom) {
+        params.append('promulgation_date_from', dateFrom);
+      }
+      if (dateTo) {
+        params.append('promulgation_date_to', dateTo);
+      }
+
+      // ページネーション
+      params.append('limit', ITEMS_PER_PAGE.toString());
+      params.append('offset', offset.toString());
+
+      return params;
+    }
+
+    // API呼び出し
+    async function searchLaws(offset = 0) {
+      // 法令API Version 2を直接fetchで呼び出し
+      const params = collectSearchParams(offset);
+
+      const url = `https://laws.e-gov.go.jp/api/2/laws?${params}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    // スピナー表示制御
+    function showSpinner(show) {
+      const spinner = document.getElementById('spinner');
+      if (show) {
+        spinner.classList.add('visible');
+      } else {
+        spinner.classList.remove('visible');
+      }
+    }
+
+    // 結果表示
+    function displayResults(response) {
+      const countEl = document.getElementById('result-count');
+      const listEl = document.getElementById('result-list');
+      const paginationEl = document.getElementById('pagination');
+
+      if (!response.laws || response.laws.length === 0) {
+        countEl.textContent = '';
+        listEl.innerHTML = '<div class="empty-message">検索結果が見つかりませんでした。</div>';
+        paginationEl.style.display = 'none';
+        return;
+      }
+
+      // 件数表示
+      const start = currentOffset + 1;
+      const end = currentOffset + response.count;
+      const total = response.total_count || response.count;
+      countEl.textContent = `${total}件中 ${start}-${end}件を表示`;
+
+      // 結果リスト生成
+      listEl.innerHTML = response.laws.map(law => {
+        // APIレスポンスのフィールド名を確認
+        const lawInfo = law.law_info || {};
+        const revisionInfo = law.revision_info || {};
+
+        const lawId = lawInfo.law_id || '';
+        const lawTitle = revisionInfo.law_title || '(法令名不明)';
+        const lawNum = lawInfo.law_num || '';
+        const lawType = lawInfo.law_type || '';
+        const category = revisionInfo.category || '';
+
+        const typeBadge = getLawTypeBadge(lawType);
+
+        return `
+          <li onclick="openLaw('${lawId}')">
+            <span class="law-title">${typeBadge}${escapeHtml(lawTitle)}</span>
+            <div class="law-meta">
+              ${lawNum ? `<span>📋 ${escapeHtml(lawNum)}</span>` : ''}
+              ${category ? `<span>📂 ${escapeHtml(category)}</span>` : ''}
+            </div>
+          </li>
+        `;
+      }).join('');
+
+      // ページネーション制御
+      updatePagination(response);
+    }
+
+    // ページネーション更新
+    function updatePagination(response) {
+      const paginationEl = document.getElementById('pagination');
+      const prevBtn = document.getElementById('prev-page');
+      const nextBtn = document.getElementById('next-page');
+      const pageInfo = document.getElementById('page-info');
+
+      // ページネーションの表示/非表示
+      const hasPagination = currentOffset > 0 || response.next_offset;
+      paginationEl.style.display = hasPagination ? 'flex' : 'none';
+
+      if (!hasPagination) return;
+
+      // 前へボタン
+      prevBtn.disabled = currentOffset === 0;
+
+      // 次へボタン
+      nextBtn.disabled = !response.next_offset;
+
+      // ページ情報
+      const currentPage = Math.floor(currentOffset / ITEMS_PER_PAGE) + 1;
+      const totalItems = response.total_count || response.count;
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+      pageInfo.textContent = `${currentPage} / ${totalPages} ページ`;
+    }
+
+    // 法令を新しいタブで開く
+    function openLaw(lawId) {
+      if (!lawId) {
+        alert('法令IDが取得できませんでした。');
+        return;
+      }
+      window.open(`viewer.html?lawid=${encodeURIComponent(lawId)}`, '_blank');
+    }
+
+    // HTMLエスケープ
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // エラー表示
+    function showError(message) {
+      const countEl = document.getElementById('result-count');
+      const listEl = document.getElementById('result-list');
+      const paginationEl = document.getElementById('pagination');
+
+      countEl.textContent = '';
+      listEl.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
+      paginationEl.style.display = 'none';
+    }
+
+    // 検索実行
+    async function performSearch(offset = 0) {
+      currentOffset = offset;
+
+      showSpinner(true);
+      document.getElementById('search-button').disabled = true;
+
+      try {
+        const response = await searchLaws(offset);
+        currentResponse = response;
+        displayResults(response);
+      } catch (error) {
+        console.error('検索エラー:', error);
+        showError('検索中にエラーが発生しました。時間をおいて再度お試しください。');
+      } finally {
+        showSpinner(false);
+        document.getElementById('search-button').disabled = false;
+      }
+    }
+
+    // 法令種別バッジを生成
+    function getLawTypeBadge(lawType) {
+      if (!lawType) return '';
+      const typeName = LAW_TYPES[lawType] || lawType;
+      return `<span class="law-type-badge law-type-${lawType}">${typeName}</span>`;
+    }
+
+    // 適用中フィルターを表示
+    function displayAppliedFilters() {
+      const filterEl = document.getElementById('applied-filters');
+      const filters = [];
+
+      // 法令種別
+      const lawTypes = Array.from(document.querySelectorAll('input[name="law_type"]:checked'));
+      if (lawTypes.length > 0) {
+        const typeNames = lawTypes.map(cb => LAW_TYPES[cb.value] || cb.value).join(', ');
+        filters.push(`種別: ${typeNames}`);
+      }
+
+      // 分野
+      const categories = Array.from(document.querySelectorAll('#category-select option:checked'));
+      if (categories.length > 0) {
+        const categoryNames = categories.map(opt => opt.textContent).join(', ');
+        filters.push(`分野: ${categoryNames}`);
+      }
+
+      // 廃止状況
+      const repealStatuses = Array.from(document.querySelectorAll('input[name="repeal_status"]:checked'));
+      if (repealStatuses.length > 0) {
+        const statusNames = repealStatuses.map(cb => REPEAL_STATUSES[cb.value] || cb.value).join(', ');
+        filters.push(`状態: ${statusNames}`);
+      }
+
+      // 公布日
+      const dateFrom = document.querySelector('input[name="promulgation_date_from"]').value;
+      const dateTo = document.querySelector('input[name="promulgation_date_to"]').value;
+      if (dateFrom || dateTo) {
+        filters.push(`公布日: ${dateFrom || '～'} ～ ${dateTo || '～'}`);
+      }
+
+      filterEl.innerHTML = filters.length > 0
+        ? `<strong>検索条件:</strong> ${filters.join(' | ')}`
+        : '';
+    }
+
+    // 詳細検索パネルの表示切替
+    document.getElementById('toggle-advanced').addEventListener('click', () => {
+      const panel = document.getElementById('advanced-search');
+      const button = document.getElementById('toggle-advanced');
+
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        button.textContent = '詳細検索 ▲';
+      } else {
+        panel.style.display = 'none';
+        button.textContent = '詳細検索 ▼';
+      }
+    });
+
+    // 条件クリア
+    document.getElementById('clear-filters').addEventListener('click', () => {
+      // チェックボックスをリセット
+      document.querySelectorAll('input[name="law_type"]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('input[name="repeal_status"]').forEach(cb => {
+        cb.checked = cb.value === 'None'; // 現行法令のみデフォルトでチェック
+      });
+
+      // セレクトボックスをリセット
+      const categorySelect = document.getElementById('category-select');
+      for (let i = 0; i < categorySelect.options.length; i++) {
+        categorySelect.options[i].selected = false;
+      }
+
+      // 日付入力をクリア
+      document.querySelector('input[name="promulgation_date_from"]').value = '';
+      document.querySelector('input[name="promulgation_date_to"]').value = '';
+
+      // 適用中フィルターをクリア
+      displayAppliedFilters();
+    });
+
+    // 検索フォームのsubmitハンドラ
+    document.getElementById('search-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      displayAppliedFilters();
+      await performSearch(0);
+    });
+
+    // 前へボタン
+    document.getElementById('prev-page').addEventListener('click', async () => {
+      const newOffset = Math.max(0, currentOffset - ITEMS_PER_PAGE);
+      await performSearch(newOffset);
+    });
+
+    // 次へボタン
+    document.getElementById('next-page').addEventListener('click', async () => {
+      if (currentResponse && currentResponse.next_offset) {
+        await performSearch(currentResponse.next_offset);
+      }
+    });
   </script>
 </body>
 
